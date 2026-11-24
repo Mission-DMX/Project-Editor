@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import random
 from collections import defaultdict
@@ -14,7 +15,8 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture
+from model.ofl.fixture_not_found_exception import FixtureDefNotFoundError
+from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture, WheelSlot
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -55,15 +57,95 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-def load_fixture(file: str) -> OflFixture | None:
+def load_fixture(file: str) -> OflFixture:
     """Load fixture from OFL JSON."""
     if not os.path.isfile(file):
         logger.error("Fixture definition %s not found.", file)
-        return None
+        raise FixtureDefNotFoundError(file, "Path is no file. Does it exist?")
     with open(file, "r", encoding="UTF-8") as f:
-        ob: dict = json.load(f)
-    ob.update({"fileName": file.split("/fixtures/")[1]})
-    return OflFixture.model_validate(ob)
+        try:
+            ob: dict = json.load(f)
+        except json.decoder.JSONDecodeError as e:
+            logger.error("Fixture definition (%s) JSON error: %s", file, e)
+            raise FixtureDefNotFoundError(file, f"The file is not valid JSON: {e}") from e
+    ob.update({"fileName": _fixture_display_name(file)})
+    try:
+        return OflFixture.model_validate(ob)
+    except Exception as e:
+        logger.error("Fixture definition (%s) validation error: %s", file, e)
+        raise e
+
+
+def _fixture_display_name(file: str) -> str:
+    """Extract the fixtures-directory-relative name from a fixture definition path.
+
+    Keeps the full path as fallback for files outside a ``fixtures/`` directory so that
+    absolute paths still round-trip through stage file serialization.
+    """
+    if "/fixtures/" in file:
+        return file.split("/fixtures/", 1)[1]
+    return file
+
+
+def _load_colorwheel_mappings(
+    f: OflFixture, channels: list[FixtureChannel]
+) -> list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]]:
+    """Load color wheel mappings from OFL model."""
+    outer_mapping_list = []
+    for channel in channels:
+        fcl: list[tuple[int, WheelSlot, WheelSlot | None]] = []
+        if channel.type != FixtureChannelType.COLORWHEEL:
+            continue
+        if channel.channel_template is None:
+            logger.error("The channel %s is a color wheel but the template was not found.", channel.name)
+            continue
+        color_wheel = f.wheels.get(channel.name)
+        if color_wheel is None:
+            logger.warning("The channel %s is has a color wheel but the wheel definition was not found.", channel.name)
+            continue
+        for capability in channel.channel_template.get_capabilities():
+            if capability.type == CapabilityType.WHEEL_SLOT:
+                slot_number = capability.capabilityProperties.get("slotNumber")
+                if len(capability.dmxRange) > 1:
+                    capability_dmx_value = int((capability.dmxRange[0] + capability.dmxRange[1]) / 2)
+                else:
+                    capability_dmx_value = capability.dmxRange[0]
+                if isinstance(slot_number, int):
+                    wheel_slot = color_wheel.slots[slot_number % len(color_wheel.slots)]
+                    fcl.append((capability_dmx_value, wheel_slot, None))
+                elif isinstance(slot_number, float):
+                    wheel_slot_a = color_wheel.slots[math.floor(slot_number) % len(color_wheel.slots)]
+                    wheel_slot_b = color_wheel.slots[math.ceil(slot_number) % len(color_wheel.slots)]
+                    fcl.append((capability_dmx_value, wheel_slot_a, wheel_slot_b))
+                else:
+                    logger.warning("The channel %s: cannot interpret slotNumber %r.", channel.name, slot_number)
+        if len(fcl) > 0:
+            outer_mapping_list.append((channel, fcl))
+    return outer_mapping_list
+
+
+def _parse_rotation_angle(value: object, channel_name: str, angle_key: str) -> float | None:
+    """Parse an OFL rotation angle property into degrees.
+
+    Returns:
+        The angle in degrees, or ``None`` if no finite angle can be derived.
+
+    """
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        text = value.strip().lower()
+        if text == "infinite":
+            logger.warning("Channel %s: %s is infinite; no finite rotation angle available.", channel_name, angle_key)
+            return None
+        if text.endswith("deg"):
+            text = text.removesuffix("deg")
+        try:
+            return float(text)
+        except ValueError:
+            pass
+    logger.warning("Channel %s: cannot interpret %s value %r as rotation angle.", channel_name, angle_key, value)
+    return None
 
 
 class UsedFixture(QtCore.QObject):
@@ -96,22 +178,30 @@ class UsedFixture(QtCore.QObject):
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
-        self._uuid: Final[UUID] = uuid if uuid else uuid4()
+        self._uuid: Final[UUID] = uuid or uuid4()
 
         self._start_index: int = start_index
         self._mode_index: int = mode_index
         self._universe_id: int = parent_universe
 
-        channels, segment_map, color_support = self._generate_fixture_channels()
+        channels, segment_map, color_support = self._generate_fixture_channels(fixture)
 
         self._fixture_channels: Final[list[FixtureChannel]] = channels
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._color_on_stage: str = (
-            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+        self._axis_movement_limits: Final[tuple[tuple[float, float], tuple[float, float]] | None] = (
+            self._find_axis_movement_limits()
         )
-        self._name_on_stage: str = self.short_name if self.short_name else self.name
+
+        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]] = (
+            _load_colorwheel_mappings(fixture, self._fixture_channels)
+        )
+
+        self._color_on_stage: str = (
+            color or "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+        )
+        self._name_on_stage: str = self.short_name or self.name
 
         self.parent_universe: int = parent_universe
         self._board_configuration.broadcaster.add_fixture.emit(self)
@@ -120,6 +210,20 @@ class UsedFixture(QtCore.QObject):
     def uuid(self) -> UUID:
         """UUID of the fixture."""
         return self._uuid
+
+    @property
+    def colorwheel_mappings(self) -> list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]]:
+        """Get the color wheels of this fixture.
+
+        This list contains tuples of the channels that contain color wheels as well as their colors.
+        Each slot is a tuple of the DMX value that should be send in order to get the color as well as the colors of the
+        position. If the third parameter of this tuple is not None, the position is right in between two slots.
+
+        Returns:
+            A copy of the list.
+
+        """
+        return list(self._colorwheel_mappings)
 
     @property
     def power(self) -> float:
@@ -132,9 +236,19 @@ class UsedFixture(QtCore.QObject):
         return self._fixture.name
 
     @property
+    def axis_movement_limits(self) -> tuple[tuple[float, float], tuple[float, float]] | None:
+        """Get the pan/tilt axis limits as ``((pan_min, pan_max), (tilt_min, tilt_max))`` in degrees."""
+        return self._axis_movement_limits
+
+    @property
     def short_name(self) -> str:
         """Short name of theFixture."""
         return self._fixture.shortName
+
+    @property
+    def categories(self) -> list[str]:
+        """Categories this fixture belongs to (e.g. ``Moving Head``, ``Color Changer``)."""
+        return self._fixture.categories
 
     @property
     def comment(self) -> str:
@@ -143,7 +257,16 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def mode(self) -> FixtureMode:
-        """Mode of theFixture."""
+        """Mode of theFixture.
+
+        Raises:
+            FixtureDefNotFoundError if the fixture mode does not exist.
+
+        """
+        if len(self._fixture.modes) <= self._mode_index:
+            raise FixtureDefNotFoundError(
+                self._fixture.fileName, "Fixture does not have requested mode. Are the fixture defintions up to date?"
+            )
         return self._fixture.modes[self._mode_index]
 
     @property
@@ -215,13 +338,13 @@ class UsedFixture(QtCore.QObject):
         return tuple((self._segment_map[segment_type] + self.start_index).tolist())
 
     def _generate_fixture_channels(
-        self,
+        self, fixture_template: OflFixture
     ) -> tuple[list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
         def append_channel(cn: str, i: int) -> None:
-            channel = FixtureChannel(cn)
+            channel = FixtureChannel(cn, fixture_template)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
                 segment_map[channel_type].append(i)
@@ -257,6 +380,59 @@ class UsedFixture(QtCore.QObject):
             found_color,
         )
 
+    def _find_axis_movement_limits(self) -> tuple[tuple[float, float], tuple[float, float]] | None:
+        """Find the pan and tilt axis limits of the fixture in degrees.
+
+        Pan/tilt channels whose angle properties cannot be interpreted as finite angles
+        (``infinite``, percent values, missing properties) are skipped.
+
+        Returns:
+            ``((pan_min, pan_max), (tilt_min, tilt_max))`` in degrees, or ``None`` if no
+            complete limits were found for both axes.
+
+        """
+        min_pan: float | None = None
+        max_pan: float | None = None
+        min_tilt: float | None = None
+        max_tilt: float | None = None
+
+        for channel in self._fixture_channels:
+            template = channel.channel_template
+            if template is None:
+                logger.error("Channel %s has empty template.", channel.name)
+                continue
+            if channel.type == FixtureChannelType.PAN:
+                is_pan = True
+            elif channel.type == FixtureChannelType.TILT:
+                is_pan = False
+            else:
+                continue
+            if template.capability is not None:
+                capability = template.capability
+            elif template.capabilities:
+                capability = template.capabilities[0]
+            else:
+                logger.error("Pan/Tilt channel %s has no capability description.", channel.name)
+                continue
+            cap_props = capability.capabilityProperties
+            if "angleStart" not in cap_props or "angleEnd" not in cap_props:
+                logger.error("Pan/Tilt channel %s does not have angle description.", channel.name)
+                continue
+            start = _parse_rotation_angle(cap_props["angleStart"], channel.name, "angleStart")
+            end = _parse_rotation_angle(cap_props["angleEnd"], channel.name, "angleEnd")
+            if start is None or end is None:
+                continue
+            if is_pan:
+                min_pan = start if min_pan is None else min(min_pan, start)
+                max_pan = end if max_pan is None else max(max_pan, end)
+            else:
+                min_tilt = start if min_tilt is None else min(min_tilt, start)
+                max_tilt = end if max_tilt is None else max(max_tilt, end)
+
+        if min_pan is None or max_pan is None or min_tilt is None or max_tilt is None:
+            return None
+        return (min_pan, max_pan), (min_tilt, max_tilt)
+
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """Get a fixture channel by index."""
         return self._fixture_channels[index]
@@ -270,4 +446,8 @@ def make_used_fixture(
     board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    try:
+        return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    except ValueError as e:
+        logger.error(e)
+        raise FixtureDefNotFoundError(fixture.fileName, str(e)) from e

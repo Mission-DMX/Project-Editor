@@ -57,6 +57,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(object)  # FilterPage
     bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     uipage_opened_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
+    default_dmx_value_editor_opening_requested: QtCore.Signal = QtCore.Signal(object)
     delete_scene: QtCore.Signal = QtCore.Signal(object)
     delete_universe: QtCore.Signal = QtCore.Signal(object)
     device_created: QtCore.Signal = QtCore.Signal(object)  # device
@@ -87,6 +88,9 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     view_to_temperature: QtCore.Signal = QtCore.Signal()
     view_leave_temperature: QtCore.Signal = QtCore.Signal()
 
+    view_to_visualizer: QtCore.Signal = QtCore.Signal()
+    view_leave_visualizer: QtCore.Signal = QtCore.Signal()
+
     view_to_console_mode: QtCore.Signal = QtCore.Signal()
     view_leave_console_mode: QtCore.Signal = QtCore.Signal()
 
@@ -106,12 +110,15 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
     desk_f_key_pressed: QtCore.Signal = QtCore.Signal(int)
+    desk_enter_pressed: QtCore.Signal = QtCore.Signal()
 
     handle_joystick_event: QtCore.Signal = QtCore.Signal(object, float, bool)
     joystick_selected_event: QtCore.Signal = QtCore.Signal(object)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
+    switched_gui_wait_mode: QtCore.Signal = QtCore.Signal(bool)
+    """Signal is supplied with true if the state is now in wait mode."""
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     log_message: QtCore.Signal = QtCore.Signal(str)

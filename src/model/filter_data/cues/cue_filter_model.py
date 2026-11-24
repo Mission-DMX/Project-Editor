@@ -17,10 +17,20 @@ class CueFilterModel:
         self.cues: list[Cue] = []
         self.channels: list[tuple[str, DataType]] = []  # name, data type
         self.global_restart_on_end: bool = False
+        self._persistence_enabled: bool = False
         self._default_cue: int = -1
 
         if parameters is not None:
             self.load_from_configuration(parameters)
+
+    @property
+    def persistence_enabled(self) -> bool:
+        """If true, the filter will recall its configuration after returning to the scene."""
+        return self._persistence_enabled
+
+    @persistence_enabled.setter
+    def persistence_enabled(self, value: bool) -> None:
+        self._persistence_enabled = value
 
     @property
     def default_cue(self) -> int:
@@ -48,7 +58,8 @@ class CueFilterModel:
         else:
             mapping_str = ""
         return {"end_handling": "start_again" if self.global_restart_on_end else "hold", "mapping": mapping_str,
-                "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": str(self.default_cue)}
+                "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": str(self.default_cue),
+                "persistence": "true" if self.persistence_enabled else "false"}
 
     def append_cue(self, c: Cue) -> None:
         """Add a cue to the model."""
@@ -76,6 +87,7 @@ class CueFilterModel:
 
     def load_from_configuration(self, parameters: dict[str, str]) -> None:
         """Deserialize configuration from filter configuration."""
+        self.persistence_enabled = parameters.get("persistence", "false") == "true"
         self.global_restart_on_end = parameters.get("end_handling") == "start_again"
 
         mapping_str = parameters.get("mapping")

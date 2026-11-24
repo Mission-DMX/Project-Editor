@@ -1,3 +1,5 @@
+"""Show UI widget controlling a pan/tilt constant virtual filter."""
+
 from __future__ import annotations
 
 from logging import getLogger
@@ -16,8 +18,16 @@ logger = getLogger(__name__)
 
 
 class PanTiltConstantControlUIWidget(UIWidget):
+    """Control widget for a pan/tilt constant virtual filter."""
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the command chain and the view references.
+
+        Args:
+            parent: The parent page of the widget.
+            configuration: The configuration of the widget.
+
+        """
         super().__init__(parent, configuration)
         self._command_chain: list[tuple[str, str]] = []  # ??
         self._filter = None
@@ -25,8 +35,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._conf_widget: QWidget | None = None
 
     def set_filter(self, f: Filter, i: int) -> None:
-        if not f:
-            return
+        """Link the widget to a pan/tilt constant virtual filter."""
         super().set_filter(f, i)
         self.associated_filters["pan_tilt_vfilter_fid"] = f.filter_id
         if not isinstance(f, PanTiltConstantFilter):
@@ -46,6 +55,15 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return self._player_widget
 
     def construct_widget(self, parent: QWidget | None) -> QWidget:
+        """Construct a widget holding the position pad and the joystick selection box.
+
+        Args:
+            parent: The parent widget to embed the constructed widget in.
+
+        Returns:
+            The constructed widget.
+
+        """
         w = QWidget(parent)
         layout = QVBoxLayout()
 
@@ -55,7 +73,8 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._chosen_joystick = QComboBox()
         self._chosen_joystick.addItems(JoystickHandler.joystick_map.keys())
         self._chosen_joystick.currentTextChanged.connect(
-            lambda x: self._filter.set_joystick(JoystickHandler.joystick_map[x]))
+            lambda x: self._filter.set_joystick(JoystickHandler.joystick_map[x])
+        )
         layout.addWidget(self._chosen_joystick)
 
         w.setLayout(layout)
@@ -81,12 +100,16 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return QLabel()
 
     def insert_action(self) -> None:
+        """Push the current pan and tilt position of the linked filter to fish.
+
+        Called by the linked filter whenever its position changed.
+
+        """
         # TODO add support for separated constants
         combined_fid = self.associated_filters["pan_tilt_vfilter_fid"]
         command = (f"{combined_fid}_16bit_pan:value", str(int(self._filter.pan * 65535)))
         self._command_chain.append(command)
-        command = (
-            f"{combined_fid}_16bit_tilt:value", str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
+        command = (f"{combined_fid}_16bit_tilt:value", str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
         self._command_chain.append(command)
         self.push_update()
         self._command_chain.clear()

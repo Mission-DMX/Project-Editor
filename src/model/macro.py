@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from logging import getLogger
 from typing import TYPE_CHECKING, Final
 
@@ -12,6 +13,7 @@ from controller.utils.process_notifications import get_process_notifier
 from proto.Console_pb2 import ButtonCode, ButtonState, button_state_change
 
 if TYPE_CHECKING:
+    from controller.cli.cli_context import CLIContext
     from model import BoardConfiguration
 
 logger = getLogger(__name__)
@@ -107,6 +109,7 @@ class _ShowfileAppliedTrigger(Trigger):
     def __init__(self) -> None:
         super().__init__("showfile_applied")
         from model import Broadcaster
+
         Broadcaster().show_file_applied.connect(self.exec)
 
 
@@ -142,11 +145,82 @@ class _FKeysTrigger(Trigger):
             NetworkManager().button_msg_to_x_touch(msg)
 
 
+_SHARED_CONTEXT_REGISTRY: dict[BoardConfiguration, dict[str, CLIContext]] = {}
+
+
+def _clear_shared_context_registry() -> None:
+    """Drop all registered shared contexts.
+
+    This method is invoked whenever a show file is (re)loaded: the complete show model is replaced, so contexts and
+    the state accumulated within them (like the selected bank set) must not be reused by macros of the new file.
+    """
+    _SHARED_CONTEXT_REGISTRY.clear()
+
+
+@lru_cache(maxsize=1)
+def _ensure_registry_cleanup_connected() -> None:
+    """Connect the registry cleanup to the clear_board_configuration signal.
+
+    This function is idempotent: the connection is only established by the first call. The broadcaster is imported
+    lazily in order to avoid import cycles during module initialization.
+    """
+    from model import Broadcaster
+
+    Broadcaster().clear_board_configuration.connect(_clear_shared_context_registry)
+
+
+def get_available_shared_context_identifiers(show: BoardConfiguration) -> list[str]:
+    """Get the IDs of shared contexts available within the given show.
+
+    Shared contexts are never shared across show configurations, so only identifiers registered for the given show
+    are returned.
+
+    Args:
+        show: the show configuration to get the shared context identifiers of
+
+    Returns:
+        the ids of all shared contexts of the given show
+
+    """
+    _ensure_registry_cleanup_connected()
+    return list(_SHARED_CONTEXT_REGISTRY.get(show, {}).keys())
+
+
+def _get_or_create_shared_context(show: BoardConfiguration, context_id: str) -> CLIContext:
+    """Get the shared CLI context of the given show identified by context_id, creating it if it does not exist.
+
+    Args:
+        show: the show configuration the context belongs to
+        context_id: the identifier of the shared context
+
+    Returns:
+        the shared context of the given show with the given identifier
+
+    """
+    _ensure_registry_cleanup_connected()
+    contexts = _SHARED_CONTEXT_REGISTRY.setdefault(show, {})
+    context = contexts.get(context_id)
+    if context is None:
+        from controller.cli.cli_context import CLIContext
+        from controller.network import NetworkManager
+
+        context = CLIContext(show, NetworkManager(), exit_available=False)
+        contexts[context_id] = context
+    return context
+
+
 class Macro:
     """Macro."""
 
-    def __init__(self, parent: BoardConfiguration) -> None:
-        """Empty macro."""
+    def __init__(self, parent: BoardConfiguration, shared_context: str | None = None) -> None:
+        """Empty macro.
+
+        Args:
+            parent: The parent board configuration
+            shared_context: If the macro should use a shared context, the id of it. If None (default) or a blank
+                string is provided, a private context will be created.
+
+        """
         self.content: str = ""
         self.name: str = ""
         self._show: BoardConfiguration = parent
@@ -154,13 +228,19 @@ class Macro:
         from controller.cli.cli_context import CLIContext
         from controller.network import NetworkManager
 
-        self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
+        if shared_context is not None:
+            shared_context = shared_context.strip() or None
+        if shared_context is None:
+            self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
+        else:
+            self.c = _get_or_create_shared_context(self._show, shared_context)
+        self._shared_context_id = shared_context
 
     @property
     def trigger_conditions(self) -> list[Trigger]:
         """Copy list of all active triggers."""
         trigger_conditions = []
-        for k, v in self._triggers:
+        for k, v in self._triggers.items():
             if v:
                 trigger_conditions.append(k)
         return trigger_conditions
@@ -169,6 +249,11 @@ class Macro:
     def all_triggers(self) -> list[Trigger]:
         """All Triggers of a Macro."""
         return list(self._triggers.keys())
+
+    @property
+    def shared_context_id(self) -> str | None:
+        """The shared context ID of the macro."""
+        return self._shared_context_id
 
     def add_trigger(self, t: Trigger, active: bool = True) -> None:
         """Register a new trigger.
@@ -183,12 +268,16 @@ class Macro:
         t._macro = self
 
     def copy(self) -> Macro:
-        """Deep copy of this macro."""
-        m = Macro(self._show)
+        """Deep copy of this macro.
+
+        The copy intentionally joins the same shared context as the original (if any): macros bound to a shared
+        context operate on the same CLI state, so the copy must not fork it.
+        """
+        m = Macro(self._show, shared_context=self._shared_context_id)
         m.name = str(self.name)
         m.content = str(self.content)
-        for k, v in self._triggers:
-            m._triggers[k.copy()] = bool(v)
+        for t, active in self._triggers.items():
+            m.add_trigger(t, active)
         return m
 
     def exec(self) -> bool:

@@ -1,3 +1,5 @@
+"""Contains BankSet editor tab widget."""
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -16,12 +18,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model import ColorHSI
+from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 
 
 class BankSetTabWidget(QWidget):
+    """Editor Tab to edit BankSets."""
+
     def __init__(self, parent: QWidget, bankset: BankSet) -> None:
+        """Initialize tab widget for given BankSet."""
         super().__init__(parent)
         self._bankset: BankSet | None = None
 
@@ -29,8 +34,8 @@ class BankSetTabWidget(QWidget):
         self._tool_bar = QToolBar()
         self._tool_bar.addAction(QIcon.fromTheme("system-software-update"), "Refresh bankset on fish",
                                  lambda: self._bankset.update() if self._bankset is not None else False)
-        self._tool_bar.addAction(QIcon.fromTheme("document-new"), "Add Bank", lambda: self._add_bank())
-        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Column to current Bank", lambda: self._add_column())
+        self._tool_bar.addAction(QIcon.fromTheme("document-new"), "Add Bank", self._add_bank)
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Column to current Bank", self._add_column)
         self._new_column_type_cbox = QComboBox()
         self._new_column_type_cbox.insertItems(0, ["Numbers", "Color"])
         self._new_column_type_cbox.setCurrentIndex(1)
@@ -53,6 +58,7 @@ class BankSetTabWidget(QWidget):
 
     @property
     def bankset(self) -> BankSet:
+        """Get or set the used BankSet."""
         return self._bankset
 
     @bankset.setter

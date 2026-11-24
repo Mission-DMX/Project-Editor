@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model import BoardConfiguration, ColorHSI
+from model import BoardConfiguration
+from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog

@@ -1,5 +1,6 @@
 """Contains general serialization functions."""
 import xml.etree.ElementTree as ET
+from logging import getLogger
 
 from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
@@ -14,6 +15,8 @@ from controller.file.serializing.universe_serialization import (
 from controller.utils.process_notifications import ProcessNotifier
 from model import BoardConfiguration, Device
 from model.events import get_all_senders
+
+logger = getLogger(__name__)
 
 
 def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
@@ -42,6 +45,7 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         pn.total_step_count += 1
 
     pn.current_step_description = "Creating universes."
+    remaining_fixtures = set(board_configuration.fixtures)
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
 
@@ -57,7 +61,12 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         if fixtures := board_configuration.fixtures:
             patching_element = ET.SubElement(universe_element, "patching")
             for fixture in fixtures:
-                _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
+                if fixture.universe_id == universe.id:
+                    _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
+                    remaining_fixtures.remove(fixture)
+    if len(remaining_fixtures) > 0:
+        logger.error("Some fixtures are not bound to any universe. These are: %s",
+                     ", ".join(remaining_fixtures))
 
     pn.total_step_count += 1
     pn.current_step_description = "Storing device list."

@@ -18,7 +18,9 @@ from view.show_mode.editor.nodes.impl.adapters import (
     AdapterFloatToColorNode,
     AdapterFloatToRange,
     ColorBrightnessMixinNode,
+    ColorToColorwheelAdapterNode,
     CombineTwo8BitToSingle16Bit,
+    DimmerBrightnessMixinNode,
     Map8BitTo16Bit,
 )
 from view.show_mode.editor.nodes.impl.arithmetics import (
@@ -34,7 +36,7 @@ from view.show_mode.editor.nodes.impl.arithmetics import (
     Sum16BitNode,
     SumFloatNode,
 )
-from view.show_mode.editor.nodes.impl.color_manip_nodes import ColorMixerVFilterNode
+from view.show_mode.editor.nodes.impl.color_manip_nodes import ColorDirectorVFilterNode, ColorMixerVFilterNode
 from view.show_mode.editor.nodes.impl.constants import (
     Constants8BitNode,
     Constants16BitNode,
@@ -54,6 +56,7 @@ from view.show_mode.editor.nodes.impl.debug import (
 )
 from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
+    ChaserNode,
     CueListNode,
     EffectsStackNode,
     SequencerNode,
@@ -70,6 +73,8 @@ from view.show_mode.editor.nodes.impl.faders import (
     FaderMainBrightness,
     FaderRawNode,
 )
+from view.show_mode.editor.nodes.impl.misc import EventSchedulerNode
+from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchColorNode, SwitchFloatNode
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
     EventCounterFilterNode,
@@ -107,6 +112,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_constants_nodes()
         self._register_debug_nodes()
         self._register_adapters_nodes()
+        self._register_routing_nodes()
         self._register_arithmetic_nodes()
         self._register_trigonometric_nodes()
         self._register_wave_nodes()
@@ -115,6 +121,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_fader_nodes()
         self._register_effect_nodes()
         self._register_scripting_nodes()
+        self._register_misc_nodes()
         self.addNodeType(ImportNode, [("")])
 
     def _register_constants_nodes(self) -> None:
@@ -139,33 +146,35 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(DebugRemoteColorNode, [("Debug",)])
 
     def _register_adapters_nodes(self) -> None:
-        """Register all the constants nodes."""
+        """Register all the adapter nodes."""
         # Add Node -> Adapters sub menu
-        self.addNodeType(Adapter16BitTo8BitNode, [("Adapters",)])
-        self.addNodeType(Adapter16BitToBoolNode, [("Adapters",)])
-        self.addNodeType(UniverseNode, [("Adapters",)])
-        self.addNodeType(AdapterColorToRGBNode, [("Adapters",)])
-        self.addNodeType(AdapterColorToRGBWNode, [("Adapters",)])
-        self.addNodeType(AdapterColorToRGBWANode, [("Adapters",)])
-        self.addNodeType(AdapterFloatToColorNode, [("Adapters",)])
-        self.addNodeType(AdapterColorToFloatsNode, [("Adapters",)])
-        self.addNodeType(Adapter8bitToFloat, [("Adapters",)])
-        self.addNodeType(Adapter16bitToFloat, [("Adapters",)])
-        self.addNodeType(AdapterFloatTo8BitRange, [("Adapters",)])
-        self.addNodeType(AdapterFloatTo16BitRange, [("Adapters",)])
-        self.addNodeType(AdapterFloatToRange, [("Adapters",)])
-        self.addNodeType(Adapter16BitToRangeFloat, [("Adapters",)])
-        self.addNodeType(Adapter8BitToRangeFloat, [("Adapters",)])
-        self.addNodeType(CombineTwo8BitToSingle16Bit, [("Adapters",)])
-        self.addNodeType(Map8BitTo16Bit, [("Adapters",)])
+        self.addNodeType(Adapter16BitTo8BitNode, [("Adapters", "From 16 Bit")])
+        self.addNodeType(Adapter16BitToBoolNode, [("Adapters", "From 16 Bit")])
+        self.addNodeType(AdapterFloatToColorNode, [("Adapters", "From Float")])
+        self.addNodeType(Adapter8bitToFloat, [("Adapters", "From 8 Bit")])
+        self.addNodeType(Adapter16bitToFloat, [("Adapters", "From 16 Bit")])
+        self.addNodeType(AdapterFloatTo8BitRange, [("Adapters", "From Float")])
+        self.addNodeType(AdapterFloatTo16BitRange, [("Adapters", "From Float")])
+        self.addNodeType(AdapterFloatToRange, [("Adapters", "From Float")])
+        self.addNodeType(ArithmeticFloatTo8BitNode, [("Adapters", "From Float")])
+        self.addNodeType(ArithmeticFloatTo16BitNode, [("Adapters", "From Float")])
+        self.addNodeType(Adapter16BitToRangeFloat, [("Adapters", "From 16 Bit")])
+        self.addNodeType(Adapter8BitToRangeFloat, [("Adapters", "From 8 Bit")])
+        self.addNodeType(CombineTwo8BitToSingle16Bit, [("Adapters", "From 8 Bit")])
+        self.addNodeType(Map8BitTo16Bit, [("Adapters", "From 8 Bit")])
+        self.addNodeType(AdapterColorToRGBNode, [("Adapters", "From Color")])
+        self.addNodeType(AdapterColorToRGBWNode, [("Adapters", "From Color")])
+        self.addNodeType(AdapterColorToRGBWANode, [("Adapters", "From Color")])
+        self.addNodeType(ColorToColorwheelAdapterNode, [("Adapters", "From Color")])
+        self.addNodeType(AdapterColorToFloatsNode, [("Adapters", "From Color")])
         self.addNodeType(ColorBrightnessMixinNode, [("Adapters",)])
+        self.addNodeType(DimmerBrightnessMixinNode, [("Adapters",)])
+        self.addNodeType(UniverseNode, [("Adapters",)])
 
     def _register_arithmetic_nodes(self) -> None:
         """Register all the arithmetics nodes."""
         # Add Node -> Arithmetic sub menu
         self.addNodeType(ArithmeticMACNode, [("Arithmetics",)])
-        self.addNodeType(ArithmeticFloatTo8BitNode, [("Arithmetics",)])
-        self.addNodeType(ArithmeticFloatTo16BitNode, [("Arithmetics",)])
         self.addNodeType(ArithmeticRoundNode, [("Arithmetics",)])
         self.addNodeType(ArithmeticLogarithmNode, [("Arithmetics",)])
         self.addNodeType(ArithmeticExponentialNode, [("Arithmetics",)])
@@ -212,17 +221,28 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(FaderHSIAUNode, [("Filter Fader",)])
 
     def _register_effect_nodes(self) -> None:
+        self.addNodeType(ColorDirectorVFilterNode, [("Effects",)])
+        self.addNodeType(ChaserNode, [("Effects",)])
         self.addNodeType(CueListNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
-        self.addNodeType(Shift8BitNode, [("Effects",)])
-        self.addNodeType(Shift16BitNode, [("Effects",)])
-        self.addNodeType(ShiftFloatNode, [("Effects",)])
-        self.addNodeType(ShiftColorNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
         self.addNodeType(SequencerNode, [("Effects",)])
+
+    def _register_routing_nodes(self) -> None:
+        self.addNodeType(Shift8BitNode, [("Routing",)])
+        self.addNodeType(Shift16BitNode, [("Routing",)])
+        self.addNodeType(ShiftFloatNode, [("Routing",)])
+        self.addNodeType(ShiftColorNode, [("Routing",)])
+        self.addNodeType(Switch8BitNode, [("Routing",)])
+        self.addNodeType(Switch16BitNode, [("Routing",)])
+        self.addNodeType(SwitchFloatNode, [("Routing",)])
+        self.addNodeType(SwitchColorNode, [("Routing",)])
 
     def _register_scripting_nodes(self) -> None:
         self.addNodeType(LuaFilterNode, [("Script",)])
 
     def _register_color_manip_nodes(self) -> None:
         self.addNodeType(ColorMixerVFilterNode, [("Color Manip",)])
+
+    def _register_misc_nodes(self) -> None:
+        self.addNodeType(EventSchedulerNode, [("Misc",)])

@@ -33,14 +33,20 @@ class SettingsDialog(QDialog):
         self.setMinimumHeight(300)
         self.setMinimumWidth(300)
         self.setWindowTitle("Setting: " + show.show_name)
-        exit_buttons = (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Apply |
-                        QDialogButtonBox.StandardButton.Cancel)
+        exit_buttons = (
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Apply
+            | QDialogButtonBox.StandardButton.Cancel
+        )
 
         self._category_tab_bar = QTabWidget(self)
         self._general_settings_tab = QWidget(self._category_tab_bar)
         general_layout = QFormLayout()
         self.show_file_tb = QLineEdit(self._general_settings_tab)
         general_layout.addRow("Show File Name: ", self.show_file_tb)
+        self._stage_filename_tb = QLineEdit(self._general_settings_tab)
+        self._stage_filename_tb.setToolTip("The specified stage file will be loaded when the show file is loaded.")
+        general_layout.addRow("Stage Filename: ", self._stage_filename_tb)
         self.show_notes_tb = QTextEdit(self._general_settings_tab)
         general_layout.addRow("Notes: ", self.show_notes_tb)
         self._general_settings_tab.setLayout(general_layout)
@@ -51,8 +57,9 @@ class SettingsDialog(QDialog):
         self._default_main_brightness_tb = QSpinBox(self._play_tab)
         self._default_main_brightness_tb.setMinimum(0)
         self._default_main_brightness_tb.setMaximum(255)
-        self._default_main_brightness_tb.setToolTip("At which brightness level should the main fader be after the "
-                                                    "show file has been loaded?")
+        self._default_main_brightness_tb.setToolTip(
+            "At which brightness level should the main fader be after the show file has been loaded?"
+        )
         play_layout.addRow("Default Main Brightness", self._default_main_brightness_tb)
         self._play_tab.setLayout(play_layout)
         self._category_tab_bar.addTab(self._play_tab, "Play")
@@ -60,9 +67,11 @@ class SettingsDialog(QDialog):
         self._editor_tab = QWidget(self._category_tab_bar)
         editor_layout = QFormLayout()
         self._brightness_mixin_enbled_cb = QCheckBox("Enable if no global dimmer", self._editor_tab)
-        self._brightness_mixin_enbled_cb.setToolTip("If this is checked, a fixture that is added will automatically "
-                                                    "connected to color brightness mixins, if no global dimmer is "
-                                                    "present.")
+        self._brightness_mixin_enbled_cb.setToolTip(
+            "If this is checked, a fixture that is added will automatically "
+            "connected to color brightness mixins, if no global dimmer is "
+            "present."
+        )
         self._brightness_mixin_enbled_cb.setChecked(True)
         editor_layout.addRow("Brightness Mixins", self._brightness_mixin_enbled_cb)
         self._show_ui_window_count_tb = QSpinBox(self._editor_tab)
@@ -95,8 +104,10 @@ class SettingsDialog(QDialog):
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)
+        self._stage_filename_tb.setText(new_show.ui_hints.get("associated_stage_file", ""))
         self._brightness_mixin_enbled_cb.setChecked(
-            str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
+            str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true"
+        )
         try:
             self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get("default_main_brightness") or "255"))
         except ValueError:
@@ -111,9 +122,14 @@ class SettingsDialog(QDialog):
         self._show.show_name = self.show_file_tb.text()
         self._show.notes = self.show_notes_tb.toPlainText()
         self._show.ui_hints["default_main_brightness"] = str(self._default_main_brightness_tb.value())
-        self._show.ui_hints[
-            "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
+        self._show.ui_hints["color-mixin-auto-add-disabled"] = (
+            "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
+        )
         self._show.ui_hints["show_ui_window_count"] = str(self._show_ui_window_count_tb.value())
+        stage_filename = str(self._stage_filename_tb.text()).strip()
+        if stage_filename and not stage_filename.endswith((".yaml", ".yml")):
+            stage_filename += ".yaml"
+        self._show.ui_hints["associated_stage_file"] = stage_filename
         update_window_count(self._show_ui_window_count_tb.value(), self._show)
 
     def _ok_button_pressed(self) -> None:

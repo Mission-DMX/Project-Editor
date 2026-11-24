@@ -11,3 +11,8 @@ class TransferFunction(Enum):
     SIGMOIDAL = "sig"
     EASE_IN = "e_i"
     EASE_OUT = "e_o"
+
+    @classmethod
+    def values(cls) -> list[str]:
+        """Get all valid transfer function identifiers."""
+        return [member.value for member in cls]

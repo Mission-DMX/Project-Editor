@@ -1,4 +1,5 @@
 """Style for UI."""
+from PySide6.QtGui import QColor
 
 APP = ""
 
@@ -69,3 +70,14 @@ CHANNEL_STYLE_COLOR = """
    border-radius: 5px;
    padding: 3px;
    """
+
+READY_MODE_INDICATOR_STYLE = """
+  background-color: #AA0000;
+  border-radius: 5px;
+  padding: 3px;
+  color: #000000;
+  text-align: center;
+"""
+
+SELECTION_BACKGROUND_COLOR = QColor(64, 64, 64)
+SELECTION_ACTIVE_COLOR = QColor(64, 64, 100)

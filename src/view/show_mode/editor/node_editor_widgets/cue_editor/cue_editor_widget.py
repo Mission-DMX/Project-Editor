@@ -78,9 +78,11 @@ class CueEditor(PreviewEditWidget):
         if self._bankset:
             self._bankset.update()
             BankSet.push_messages_now()
+        self._persistence_enabled_cb.setChecked(self._model.persistence_enabled)
 
     def _get_configuration(self) -> dict[str, str]:
         self._model.default_cue = self._default_cue_combo_box.currentIndex() - 1
+        self._model.persistence_enabled = self._persistence_enabled_cb.isChecked()
         return self._model.get_as_configuration()
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None) -> None:
@@ -112,6 +114,8 @@ class CueEditor(PreviewEditWidget):
         self._current_cue_another_play_pressed_checkbox.clicked.connect(self._cue_play_pressed_restart_changed)
         self._current_cue_another_play_pressed_checkbox.setEnabled(False)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
+        self._persistence_enabled_cb = QCheckBox("Enable Persistence", self._parent_widget)
+        cue_settings_container_layout.addWidget(self._persistence_enabled_cb)
 
         cue_settings_container_layout.addRow("Zoom", self.zoom_panel)
         cue_settings_container.setLayout(cue_settings_container_layout)
@@ -173,6 +177,7 @@ class CueEditor(PreviewEditWidget):
         toolbar.addSeparator()
         toolbar.addWidget(self.transition_type_select_widget)
         toolbar.addAction(self._gui_rec_action)
+        toolbar.addAction(self._record_from_image_action)
         top_layout.addWidget(toolbar)
 
     def _table_context_popup(self, pos: QPoint) -> None:
@@ -311,8 +316,9 @@ class CueEditor(PreviewEditWidget):
         """
         if cue_index < 0 or cue_index >= len(self._model.cues):
             return
-        if 0 <= self._last_selected_cue < len(self._model.cues):
-            self._model.cues[self._last_selected_cue] = self._timeline_container.cue
+        previous_cue = self._timeline_container.cue
+        if previous_cue is not None and 0 <= self._last_selected_cue < len(self._model.cues):
+            self._model.cues[self._last_selected_cue] = previous_cue
         c = self._model.cues[cue_index]
         self._timeline_container.cue = c
         self._current_cue_end_action_select_widget.setCurrentIndex(c.end_action.value)
@@ -404,20 +410,25 @@ class CueEditor(PreviewEditWidget):
         self._toolbar_remove_channel_action.setEnabled(len(self._model.cues) > 0 and len(self._model.channels) > 0)
 
     def _cue_end_action_changed(self) -> None:
+        cue = self._timeline_container.cue
+        if cue is None:
+            return
         action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
-        self._timeline_container.cue.end_action = action
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 2).setText(str(action))
+        cue.end_action = action
+        self._cue_list_widget.item(cue.index_in_editor - 1, 2).setText(str(action))
 
     def _cue_play_pressed_restart_changed(self) -> None:
-        self._timeline_container.cue.restart_on_another_play_press = (
-            self._current_cue_another_play_pressed_checkbox.checkState().Checked
-        )
+        cue = self._timeline_container.cue
+        if cue is None:
+            return
+        cue.restart_on_another_play_press = self._current_cue_another_play_pressed_checkbox.isChecked()
 
     def _rec_pressed(self) -> None:
         super()._rec_pressed()
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1).setText(
-            self._timeline_container.cue.duration_formatted
-        )
+        cue = self._timeline_container.cue
+        if cue is None:
+            return
+        self._cue_list_widget.item(cue.index_in_editor - 1, 1).setText(cue.duration_formatted)
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:

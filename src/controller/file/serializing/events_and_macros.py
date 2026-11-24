@@ -30,6 +30,8 @@ def _write_macro(root: "ET.Element", macro: "Macro") -> None:
     element = ET.SubElement(root, "macro", attrib={
         "name": str(macro.name),
     })
+    if macro.shared_context_id is not None:
+        element.attrib["contextID"] = macro.shared_context_id
     content_element = ET.SubElement(element, "content")
     content_element.text = macro.content
     for t in macro.all_triggers:

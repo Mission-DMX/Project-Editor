@@ -48,10 +48,10 @@ class Command(ABC):
         return "Unnamed Command"
 
     @property
-    def help(self) -> str:
+    def help_text(self) -> str:
         """Help text."""
         return self._help_text
 
-    @help.setter
-    def help(self, new_help: str) -> None:
+    @help_text.setter
+    def help_text(self, new_help: str) -> None:
         self._help_text = str(new_help)

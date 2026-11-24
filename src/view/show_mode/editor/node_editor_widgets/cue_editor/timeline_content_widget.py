@@ -59,6 +59,14 @@ class TimelineContentWidget(QWidget):
         """Current cursor position."""
         return self._cursor_position
 
+    @cursor_position.setter
+    def cursor_position(self, value: float) -> None:
+        self._cursor_position = value
+        self._last_clicked_kf_state = None
+        self._update_7seg_text()
+        self._compute_resize()
+        self.update()
+
     @property
     def cue_index(self) -> int:
         """Current cue index.
@@ -105,13 +113,12 @@ class TimelineContentWidget(QWidget):
         kf_line_brush.setStyle(Qt.HorPattern)
         for kf in self._frames:
             if kf:
-                i = 0
                 x = int(kf.timestamp / self._time_zoom)
                 painter.setBrush(kf_line_brush)
                 kf_states = kf._states
                 painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
                 painter.setBrush(light_gray_brush)
-                for s in kf_states:
+                for i, s in enumerate(kf_states):
                     if kf.only_on_channel is None:
                         y = 40 + i * CHANNEL_DISPLAY_HEIGHT
                     else:
@@ -140,7 +147,6 @@ class TimelineContentWidget(QWidget):
                         painter.drawText(x + 15, y + 21, str(s._value))
                     painter.fillPath(marker_path, selected_brush)
                     painter.drawText(x + 15, y + 9, s.transition)
-                    i += 1
 
         # render cursor, timescale and bars
         painter.setBrush(light_gray_brush)

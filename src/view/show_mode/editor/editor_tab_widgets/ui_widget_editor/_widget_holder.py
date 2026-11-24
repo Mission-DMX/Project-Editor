@@ -8,7 +8,7 @@ from PySide6.QtGui import QCloseEvent, QMouseEvent
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__name__)
 
@@ -43,7 +43,7 @@ class UIWidgetHolder(QWidget):
             self._close_button = QPushButton("X", self)
             self._close_button.resize(30, 30)
             self._close_button.move(self.width() - 40, 0)
-            self._close_button.clicked.connect(self.close)
+            self._close_button.clicked.connect(self._delete_and_close)
             self._edit_button = QPushButton("Edit", self)
             self._edit_button.resize(50, 30)
             self._edit_button.move(0, 0)
@@ -58,8 +58,8 @@ class UIWidgetHolder(QWidget):
 
     def update_size(self) -> None:
         """Update dimensions of show UI widget."""
-        self.setMinimumWidth(100)
-        self.setMinimumHeight(30)
+        self.setMinimumWidth(max(100, self._child.minimumSizeHint().width()))
+        self.setMinimumHeight(max(30, self._child.minimumSizeHint().height()))
         self.setMaximumHeight(65565)
         self.setMaximumWidth(65565)
 
@@ -68,7 +68,8 @@ class UIWidgetHolder(QWidget):
             minimum_size = child_layout.totalMinimumSize()
         else:
             minimum_size = self._child.minimumSize()
-            minimum_size = QSize(max(250, minimum_size.width()), max(100, minimum_size.height()))
+            if minimum_size.height() < 5 and minimum_size.width() < 5:
+                minimum_size = QSize(max(250, minimum_size.width()), max(100, minimum_size.height()))
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)
@@ -86,10 +87,6 @@ class UIWidgetHolder(QWidget):
         """
         self.closing.emit()
         self._model.close()
-        try:
-            self._model.parent.widgets.remove(self._model)
-        except ValueError:
-            pass
         super().closeEvent(event)
 
     @override
@@ -102,6 +99,8 @@ class UIWidgetHolder(QWidget):
         """
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
+        else:
+            event.ignore()
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -151,3 +150,10 @@ class UIWidgetHolder(QWidget):
             self._child.setEnabled(False)
         except RuntimeError as e:
             logger.exception("BUG! This widget is already deleted: %s", e)
+
+    def _delete_and_close(self) -> None:
+        try:
+            self._model.parent.remove_widget(self._model)
+        except ValueError as e:
+            logger.exception("BUG! Failed to remove widget from parent: %s", e)
+        self.close()

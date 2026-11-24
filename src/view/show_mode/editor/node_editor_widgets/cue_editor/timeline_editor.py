@@ -89,6 +89,15 @@ class TimelineContainer(QWidget):
     def bankset(self, bs: BankSet) -> None:
         self._keyframes_panel.used_bankset = bs
 
+    @property
+    def cursor_position(self) -> float:
+        """The current cursor position of the timeline."""
+        return self._keyframes_panel.cursor_position
+
+    @cursor_position.setter
+    def cursor_position(self, position: float) -> None:
+        self._keyframes_panel.cursor_position = position
+
     def add_channel(self, channel_type: DataType, name: str) -> None:
         """Add a channel to the editor.
 
@@ -117,22 +126,26 @@ class TimelineContainer(QWidget):
         # TODO reset self._keyframes_panel
 
     @property
-    def cue(self) -> Cue:
-        """Returns the edited cue."""
+    def cue(self) -> Cue | None:
+        """Return the edited cue or None if no cue is loaded."""
         return self._cue
 
     @cue.setter
-    def cue(self, c: Cue) -> None:
+    def cue(self, c: Cue | None) -> None:
         self._cue = c
+        self.update_cue_display()
+
+    def update_cue_display(self) -> None:
+        """Updates the display of the set cue."""
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()
         self._channel_label.clear_labels()
-        if c is not None:
-            for channel in c.channels:
+        if self._cue is not None:
+            for channel in self._cue.channels:
                 self.add_channel(channel[1], channel[0])
-            self._keyframes_panel.cue_index = c.index_in_editor
+            self._keyframes_panel.cue_index = self._cue.index_in_editor
             # TODO introduce property
-            self._keyframes_panel.frames = c._frames
+            self._keyframes_panel.frames = self._cue._frames
         else:
             self._keyframes_panel.frames = []
             self._keyframes_panel.cue_index = 0
@@ -177,11 +190,14 @@ class TimelineContainer(QWidget):
 
     def _generate_frames(self, time_point: float) -> None:
         """Generate key frames at a specified cursor time point for each channel."""
-        for c in self._cue.channels:
+        cue = self._cue
+        if cue is None:
+            return
+        for c in cue.channels:
             channel_name = c[0]
             if not self._channel_label.active_channels.get(channel_name):
                 continue
-            f = KeyFrame(self._cue)
+            f = KeyFrame(cue)
             f.timestamp = time_point
             f.only_on_channel = channel_name
             i = _get_column_from_name(channel_name)
@@ -190,9 +206,12 @@ class TimelineContainer(QWidget):
 
     def _generate_combined_frame(self, time_point: float) -> None:
         """Generate a single keyframe at the given cursor position containing data for all enabled channels."""
-        f = KeyFrame(self._cue)
+        cue = self._cue
+        if cue is None:
+            return
+        f = KeyFrame(cue)
         f.timestamp = time_point
-        for i, channel in enumerate(self._cue.channels):
+        for i, channel in enumerate(cue.channels):
             s = self._generate_state_from_channel(channel, i)
             f.append_state(s)
         self._keyframes_panel.insert_frame(f)

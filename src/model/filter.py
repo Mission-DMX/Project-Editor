@@ -80,8 +80,12 @@ class FilterTypeEnumeration(IntFlag):
     """Filter type enumeration.
 
     Negative values indicate virtual filters.
+
     """
 
+    VFILTER_COLORDIRECTOR = -15
+    VFILTER_COLOR_TO_COLORWHEEL = -14
+    VFILTER_DIMMER_BRIGHTNESS_MIXIN = -13
     VFILTER_SEQUENCER = -12
     VFILTER_COLOR_MIXER = -11
     VFILTER_IMPORT = -10
@@ -155,7 +159,7 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_ADAPTER_8BIT_TO_16BIT = 58
     FILTER_COLOR_MIXER_HSV = 59
     FILTER_COLOR_MIXER_ADDITIVE_RGB = 60
-    FILTER_COLOR_MIXER_NORMATVE_RGB = 61
+    FILTER_COLOR_MIXER_NORMATIVE_RGB = 61
     FILTER_SUM_8BIT = 62
     FILTER_SUM_16BIT = 63
     FILTER_SUM_FLOAT = 64
@@ -165,6 +169,16 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_REMOTE_DEBUG_PIXEL = 68
     FILTER_SEQUENCER = 69
     FILTER_EVENT_COUNTER = 70
+    FILTER_RESPONDING_CONSTANT_8BIT = 71
+    FILTER_RESPONDING_CONSTANT_16BIT = 72
+    FILTER_RESPONDING_CONSTANT_FLOAT = 73
+    FILTER_RESPONDING_CONSTANT_COLOR = 74
+    FILTER_COLOR_CHASER = 75
+    FILTER_SWITCH_8BIT = 76
+    FILTER_SWITCH_16BIT = 77
+    FILTER_SWITCH_FLOAT = 78
+    FILTER_SWITCH_COLOR = 79
+    FILTER_EVENT_SCHEDULER = 80
 
 
 class Filter:
@@ -190,7 +204,6 @@ class Filter:
         initial_parameters: The initial parameters of the filter.
 
         """
-        # TODO id why as string
         if pos is None:
             pos = [0.0, 0.0]
 
@@ -253,7 +266,11 @@ class Filter:
 
     @property
     def channel_links(self) -> dict[str, str]:
-        """Dict mapping the filter inputs to the connected outputs."""
+        """Dict mapping the filter inputs to the connected outputs.
+
+        Keys represent the input and the values the foreign output channels.
+
+        """
         return self._channel_links
 
     @property
@@ -303,16 +320,16 @@ class Filter:
 
         if self.is_virtual_filter:
             f = construct_virtual_filter_instance(
-                new_scene if new_scene else self.scene,
+                new_scene or self.scene,
                 self._filter_type,
-                new_id if new_id else self._filter_id,
+                new_id or self._filter_id,
                 pos=self._pos,
             )
             f.filter_configurations.update(self.filter_configurations.copy())
         else:
             f = Filter(
-                new_scene if new_scene else self.scene,
-                new_id if new_id else self._filter_id,
+                new_scene or self.scene,
+                new_id or self._filter_id,
                 self._filter_type,
                 self._pos,
                 self.filter_configurations.copy(),
@@ -341,7 +358,13 @@ class VirtualFilter(Filter, abc.ABC):
     that the show will be serialized for fish.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, filter_type: int, pos: tuple[int] | None = None) -> None:
+    def __init__(
+        self,
+        scene: Scene,
+        filter_id: str,
+        filter_type: int,
+        pos: tuple[int, int] | tuple[float, float] | None = None,
+    ) -> None:
         """Initialize a virtual filter.
 
         Args:
@@ -400,3 +423,19 @@ class VirtualFilter(Filter, abc.ABC):
         the filter element within the show file. Afterward the current state of the v-filter needs to be accessible
         purely by querying the configuration and parameters variables.
         """
+
+    def handle_filter_message(self, key: str, value: str) -> bool:
+        """Implement this method in order to handle filter messages targeting the virtual filter.
+
+        As virtual filters do not represent a single unit in a fish scene, the handling of filter messages
+        needs to be implemented with this method.
+
+        Args:
+            key: The key of the filter message.
+            value: The value of the filter message.
+
+        Returns:
+            True if execution was successful.
+
+        """
+        return False

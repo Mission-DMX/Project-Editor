@@ -7,6 +7,7 @@ import style
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet
 from model.ofl.fixture import UsedFixture
+from model.scene import Scene
 from model.universe import Universe
 from view.console_mode.console_channel_widget import ChannelWidget
 
@@ -112,7 +113,14 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                 index += 1
                 fixtures_per_bank = 0
 
+    def add_settings_to_scenes_default_values(self, scene: Scene) -> None:
+        """Add the current universes configuration to the scenes default values."""
+        for channel in self._universe.channels:
+            scene.insert_dmx_default_value(self._universe, channel.address, channel.value, supress_emission=True)
+
     def _add_fixture(self, fixture: UsedFixture) -> None:
+        if fixture.universe_id != self._universe.id:
+            return
         layout = self._universe_widget.layout()
         for channel_index in range(fixture.channel_length):
             channel_widget = ChannelWidget(

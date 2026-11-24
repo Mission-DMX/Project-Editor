@@ -1,9 +1,11 @@
-"""Constants filter nodes"""
+"""Constants filter nodes."""
 from logging import getLogger
+from typing import override
 
 from PySide6.QtGui import QBrush, QColor, QFontMetrics, QPainter
 
-from model import ColorHSI, DataType, Scene
+from model import DataType, Scene
+from model.color_hsi import ColorHSI
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -14,6 +16,7 @@ _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
 
 class TextPreviewRendererMixin(FilterNode):
+    """Mixin to render text based previews in filter nodes."""
 
     def __init__(self, model: Filter | Scene,
                  filter_type: int,
@@ -21,6 +24,7 @@ class TextPreviewRendererMixin(FilterNode):
                  terminals: dict[str, dict[str, str]] | None = None,
                  allow_add_input: bool = False,
                  allow_add_output: bool = False) -> None:
+        """Initialize."""
         super().__init__(model, filter_type, name, terminals, allow_add_input, allow_add_output)
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
@@ -41,9 +45,11 @@ class TextPreviewRendererMixin(FilterNode):
 
 class Constants8BitNode(TextPreviewRendererMixin):
     """Filter to represent an 8 bit value."""
+
     nodeName = "8_bit_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name, terminals={
             "value": {"io": "out"},
         })
@@ -55,6 +61,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_8_BIT
 
+    @override
     def update_node_after_settings_changed(self) -> None:
         try:
             self.filter.initial_parameters["value"] = str(
@@ -66,9 +73,11 @@ class Constants8BitNode(TextPreviewRendererMixin):
 
 class Constants16BitNode(TextPreviewRendererMixin):
     """Filter to represent a 16 bit value."""
+
     nodeName = "16_bit_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name, terminals={
             "value": {"io": "out"},
         })
@@ -80,6 +89,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_16_BIT
 
+    @override
     def update_node_after_settings_changed(self) -> None:
         try:
             self.filter.initial_parameters["value"] = str(
@@ -91,9 +101,11 @@ class Constants16BitNode(TextPreviewRendererMixin):
 
 class ConstantsFloatNode(TextPreviewRendererMixin):
     """Filter to represent a float/double value."""
+
     nodeName = "Float_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name, terminals={
             "value": {"io": "out"},
         })
@@ -105,6 +117,7 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
         self.filter.gui_update_keys["value"] = DataType.DT_DOUBLE
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
+    @override
     def update_node_after_settings_changed(self) -> None:
         try:
             self.filter.initial_parameters["value"] = str(
@@ -116,11 +129,15 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
 
 class ConstantsColorNode(FilterNode):
     """Filter to represent a color value.
-    TODO specify color format
+
+    Colors are stored as "h,s,i" where h is a float in [0,360], s and i are float in [0,1].
+
     """
+
     nodeName = "Color_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
             "value": {"io": "out"},
         })
@@ -143,6 +160,7 @@ class ConstantsColorNode(FilterNode):
         p.setBrush(self._color_brush)
         p.drawRect(x + 3, y + 3, 20, 20)
 
+    @override
     def update_node_after_settings_changed(self) -> None:
         try:
             self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
@@ -153,9 +171,11 @@ class ConstantsColorNode(FilterNode):
 
 class PanTiltConstant(FilterNode):
     """Filter to represent a pan/tilt position."""
+
     nodeName = "PanTilt_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name,
                          terminals={}, allow_add_output=True)
         try:
@@ -175,7 +195,7 @@ class PanTiltConstant(FilterNode):
             self.filter.filter_configurations["outputs"] = outputs_from_file
         except:
             self.filter.filter_configurations["outputs"] = "16bit"
-        self.setup_output_terminals()
+        self._setup_output_terminals()
         self.filter.gui_update_keys["pan"] = DataType.DT_DOUBLE
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
@@ -195,7 +215,7 @@ class PanTiltConstant(FilterNode):
         p.drawText(x + 3, y + fm.height() + 3, value_pan_str)
         p.drawText(x + 3, y + sheight, value_tilt_str)
 
-    def setup_output_terminals(self) -> None:
+    def _setup_output_terminals(self) -> None:
         existing_output_keys = list(self.outputs().keys())
         outputs = self.filter.filter_configurations["outputs"]
         match outputs:
@@ -227,7 +247,7 @@ class PanTiltConstant(FilterNode):
                 if "tilt16bit" not in existing_output_keys:
                     self.addOutput("tilt16bit")
 
-    def outputs_changed(self, eight_bit: bool, sixteen_bit: bool) -> None:
+    def _outputs_changed(self, eight_bit: bool, sixteen_bit: bool) -> None:
         self.filter.filter_configurations["outputs"] = \
             "both" if eight_bit and sixteen_bit else "8bit" if eight_bit else "16bit"
-        self.setup_output_terminals()
+        self._setup_output_terminals()

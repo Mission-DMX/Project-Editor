@@ -11,7 +11,8 @@ from logging import getLogger
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from model import ColorHSI, DataType
+from model import DataType
+from model.color_hsi import ColorHSI
 from model.filter_data.cues.cue import Cue, KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from model.filter_data.sequencer._utils import _rf
 from model.filter_data.transfer_function import TransferFunction

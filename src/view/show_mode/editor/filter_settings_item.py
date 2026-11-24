@@ -22,15 +22,23 @@ from PySide6.QtWidgets import (
 
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
+from view.show_mode.editor.node_editor_widgets.chaser_editor.color_chaser_widget import ColorChaserFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
+from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import ColorToColorwheelAdapterSetupWidget
+from .node_editor_widgets.colordirector_editor.widget import ColordirectorEditorWidget
 from .node_editor_widgets.column_select import ColumnSelect
+from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
+from .node_editor_widgets.event_scheduler_config_widget.event_scheduler_filter_config_widget import (
+    EventSchedulerSettingsWidget,
+)
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from .node_editor_widgets.number_constant_settings_widget import NumberConstantSettingsWidget
 from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
 
 if TYPE_CHECKING:
@@ -59,10 +67,16 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self._dialog = None
         self._filter_node = filter_node
         self._on_update = lambda: None
+        self._parent = parent
         self.setScale(0.2)
-        self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
+        self.update_position()
         self._filter = filter_
         self._mb_updated: bool = False
+
+    def update_position(self) -> None:
+        """Update the position of the button after the filter node size changed."""
+        self.setPos(0, 0)
+        self.moveBy(self._parent.boundingRect().width() / 2 - 6, self._parent.boundingRect().height() - 20)
 
     @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
@@ -131,9 +145,25 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ImportVFilterSettingsWidget(filter_)
     if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
         return ColorMixingSetupWidget()
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL):
+        return ColorToColorwheelAdapterSetupWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_SEQUENCER:
         return SequencerEditor(f=filter_)
-
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
+        return DimmerBrightnessMixinConfigWidget()
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_COLORDIRECTOR:
+        return ColordirectorEditorWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
+        return ColorChaserFilterConfigWidget(filter_)
+    if filter_.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+                               FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT]:
+        return NumberConstantSettingsWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_EVENT_SCHEDULER:
+        return EventSchedulerSettingsWidget()
     return None
 
 
@@ -146,7 +176,7 @@ class FilterSettingsDialog(QDialog):
         self._filter_node = filter_node
         self.filter = filter_node.filter
 
-        self.setWindowTitle("Filter Settings")
+        self.setWindowTitle(f"Filter Settings: {filter_node.filter.filter_id}")
         # Form layout:
         # Initial Parameters
         # ip1_name: ip1_value_editable
@@ -234,6 +264,8 @@ class FilterSettingsDialog(QDialog):
             self._special_widget.parent_closed(self._filter_node)
         else:
             self._filter_node.update_node_after_settings_changed()
+            if self._filter_node.fsi is not None:
+                self._filter_node.fsi.update_position()
         super().closeEvent(arg__1)
 
     @override

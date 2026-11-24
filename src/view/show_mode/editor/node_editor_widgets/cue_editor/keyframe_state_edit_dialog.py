@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model import ColorHSI
+from model.color_hsi import ColorHSI
 from model.filter_data.cues.cue import KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 
 

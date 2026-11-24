@@ -12,6 +12,7 @@ from controller.cli.asset_command import AssetCommand
 from controller.cli.bankset_command import BankSetCommand
 from controller.cli.connect_command import ConnectCommand
 from controller.cli.event_command import EventCommand
+from controller.cli.extract_command import ExtractCommand
 from controller.cli.fish_con_command import FishConnCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
@@ -106,6 +107,7 @@ class CLIContext:
             ConnectCommand(self),
             FishConnCommand(self),
             UIPageCommand(self),
+            ExtractCommand(self),
         ]
         self._selected_bank: BankSet | None = None
         self._selected_scene: Scene | None = None
@@ -118,7 +120,7 @@ class CLIContext:
             help="subcommands help", dest="subparser_name"
         )
         for c in self._commands:
-            c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
+            c.configure_parser(subparsers.add_parser(c.name, help=c.help_text, exit_on_error=False))
         if exit_available:
             subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
         self._return_text = ""

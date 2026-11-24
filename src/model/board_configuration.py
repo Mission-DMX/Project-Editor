@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Sequence
 from logging import getLogger
+from uuid import UUID
 
 import numpy as np
 from PySide6 import QtCore, QtGui
@@ -30,11 +31,12 @@ class BoardConfiguration:
         self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
         self._universes: dict[int, Universe] = {}
-        self._fixtures: list[UsedFixture] = []
+        self._fixtures: dict[UUID, UsedFixture] = {}
         self._ui_hints: dict[str, str] = {}
         self._macros: list[Macro] = []
 
         self._show_file_path: str = ""
+        self._has_unsaved_changes: bool = False
         self._broadcaster: Broadcaster = Broadcaster()
 
         self._broadcaster.add_universe.connect(self._add_universe)
@@ -67,6 +69,7 @@ class BoardConfiguration:
         self._scenes_index = {}
         self._ui_hints = {}
         self._show_file_path = ""
+        self._has_unsaved_changes = False
         self._filter_update_msg_register.clear()
         self._macros.clear()
 
@@ -100,7 +103,7 @@ class BoardConfiguration:
         self._universes.update({universe.id: universe})
 
     def _add_fixture(self, used_fixture: UsedFixture) -> None:
-        self._fixtures.append(used_fixture)
+        self._fixtures[used_fixture.uuid] = used_fixture
 
     def _delete_universe(self, universe: Universe) -> None:
         """Remove the passed universe from the list of universes.
@@ -110,7 +113,10 @@ class BoardConfiguration:
 
         """
         try:
-            del self._universes[universe.id]
+            uid = universe.id if isinstance(universe, Universe) else universe if isinstance(universe, int) else None
+            if uid is None:
+                raise ValueError("Expected a universe.")
+            del self._universes[uid]
         except ValueError:
             logger.exception("Unable to remove universe %s", universe.name)
 
@@ -146,7 +152,7 @@ class BoardConfiguration:
     @property
     def fixtures(self) -> Sequence[UsedFixture]:
         """Fixtures associated with this Show."""
-        return self._fixtures
+        return self._fixtures.values()
 
     @property
     def show_name(self) -> str:
@@ -210,6 +216,15 @@ class BoardConfiguration:
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
+    @property
+    def has_unsaved_changes(self) -> bool:
+        """Whether the show data contains changes that were not saved to the show file yet."""
+        return self._has_unsaved_changes
+
+    @has_unsaved_changes.setter
+    def has_unsaved_changes(self, has_unsaved_changes: bool) -> None:
+        self._has_unsaved_changes = has_unsaved_changes
+
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
         """Get a scene by her id."""
         looked_up_position = self._scenes_index.get(scene_id)
@@ -227,7 +242,7 @@ class BoardConfiguration:
             for c in candidate_list:
                 c(param)
 
-    def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
+    def register_filter_update_callback(self, target_scene: int | Scene, target_filter_id: str, c: Callable) -> None:
         """Register a new callback for filter update messages.
 
         If filter update messages are received, they need to be routed to their intended destination. This is done using
@@ -239,6 +254,8 @@ class BoardConfiguration:
             c: The callable to register.
 
         """
+        if isinstance(target_scene, Scene):
+            target_scene = target_scene.scene_id
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
             callable_list = set()
@@ -246,7 +263,7 @@ class BoardConfiguration:
         if c not in callable_list:
             callable_list.add(c)
 
-    def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
+    def remove_filter_update_callback(self, target_scene: int | Scene, target_filter_id: str, c: Callable) -> None:
         """Remove a previously registered callback.
 
         Args:
@@ -255,11 +272,29 @@ class BoardConfiguration:
             c: The callable to be removed.
 
         """
+        if isinstance(target_scene, Scene):
+            target_scene = target_scene.scene_id
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
             return
         if c in callable_list:
             callable_list.remove(c)
+
+    def clear_filter_update_callbacks(self, target_scene: int, target_filter_id: str) -> None:
+        """Clear out all callbacks for provided filter.
+
+        This removes every callback registered for the provided filter including the ones registered by other
+        components. It is intended for components owning all callbacks of their (internal) filters, such as virtual
+        filters cleaning up the callbacks they registered for their generated sub filters. Use
+        remove_filter_update_callback instead if other components may have registered callbacks for the same filter
+        as well.
+
+        Args:
+            target_scene: The scene the callbacks belongs to.
+            target_filter_id: The filter id which they are listening on.
+
+        """
+        self._filter_update_msg_register.pop((target_scene, target_filter_id), None)
 
     def add_macro(self, macro: Macro) -> None:
         """Add a new macro to the show file.
@@ -312,3 +347,30 @@ class BoardConfiguration:
         ]
 
         return np.concatenate(ranges) if ranges else np.array([], dtype=int)
+
+    def get_fixture(self, fixture_id: str | UUID) -> UsedFixture | None:
+        """Get the fixture specified by its id."""
+        if fixture_id == "" or fixture_id is None:
+            return None
+        if not isinstance(fixture_id, UUID):
+            fixture_id = UUID(fixture_id)
+        return self._fixtures.get(fixture_id)
+
+    def get_fixture_by_address(self, fixture_univ: int, fixture_chan: int) -> UsedFixture | None:
+        """Search for a fixture matching the provided address.
+
+        Args:
+            fixture_univ: The universe of the fixture.
+            fixture_chan: A channel of the fixture.
+
+        Returns:
+            The fixture or None if no fixture was found.
+
+        """
+        for fixture in self._fixtures.values():
+            if (
+                fixture.universe_id == fixture_univ
+                and fixture.start_index <= fixture_chan < fixture.start_index + fixture.channel_length
+            ):
+                return fixture
+        return None

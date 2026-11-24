@@ -6,7 +6,7 @@ from collections.abc import Callable
 from PySide6.QtWidgets import QFileDialog, QWidget
 
 from controller.file.read import read_document
-from controller.file.write import write_document
+from controller.file.write import export_document, write_document
 from model import BoardConfiguration
 
 
@@ -54,8 +54,10 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
         show_data: Board configuration to be saved.
 
     """
-    if write_document(file_name, show_data) and show_data.file_path != file_name:
-        show_data.file_path = file_name
+    if write_document(file_name, show_data):
+        show_data.has_unsaved_changes = False
+        if show_data.file_path != file_name:
+            show_data.file_path = file_name
 
 
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
@@ -78,3 +80,13 @@ def show_load_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) ->
 
     """
     _select_file(parent, _load_show_file, False, show_data)
+
+def open_show_export_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
+    """Opens a dialog to export the provided show by fish in standalone mode."""
+    file_dialog = QFileDialog(parent, "Export Show")
+    file_dialog.setNameFilter("Fish Standalone Show (*.fs)")
+    file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+    file_dialog.setDefaultSuffix(".fs")
+    file_dialog.setDirectory(os.path.expanduser("~"))
+    file_dialog.fileSelected.connect(lambda file_name: export_document(file_name, show_data))
+    file_dialog.show()
