@@ -26,11 +26,19 @@ def _has_type(channel: FixtureChannel | None, type_mask: FixtureChannelType) -> 
     return bool(channel.type & type_mask)
 
 
-def _is_fine(name: str | None) -> bool:
-    """Return True if ``name`` follows the OFL fine-channel naming convention."""
-    if not name:
+def _is_fine(channel: FixtureChannel | None) -> bool:
+    """Return True if ``channel`` is the fine-resolution companion of a coarse channel.
+
+    Prefers the structural signal carried by ``FixtureChannel.is_fine`` (derived from the OFL
+    ``fineChannelAliases`` lookup). When the channel has no template — e.g. matrix-expanded
+    channels that are not individually listed in ``availableChannels`` — we fall back to the
+    "fine" substring heuristic on the channel name.
+    """
+    if channel is None:
         return False
-    return "fine" in name.lower()
+    if channel.channel_template is not None:
+        return channel.is_fine
+    return "fine" in (channel.name or "").lower()
 
 
 def _channel_at(fixture: UsedFixture, index: int) -> FixtureChannel | None:
@@ -155,6 +163,13 @@ def _check_and_add_auxiliary_filters(
     added_depth = 0
     y_shift = y
 
+    # Precompute the fine-intensity channels once. They only matter inside the dimmer branch below,
+    # and recomputing them per candidate channel was an O(N^2) spike flagged in review.
+    fine_intensity_channels: list[FixtureChannel] = [
+        fc for fc in fixture.fixture_channels if _has_type(fc, FixtureChannelType.INTENSITY) and _is_fine(fc)
+    ]
+    double_channel_dimmer_required = bool(fine_intensity_channels)
+
     def compute_filter_height(channel_count_: int, filter_index: int, filter_chan_count: int = 1) -> float:
         nonlocal y_shift
         f = float(10 * channel_count_ + filter_index * 45 + y_shift)
@@ -171,28 +186,28 @@ def _check_and_add_auxiliary_filters(
             next3 = _channel_at(fixture, index + 3)
 
             is_pan_tilt_fine = (
-                _is_fine(channel.name)
+                _is_fine(channel)
                 and _has_type(channel, _PAN_TILT_MASK)
                 and prev_channel is not None
-                and not _is_fine(prev_channel.name)
+                and not _is_fine(prev_channel)
                 and bool(prev_channel.type & channel.type & _PAN_TILT_MASK)
             )
 
             is_rgb_start = (
                 _has_type(channel, FixtureChannelType.RED)
-                and not _is_fine(channel.name)
+                and not _is_fine(channel)
                 and _has_type(next1, FixtureChannelType.GREEN)
-                and not _is_fine(next1.name if next1 else None)
+                and not _is_fine(next1)
                 and _has_type(next2, FixtureChannelType.BLUE)
-                and not _is_fine(next2.name if next2 else None)
+                and not _is_fine(next2)
             )
             has_adjacent_white = (
                 is_rgb_start
                 and _has_type(next3, FixtureChannelType.WHITE)
-                and not _is_fine(next3.name if next3 else None)
+                and not _is_fine(next3)
             )
 
-            is_dimmer = _has_type(channel, FixtureChannelType.INTENSITY) and not _is_fine(channel.name)
+            is_dimmer = _has_type(channel, FixtureChannelType.INTENSITY) and not _is_fine(channel)
 
             if is_pan_tilt_fine:
                 adapter_name = _sanitize_name(f"pos2channel_{i}_{name}")
@@ -253,10 +268,6 @@ def _check_and_add_auxiliary_filters(
                 i += 1
             elif is_dimmer:
                 dimmer_name = _sanitize_name(f"dimmer_{i}_{name}")
-                double_channel_dimmer_required = any(
-                    _has_type(fc, FixtureChannelType.INTENSITY) and _is_fine(fc.name)
-                    for fc in fixture.fixture_channels
-                )
                 global_dimmer_filter = DimmerGlobalBrightnessMixinVFilter(
                     scene=fp.parent_scene,
                     filter_id=dimmer_name,
@@ -293,9 +304,8 @@ def _check_and_add_auxiliary_filters(
 
                 if double_channel_dimmer_required:
                     universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_upper"
-                    for fc in fixture.fixture_channels:
-                        if _has_type(fc, FixtureChannelType.INTENSITY) and _is_fine(fc.name):
-                            universe_filter.channel_links[_sanitize_name(fc.name)] = adapter_name + ":value_lower"
+                    for fc in fine_intensity_channels:
+                        universe_filter.channel_links[_sanitize_name(fc.name)] = adapter_name + ":value_lower"
                 else:
                     universe_filter.channel_links[_sanitize_name(channel.name)] = dimmer_name + ":dimmer_out8b"
 

@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import os
-import zipfile
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-import requests
 from PySide6 import QtWidgets
 
 import style
+from controller.utils.fixture_library import ensure_fixture_library
 from layouts.flow_layout import FlowLayout
 from model.ofl.manufacture import Manufacture, generate_manufacturers
 from view.dialogs.patching_dialog import PatchingDialog
@@ -32,24 +31,9 @@ class PatchingSelect(QtWidgets.QScrollArea):
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent)
         self._board_configuration = board_configuration
-        cache_path = "/var/cache/missionDMX"
-        if not os.path.exists(cache_path):
-            os.mkdir(cache_path)
-        fixtures_path = os.path.join(cache_path, "fixtures/")
-        zip_path = os.path.join(cache_path, "fixtures.zip")
+        fixtures_path = ensure_fixture_library("/var/cache/missionDMX")
         if not os.path.exists(fixtures_path):
-            logger.info("Downloading fixture library. Please wait")
-            url = "https://open-fixture-library.org/download.ofl"
-            r = requests.get(url, allow_redirects=True, timeout=5)
-            if r.status_code != 200:
-                logger.error("Failed to download fixture library")
-                return
-
-            with open(zip_path, "wb") as file:
-                file.write(r.content)
-            with zipfile.ZipFile(zip_path) as zip_ref:
-                zip_ref.extractall(fixtures_path)
-            logger.info("Fixture lib downloaded and installed.")
+            return
         manufacturers: list[tuple[Manufacture, list[OflFixture]]] = generate_manufacturers(fixtures_path)
         self.index = 0
         self.container = QtWidgets.QStackedWidget()

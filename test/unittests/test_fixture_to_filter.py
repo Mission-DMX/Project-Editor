@@ -1,12 +1,16 @@
 """Unit tests for :mod:`controller.show_manipulation.fixture_to_filter`.
 
-Loads a representative set of OFL fixture definitions from the system-installed
-``/var/cache/missionDMX/fixtures`` library and asserts that
-:func:`place_fixture_filters_in_scene` wires up the expected adapter filters.
-These tests guard against regressions like
+Downloads a pinned OFL fixture library into a per-run temp directory and asserts that
+:func:`place_fixture_filters_in_scene` wires up the expected adapter filters. These tests
+guard against regressions like
 `#330 <https://github.com/Mission-DMX/Project-Editor/issues/330>`__ where a channel
 whose white segment is not literally named ``"White"`` silently fell back to the
 RGB-only adapter, leaving the W segment unconnected.
+
+Using a temp directory under ``/tmp`` avoids clobbering the user's local
+``/var/cache/missionDMX/fixtures`` (which may hold user-modified or custom fixtures).
+The directory is removed in ``tearDownClass``. Composability with user-local custom
+fixtures is explicitly out of scope — tracked as a separate TODO.
 
 The tests do not need a running fish instance; they build filters in-memory and
 inspect the resulting ``channel_links`` / filter types.
@@ -15,6 +19,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import tempfile
 import unittest
 from dataclasses import dataclass, field
 from logging import getLogger
@@ -36,6 +42,7 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 _APP = QApplication.instance() or QApplication([])
 
 from controller.show_manipulation.fixture_to_filter import place_fixture_filters_in_scene  # noqa: E402
+from controller.utils.fixture_library import ensure_fixture_library  # noqa: E402
 from model import BoardConfiguration, Scene  # noqa: E402
 from model.filter import FilterTypeEnumeration  # noqa: E402
 from model.ofl.fixture import UsedFixture  # noqa: E402
@@ -43,13 +50,10 @@ from model.ofl.ofl_fixture import OflFixture  # noqa: E402
 
 logger = getLogger(__name__)
 
-_FIXTURE_DIR = "/var/cache/missionDMX/fixtures"
-"""System-installed OFL fixture library. Expected to be present on any host running the test suite."""
 
-
-def _load_ofl(relative_path: str) -> OflFixture:
-    """Load an OFL fixture definition from the system fixture library."""
-    full_path = os.path.join(_FIXTURE_DIR, relative_path)
+def _load_ofl(fixture_dir: str, relative_path: str) -> OflFixture:
+    """Load an OFL fixture definition from the given fixture directory."""
+    full_path = os.path.join(fixture_dir, relative_path)
     with open(full_path, "r", encoding="UTF-8") as f:
         data = json.load(f)
     data["fileName"] = relative_path
@@ -120,42 +124,36 @@ class FixtureToFilterTest(unittest.TestCase):
         ),
         FixtureBuildExpectation(
             fixture_path="stairville/sonicpulse-led-bar-10.json",
-            mode="4Ch",
+            mode="4-channel",
             expected_rgbw=1,
-            rgb_links_must_reference=["Red", "Green", "Blue", "White"],
+            rgb_links_must_reference=["Red Master", "Green Master", "Blue Master", "White Master"],
         ),
         FixtureBuildExpectation(
             fixture_path="stairville/sonicpulse-led-bar-10.json",
-            mode="6Ch",
-            expected_rgbw=1,
-            expected_dimmer=1,
-            rgb_links_must_reference=["Red", "Green", "Blue", "White", "Dimmer"],
-        ),
-        FixtureBuildExpectation(
-            fixture_path="stairville/sonicpulse-led-bar-10.json",
-            mode="11Ch",
+            mode="6-channel",
             expected_rgbw=1,
             expected_dimmer=1,
+            rgb_links_must_reference=["Red Master", "Green Master", "Blue Master", "White Master", "Dimmer"],
         ),
-        # --- Segment-based fixtures: the original #330 regression case ---
-        # These are the exact fixtures that fell into the RGB-only branch because the
-        # fourth colour channel was named "White Segment N" instead of literally "White".
         FixtureBuildExpectation(
             fixture_path="stairville/sonicpulse-led-bar-10.json",
-            mode="23Ch",
-            expected_rgbw=4,
+            mode="11-channel",
+            expected_rgbw=1,
+            expected_dimmer=1,
+        ),
+        # --- Matrix-based segment fixture: the original #330 regression case. The eight
+        # per-pixel segments expand into channels like "White Segment 1"; without the fix
+        # these fell into the RGB-only branch because the fourth channel was not literally
+        # named "White".
+        FixtureBuildExpectation(
+            fixture_path="stairville/sonicpulse-led-bar-10.json",
+            mode="39-channel",
+            expected_rgbw=8,
             expected_dimmer=1,
             rgb_links_must_reference=[
                 "Red Segment 1", "Green Segment 1", "Blue Segment 1", "White Segment 1",
-                "Red Segment 4", "Green Segment 4", "Blue Segment 4", "White Segment 4",
+                "Red Segment 8", "Green Segment 8", "Blue Segment 8", "White Segment 8",
             ],
-        ),
-        FixtureBuildExpectation(
-            fixture_path="stairville/sonicpulse-led-bar-10.json",
-            mode="39Ch",
-            expected_rgbw=8,
-            expected_dimmer=1,
-            rgb_links_must_reference=["White Segment 1", "White Segment 8"],
         ),
         # --- Moving heads: Pan + Tilt (coarse-only) ---
         FixtureBuildExpectation(
@@ -218,11 +216,52 @@ class FixtureToFilterTest(unittest.TestCase):
             expected_dimmer=1,
             rgb_links_must_reference=["Red", "Green", "Blue", "White", "Dimmer"],
         ),
+        # --- RGBA fixture (R-G-B-Amber): no White slot, so the RGB adapter is emitted and Amber
+        # is routed as a plain universe output (recorded in filter_configurations rather than
+        # channel_links). Documents current behaviour; a dedicated RGBA adapter would be a
+        # follow-up. ---
+        FixtureBuildExpectation(
+            fixture_path="generic/rgba-fader.json",
+            mode="8 bit",
+            expected_rgb=1,
+            rgb_links_must_reference=["Red", "Green", "Blue"],
+        ),
+        # --- RGBWAUV fixture: the R-G-B-W prefix still triggers the RGBW adapter; Amber + UV
+        # are wired as plain universe outputs (filter_configurations, not channel_links).
+        # Guards against regressions in the RGBW branch when extra colour segments follow
+        # White. ---
+        FixtureBuildExpectation(
+            fixture_path="generic/rgbwauv-fader.json",
+            mode="8 bit",
+            expected_rgbw=1,
+            rgb_links_must_reference=["Red", "Green", "Blue", "White"],
+        ),
     ]
+
+    _fixture_dir: str = ""
+    _tmp_cache_dir: str = ""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        """Download the OFL fixture library into a per-run temp directory.
+
+        Users typically have a locally-modified fixture library under
+        ``/var/cache/missionDMX/fixtures``; the test intentionally does not touch that
+        location to avoid interfering with the user's environment.
+        """
+        cls._tmp_cache_dir = tempfile.mkdtemp(prefix="mdmx_fixtures_")
+        cls._fixture_dir = ensure_fixture_library(cls._tmp_cache_dir)
+        if not os.path.isdir(cls._fixture_dir):
+            raise unittest.SkipTest(
+                f"Failed to download OFL fixture library into {cls._tmp_cache_dir!r}. "
+                "Check network connectivity to open-fixture-library.org."
+            )
 
     @classmethod
     def tearDownClass(cls) -> None:
-        """Restore the working directory that was active before module import."""
+        """Delete the downloaded fixture library and restore the working directory."""
+        if cls._tmp_cache_dir and os.path.isdir(cls._tmp_cache_dir):
+            shutil.rmtree(cls._tmp_cache_dir, ignore_errors=True)
         if _ORIGINAL_CWD and os.getcwd() != _ORIGINAL_CWD:
             os.chdir(_ORIGINAL_CWD)
 
@@ -233,7 +272,7 @@ class FixtureToFilterTest(unittest.TestCase):
         return board, scene
 
     def _run_case(self, case: FixtureBuildExpectation) -> None:
-        ofl = _load_ofl(case.fixture_path)
+        ofl = _load_ofl(self._fixture_dir, case.fixture_path)
         mode_idx = _mode_index(ofl, case.mode)
         board, scene = self._build_scene()
         fixture = UsedFixture(board, ofl, mode_idx, parent_universe=1, start_index=0)
@@ -317,14 +356,15 @@ class FixtureToFilterTest(unittest.TestCase):
     def test_rgbw_white_segment_regression(self) -> None:
         """Explicit regression guard for #330.
 
-        A segmented 23-channel fixture whose white channels are named
-        ``"White Segment N"`` must produce one ColorToRGBW adapter per segment
-        and must *not* fall back to the RGB-only adapter.
+        The upstream 39-channel mode of ``stairville/sonicpulse-led-bar-10`` expands
+        eight matrix segments into channels named ``"White Segment N"``. Without the
+        fix these fell into the RGB-only branch because the W channel name no longer
+        literally matched ``"White"``.
         """
         case = FixtureBuildExpectation(
             fixture_path="stairville/sonicpulse-led-bar-10.json",
-            mode="23Ch",
-            expected_rgbw=4,
+            mode="39-channel",
+            expected_rgbw=8,
             expected_rgb=0,
             expected_dimmer=1,
         )
@@ -332,14 +372,14 @@ class FixtureToFilterTest(unittest.TestCase):
 
         # Also verify the universe filter actually binds the white segments through the RGBW
         # adapter and does not leave them dangling.
-        ofl = _load_ofl(case.fixture_path)
+        ofl = _load_ofl(self._fixture_dir, case.fixture_path)
         mode_idx = _mode_index(ofl, case.mode)
         board, scene = self._build_scene()
         fixture = UsedFixture(board, ofl, mode_idx, parent_universe=1, start_index=0)
         place_fixture_filters_in_scene(fixture, scene.pages[0])
         universe_filter = self._universe_filter(scene.filters)
         self.assertIsNotNone(universe_filter)
-        for segment in range(1, 5):
+        for segment in range(1, 9):
             key = f"White_Segment_{segment}"
             self.assertIn(key, universe_filter.channel_links)
             self.assertTrue(
