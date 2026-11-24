@@ -5,6 +5,7 @@ FISH_EXEC_PATH pointing to a local fish binary.
 """
 import os.path
 import subprocess
+from collections.abc import Callable
 from logging import getLogger
 from time import sleep
 
@@ -32,7 +33,7 @@ def _stall_until_stdout_reached_target(process: subprocess.Popen, target: str):
 _last_error_message = ""
 _GOOD_MESSAGES = ["No Error occured", "Showfile Applied."]
 
-def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, recorded_gui_updates: list[tuple[int, str, str, str]] | None = None, main_brightness: int = 65565) -> bool:
+def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, recorded_gui_updates: list[tuple[int, str, str, str]] | None = None, main_brightness: int = 65565, after_apply: Callable[[NetworkManager, QApplication], None] | None = None) -> bool:
     """Execute a board configuration.
 
     This method starts a fish instance, connects to it, uploads a board configuration and enables filter execution.
@@ -43,6 +44,9 @@ def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, record
         cycles: The amount of cycles to wait
         recorded_gui_updates: If A list is provided, any GUI updates received during execution are stored in there.
         main_brightness: The Main brightness value used for the test.
+        after_apply: Optional callback invoked once right after the show file was applied and the main brightness
+            fader was set. Receives the active NetworkManager and QApplication so additional messages can be sent
+            or events processed before the evaluation phase runs.
 
     Returns:
         True if no error occurred during execution. Otherwise, false.
@@ -100,6 +104,8 @@ def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, record
         logger.error("Final error state from fish was: %s. Failing execution.", _last_error_message)
         error_occurred = True
     nm.set_main_brightness_fader_position(int((main_brightness / 65565) * 255))
+    if after_apply is not None and not error_occurred:
+        after_apply(nm, application)
     logger.info("Evaluating execution...")
     if not error_occurred:
         for i in range(cycles * 4):

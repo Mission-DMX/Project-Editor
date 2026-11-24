@@ -1,10 +1,15 @@
 """Module containing node editor"""
 from logging import getLogger
+from typing import override
 
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
-from PySide6.QtWidgets import QGridLayout, QWidget
+from pyqtgraph.flowchart.Terminal import ConnectionItem
+from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtWidgets import QGraphicsSceneMouseEvent, QGridLayout, QWidget
 
 from model import Scene
+from model.broadcaster import Broadcaster
+from model.filter import VirtualFilter
 from model.scene import FilterPage
 from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
 
@@ -28,11 +33,16 @@ class NodeEditorWidget(QWidget):
         # Flag to differentiate between loading filters from file and creating filters.
         self._loading = False
         self._library = FilterNodeLibrary()
+        self._pick_mode_active: bool = False
 
         layout = QGridLayout()
         self.setLayout(layout)
 
         self._populate_flowchart()
+
+        broadcaster = Broadcaster()
+        broadcaster.scope_edge_pick_requested.connect(self._enter_pick_mode)
+        broadcaster.scope_edge_pick_cancelled.connect(self._exit_pick_mode)
 
     def _populate_flowchart(self) -> None:
         self._flowchart = FilterFlowchart(page=self._page, library=self._library)
@@ -101,3 +111,69 @@ class NodeEditorWidget(QWidget):
     def refresh(self) -> None:
         self.layout().removeWidget(self._flowchart.widget().chartWidget.viewDock)
         self._populate_flowchart()
+
+    def _enter_pick_mode(self) -> None:
+        # Only the visible editor should capture the next edge click.
+        if not self.isVisible() or self._pick_mode_active:
+            return
+        self._pick_mode_active = True
+        scene = self._flowchart.scene
+        if scene is not None:
+            scene.installEventFilter(self)
+        view = self._flowchart.widget().chartWidget.view
+        view.setCursor(Qt.CursorShape.CrossCursor)
+
+    def _exit_pick_mode(self) -> None:
+        if not self._pick_mode_active:
+            return
+        self._pick_mode_active = False
+        scene = self._flowchart.scene
+        if scene is not None:
+            scene.removeEventFilter(self)
+        view = self._flowchart.widget().chartWidget.view
+        view.unsetCursor()
+
+    @override
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if not self._pick_mode_active:
+            return super().eventFilter(watched, event)
+        if event.type() == QEvent.Type.GraphicsSceneMousePress and isinstance(event, QGraphicsSceneMouseEvent):
+            if event.button() == Qt.MouseButton.RightButton:
+                Broadcaster().scope_edge_pick_cancelled.emit()
+                return True
+            if event.button() != Qt.MouseButton.LeftButton:
+                return super().eventFilter(watched, event)
+            scene = self._flowchart.scene
+            if scene is None:
+                return super().eventFilter(watched, event)
+            for item in scene.items(event.scenePos()):
+                if isinstance(item, ConnectionItem):
+                    # pyqtgraph's source/target orientation depends on which
+                    # end initiated the connection drag, so pick whichever is
+                    # the output terminal.
+                    endpoints = [item.source.term, item.target.term]
+                    output_terms = [t for t in endpoints if t.isOutput()]
+                    if not output_terms:
+                        continue
+                    out_term: Terminal = output_terms[0]
+                    source_filter_node = out_term.node()
+                    source_filter = getattr(source_filter_node, "filter", None)
+                    port_name = out_term.name()
+                    if isinstance(source_filter, VirtualFilter):
+                        resolved = source_filter.resolve_output_port_id(port_name)
+                        if resolved is None:
+                            logger.warning("Virtual filter %s has no output port %s",
+                                           source_filter.filter_id, port_name)
+                            Broadcaster().scope_edge_pick_cancelled.emit()
+                            return True
+                        channel_id = resolved
+                    else:
+                        channel_id = f"{source_filter_node.name()}:{port_name}"
+                    data_type = source_filter.out_data_types.get(port_name) if source_filter else None
+                    Broadcaster().scope_edge_picked.emit(channel_id, data_type)
+                    Broadcaster().scope_edge_pick_cancelled.emit()
+                    return True
+            # Click missed a connection — cancel so the user isn't stuck.
+            Broadcaster().scope_edge_pick_cancelled.emit()
+            return True
+        return super().eventFilter(watched, event)
