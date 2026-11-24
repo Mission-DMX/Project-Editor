@@ -1,4 +1,4 @@
-"""select Manufacturer"""
+"""Select Manufacturer."""
 
 from __future__ import annotations
 
@@ -26,9 +26,10 @@ logger = getLogger(__name__)
 
 
 class PatchingSelect(QtWidgets.QScrollArea):
-    """select Manufacturer"""
+    """Select Manufacturer."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
+        """Initialize the patching select widget."""
         super().__init__(parent)
         self._board_configuration = board_configuration
         fixtures_path = ensure_fixture_library("/var/cache/missionDMX")
@@ -89,24 +90,22 @@ class PatchingSelect(QtWidgets.QScrollArea):
         return fixture_item
 
     def select_fixture(self, index: int) -> None:
-        """select_fixture"""
+        """Select fixture."""
         self.container.setCurrentIndex(index)
 
     def reset(self) -> None:
-        """reset to start"""
+        """Reset to start."""
         self.container.setCurrentIndex(self.container.count() - 1)
 
     def _run_patch(self, fixture: OflFixture, index: int) -> None:
-        """run the patching dialog"""
+        """Run the patching dialog."""
         dialog = PatchingDialog(self._board_configuration, (fixture, index))
         dialog.finished.connect(lambda: self._patch(dialog))
 
         dialog.open()
 
     def _patch(self, form: PatchingDialog) -> None:
-        """
-        patch fixtures from PatchingDialog
-        """
+        """Patch fixtures from PatchingDialog."""
         if form.result():
             form.generate_fixtures()
         self._board_configuration.broadcaster.view_leave_patching.emit()
