@@ -5,12 +5,15 @@ Usage:
     writeDocument("ShowFiles/show_file.xml", xml)
 """
 import os
+from logging import getLogger
 from shutil import copyfile
 from xml.etree import ElementTree as ET
 
 from controller.file.serializing.general_serialization import create_xml
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration
+
+logger = getLogger(__name__)
 
 
 def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
@@ -28,23 +31,22 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     """
     pn = get_process_notifier("Saving Showfile", 2)
     xml = create_xml(show_data, pn)
-    if os.path.exists(file_name):
-        # TODO introduce proper version control
-        copyfile(file_name, os.path.splitext(file_name)[0] + ".show_backup")
-    pn.current_step_description = "Writing to disk."
-    pn.current_step_number += 1
-    with open(file_name, "w+", encoding="UTF-8") as file:
-        ET.indent(xml)
-        file.write(ET.tostring(xml, encoding="unicode", method="xml"))
+    try:
+        if os.path.exists(file_name):
+            # TODO introduce proper version control
+            copyfile(file_name, os.path.splitext(file_name)[0] + ".show_backup")
+        pn.current_step_description = "Writing to disk."
+        pn.current_step_number += 1
+        with open(file_name, "w+", encoding="UTF-8") as file:
+            ET.indent(xml)
+            file.write(ET.tostring(xml, encoding="unicode", method="xml"))
+    except OSError as error:
+        logger.exception("Could not save %s: %s", file_name, error)
+        pn.close()
+        return False
     pn.current_step_number += 1
     pn.close()
     return True
-    # try:
-    #
-    #    return True
-    # except IOError:
-    #    print(f"Could not save {file_name}")
-    #    return False
 
 
 def export_document(file_name: str, show_data: BoardConfiguration) -> bool:

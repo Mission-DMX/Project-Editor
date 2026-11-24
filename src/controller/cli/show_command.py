@@ -49,11 +49,11 @@ class ShowCommand(Command):
         )
 
         load_parser: ArgumentParser = subparsers.add_parser("load", help="Load a show file", exit_on_error=False)
-        load_parser.add_argument("filename", help="The location of the .show file.", type=str)
+        load_parser.add_argument("filename", help="The location of the .show file.")
 
         save_parser: ArgumentParser = subparsers.add_parser("save", help="Save a show file", exit_on_error=False)
         save_parser.add_argument("filename", help="The location of the .show file. Optional.", default="",
-                                 type=str, nargs="?")
+                                 nargs="?")
 
         scene_parser: ArgumentParser = subparsers.add_parser(
             "select-scene", help="Select a specific scene in the running show.", exit_on_error=False
@@ -91,15 +91,18 @@ class ShowCommand(Command):
             case "load":
                 return read_document(args.filename, self.context.show)
             case "save":
-                if args.filename is not None and len(args.filename) > 0:
-                    chosen_file_name = args.filename
-                else:
-                    chosen_file_name = self.context.show.file_path
-                try:
-                    return write_document(chosen_file_name, self.context.show)
-                except FileNotFoundError:
-                    self.context.print(f"Unable to write to file {chosen_file_name}.")
+                chosen_file_name = args.filename if args.filename else self.context.show.file_path
+                if not chosen_file_name:
+                    self.context.print("No show file loaded and no filename given. Use 'save <filename>'.")
                     return False
+                if write_document(chosen_file_name, self.context.show):
+                    self.context.show.has_unsaved_changes = False
+                    if self.context.show.file_path != chosen_file_name:
+                        self.context.show.file_path = chosen_file_name
+                    self.context.print(f"Saved show file to {chosen_file_name}.")
+                    return True
+                self.context.print(f"Unable to write to file {chosen_file_name}.")
+                return False
             case "select-scene":
                 scene = self.context.show.get_scene_by_id(args.sceneid)
                 if not scene:
