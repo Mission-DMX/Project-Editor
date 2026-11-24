@@ -1,6 +1,8 @@
+"""Povides a clock UI widget."""
+
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import os
 from typing import TYPE_CHECKING, override
 
@@ -30,7 +32,10 @@ def _configure_label(w: QLabel) -> QLabel:
 
 
 class ClockUIWidget(UIWidget):
+    """Widget displaying a large clock."""
+
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the UI widget provider."""
         super().__init__(parent, configuration)
         self._widget: QLabel | None = None
         self._timer: QTimer | None = None
@@ -59,7 +64,7 @@ class ClockUIWidget(UIWidget):
         self._update_label()
 
     def _update_label(self) -> None:
-        ct = datetime.datetime.now(tz=get_localzone()).time()
+        ct = dt.datetime.now(tz=get_localzone()).time()
         text = f"{ct.hour:02}:{ct.minute:02}:{ct.second:02}"
         self._widget.setText(text)
 
