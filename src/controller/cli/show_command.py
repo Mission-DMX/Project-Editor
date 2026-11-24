@@ -91,7 +91,7 @@ class ShowCommand(Command):
             case "load":
                 return read_document(args.filename, self.context.show)
             case "save":
-                chosen_file_name = args.filename if args.filename else self.context.show.file_path
+                chosen_file_name = args.filename or self.context.show.file_path
                 if not chosen_file_name:
                     self.context.print("No show file loaded and no filename given. Use 'save <filename>'.")
                     return False
