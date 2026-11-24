@@ -68,6 +68,12 @@ class UniverseSelector(QtWidgets.QTabWidget):
         save_as_scene_default_button.setToolTip("Save the current setup as a default for a scene.")
         save_as_scene_default_button.clicked.connect(lambda _: self.save_to_scene_default_clicked())
         row_layout.addWidget(save_as_scene_default_button)
+        row_layout.addSpacing(25)
+        clear_all_button = QPushButton("Clear All")
+        clear_all_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        clear_all_button.setToolTip("Reset every channel on every universe to 0.")
+        clear_all_button.clicked.connect(lambda _: self._clear_all_clicked())
+        row_layout.addWidget(clear_all_button)
         row_layout.addStretch()
         layout.addLayout(row_layout)
 
@@ -93,6 +99,20 @@ class UniverseSelector(QtWidgets.QTabWidget):
     def _automap(self) -> None:
         for uw in self._universe_widgets:
             uw.automap()
+
+    def _clear_all_clicked(self) -> None:
+        self._confirm_clear_dialog = YesNoDialog(
+            self,
+            "Clear All Channels",
+            "Reset every channel on every universe to 0?",
+            self._clear_all_confirmed,
+            default_accept=False,
+        )
+
+    def _clear_all_confirmed(self) -> None:
+        for universe_widget in self._universe_widgets:
+            universe_widget.clear_all()
+        self.send_all_universe()
 
     def save_to_scene_default_clicked(self, channel: Channel | None = None) -> None:
         """Save a single channel or all values to scenes."""
