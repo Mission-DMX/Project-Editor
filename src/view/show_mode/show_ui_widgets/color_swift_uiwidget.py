@@ -1,24 +1,22 @@
 """Show-mode color picker widget backed by the chromaticity ``ColorPickerWidget``."""
 
+from typing import override
+
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget
 
-from model import ColorHSI, Filter, UIPage, UIWidget
+from model import Filter, UIPage, UIWidget
+from model.color_hsi import ColorHSI
 from view.utility_widgets.color_picker.color_picker_widget import ColorPickerWidget
 
 
 class ColorSwiftUIWidget(UIWidget):
     """UIWidget that lets the operator pick a color from a chromaticity diagram and store presets."""
 
-    def __init__(
-        self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str],
-    ) -> None:
-        """Initialize the UI widget state from an optional filter model and configuration dict."""
-        super().__init__(fid, parent, configuration)
-        if filter_model:
-            self._value = ColorHSI.from_filter_str(filter_model.initial_parameters.get("value"))
-        else:
-            self._value = ColorHSI.from_filter_str("")
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the UI widget with its parent page and configuration dict."""
+        super().__init__(parent, configuration)
+        self._value: ColorHSI = ColorHSI.from_filter_str("")
         if not self.configuration.get("number_of_presets"):
             self.configuration["number_of_presets"] = "0"
         if not self.configuration.get("stored_presets"):
@@ -26,6 +24,14 @@ class ColorSwiftUIWidget(UIWidget):
         self._presets: list[ColorHSI] = []
         self._player_widget: QWidget | None = None
         self._config_widget: QWidget | None = None
+
+    @override
+    def set_filter(self, f: Filter, i: int) -> None:
+        """Bind the widget to a filter and seed the stored color from its initial parameters."""
+        if not f:
+            return
+        super().set_filter(f, i)
+        self._value = ColorHSI.from_filter_str(f.initial_parameters.get("value"))
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         """Return the current color as a filter-formatted (key, value) pair."""
@@ -77,10 +83,12 @@ class ColorSwiftUIWidget(UIWidget):
         return w
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        """Return a fresh ``ColorPickerWidget`` for the show-mode player surface."""
+        """Return a fresh ``ColorPickerWidget`` wired to push picks to the show runtime."""
         if self._player_widget:
             self._player_widget.deleteLater()
         self._player_widget = ColorPickerWidget(parent)
+        self._player_widget.color = self._value
+        self._player_widget.color_changed.connect(self.push_value)
         return self._player_widget
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
@@ -91,7 +99,7 @@ class ColorSwiftUIWidget(UIWidget):
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         """Return a deep copy of this widget attached to a different parent UI page."""
-        w = ColorSwiftUIWidget(self.filter_id, new_parent, None, self.configuration)
+        w = ColorSwiftUIWidget(new_parent, self.configuration)
         self.copy_base(w)
         w._value = self._value.copy()
         return w
