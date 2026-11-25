@@ -19,7 +19,6 @@ DearWidgets ship.
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QRegularExpression, QSignalBlocker, Qt, Signal
 from PySide6.QtGui import QPalette, QRegularExpressionValidator
@@ -40,9 +39,6 @@ from model.color_hsi import ColorHSI
 from view.utility_widgets.color_picker import cie_constants as cie
 from view.utility_widgets.color_picker.chromaticity_gl_widget import ChromaticityDiagramGLWidget
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox, JogwheelSpinBox
-
-if TYPE_CHECKING:
-    pass
 
 logger = getLogger(__name__)
 
@@ -274,7 +270,6 @@ class ColorPickerWidget(QWidget):
         self._chromaticity.set_luminance(self._color.intensity)
 
     def _refresh_preview(self) -> None:
-        r, g, b = self._color.to_rgb()
         palette = self._preview.palette()
         palette.setColor(QPalette.ColorRole.Window, self._color.to_qt_color())
         self._preview.setPalette(palette)

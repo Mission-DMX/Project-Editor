@@ -97,7 +97,7 @@ SRGB_PRIMARIES_XY: tuple[tuple[float, float], tuple[float, float], tuple[float, 
 # D65 white point in CIE 1931 xy.
 D65_WHITE_XY: tuple[float, float] = (0.3127, 0.3290)
 
-# Chromaticity domain shown by the diagram: xy ∈ [0, X_MAX] × [0, Y_MAX].
+# Chromaticity domain shown by the diagram: xy in [0, X_MAX] x [0, Y_MAX].
 XY_DOMAIN_X: float = 0.8
 XY_DOMAIN_Y: float = 0.9
 
@@ -125,28 +125,28 @@ def xyY_to_xyz(x: float, y: float, Y: float) -> tuple[float, float, float]:  # n
     """
     if y < 1e-6:
         return 0.0, 0.0, 0.0
-    X = x * Y / y
-    Z = (1.0 - x - y) * Y / y
-    return X, Y, Z
+    big_x = x * Y / y
+    big_z = (1.0 - x - y) * Y / y
+    return big_x, Y, big_z
 
 
 def xyz_to_xyY(xyz: tuple[float, float, float]) -> tuple[float, float, float]:  # noqa: N802
     """Convert CIE XYZ to xyY."""
-    X, Y, Z = xyz
-    total = X + Y + Z
+    big_x, big_y, big_z = xyz
+    total = big_x + big_y + big_z
     if total < 1e-12:
         # Degenerate; return D65 chromaticity with Y=0.
         return D65_WHITE_XY[0], D65_WHITE_XY[1], 0.0
-    return X / total, Y / total, Y
+    return big_x / total, big_y / total, big_y
 
 
 def xyz_to_linear_srgb_d65(xyz: tuple[float, float, float]) -> tuple[float, float, float]:
     """Convert CIE XYZ (D65) to linear sRGB (D65)."""
-    X, Y, Z = xyz
+    big_x, big_y, big_z = xyz
     m = XYZ_TO_LINEAR_SRGB_D65
-    r = m[0][0] * X + m[0][1] * Y + m[0][2] * Z
-    g = m[1][0] * X + m[1][1] * Y + m[1][2] * Z
-    b = m[2][0] * X + m[2][1] * Y + m[2][2] * Z
+    r = m[0][0] * big_x + m[0][1] * big_y + m[0][2] * big_z
+    g = m[1][0] * big_x + m[1][1] * big_y + m[1][2] * big_z
+    b = m[2][0] * big_x + m[2][1] * big_y + m[2][2] * big_z
     return r, g, b
 
 
@@ -154,10 +154,10 @@ def linear_srgb_to_xyz_d65(rgb: tuple[float, float, float]) -> tuple[float, floa
     """Convert linear sRGB (D65) to CIE XYZ (D65)."""
     r, g, b = rgb
     m = LINEAR_SRGB_TO_XYZ_D65
-    X = m[0][0] * r + m[0][1] * g + m[0][2] * b
-    Y = m[1][0] * r + m[1][1] * g + m[1][2] * b
-    Z = m[2][0] * r + m[2][1] * g + m[2][2] * b
-    return X, Y, Z
+    big_x = m[0][0] * r + m[0][1] * g + m[0][2] * b
+    big_y = m[1][0] * r + m[1][1] * g + m[1][2] * b
+    big_z = m[2][0] * r + m[2][1] * g + m[2][2] * b
+    return big_x, big_y, big_z
 
 
 def linear_to_srgb_oetf(c: float) -> float:

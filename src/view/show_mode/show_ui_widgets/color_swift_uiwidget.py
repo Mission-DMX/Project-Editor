@@ -7,7 +7,9 @@ from view.utility_widgets.color_picker.color_picker_widget import ColorPickerWid
 
 class ColorSwiftUIWidget(UIWidget):
 
-    def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
+    def __init__(
+        self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str],
+    ) -> None:
         super().__init__(fid, parent, configuration)
         if filter_model:
             self._value = ColorHSI.from_filter_str(filter_model.initial_parameters.get("value"))
@@ -24,7 +26,7 @@ class ColorSwiftUIWidget(UIWidget):
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", self._value.format_for_filter())]
 
-    def push_value(self, new_value: ColorHSI):
+    def push_value(self, new_value: ColorHSI) -> None:
         self._value = new_value
         self.push_update()
 
@@ -44,7 +46,7 @@ class ColorSwiftUIWidget(UIWidget):
             column_layout = QVBoxLayout()
             select_button = QPushButton("Sel", w)
             select_button.setEnabled(for_player)
-            select_button.clicked.connect(lambda _i=i: self._select_color(i))
+            select_button.clicked.connect(lambda _=None, _i=i: self._select_color(_i))
             column_layout.addWidget(select_button)
             color_label = QWidget(w)
             color_label.setMinimumWidth(16)
@@ -96,11 +98,11 @@ class ColorSwiftUIWidget(UIWidget):
         layout.addWidget(preset_list)
         w.setLayout(layout)
 
-        def _add_preset(c_template):
+        def _add_preset(c_template: QColor) -> None:
             c: ColorHSI = ColorHSI.from_qt_color(c_template)
             self._presets.append(c)
             self.configuration["number_of_presets"] = str(int(self.configuration["number_of_presets"]) + 1)
-            self.configuration["stored_presets"] += "{}{}".format(";" if self.configuration["stored_presets"] else '',
+            self.configuration["stored_presets"] += "{}{}".format(";" if self.configuration["stored_presets"] else "",
                                                                   c.format_for_filter())
             preset_list.addItem(c.format_for_filter())
             # TODO add buttons to existing widgets in a smarter way
@@ -111,19 +113,19 @@ class ColorSwiftUIWidget(UIWidget):
                 config_parent = self._config_widget.parent()
                 self._config_widget = self._build_base_widget(config_parent, False)
 
-        def open_dialog():
+        def open_dialog() -> None:
             d = QColorDialog(w)
             d.colorSelected.connect(_add_preset)
             d.show()
         add_action.triggered.connect(open_dialog)
         return w
 
-    def _select_color(self, i: int):
+    def _select_color(self, i: int) -> None:
         if not self._player_widget:
             return
         d = QColorDialog(self._player_widget)
         d.colorSelected.connect(lambda color: self._set_preset(i, color))
         d.show()
 
-    def _set_preset(self, i: int, color: QColor):
+    def _set_preset(self, i: int, color: QColor) -> None:
         self._presets[i] = ColorHSI.from_qt_color(color)
