@@ -1,204 +1,361 @@
-import os.path
-from logging import getLogger
+"""Composite color picker widget.
 
-import numpy as np
-from OpenGL import GL
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QOpenGLExtraFunctions, QOpenGLFunctions, QSurfaceFormat
-from PySide6.QtOpenGL import (QOpenGLBuffer, QOpenGLFramebufferObject, QOpenGLShader, QOpenGLShaderProgram,
-                              QOpenGLVertexArrayObject)
-from PySide6.QtOpenGLWidgets import QOpenGLWidget
-from PySide6.QtWidgets import QWidget
+Combines the CIE 1931 xy chromaticity diagram (`ChromaticityDiagramGLWidget`)
+with synchronized numeric inputs for HSI, RGB, CMY and an HTML hex field.
+
+Public API (preserved from the previous stub):
+    * ``color_changed = Signal(ColorHSI)`` — fires once per committed change,
+      including during live mouse drag on the diagram.
+    * ``color`` property — getter returns the current ``ColorHSI``, setter
+      updates all inputs and emits ``color_changed`` on actual changes.
+
+Note on the "intensity" axis: ``ColorHSI`` uses the HSV ``V`` channel (the
+max-of-RGB brightness), not the CIE ``Y`` relative luminance.  For picker
+purposes this value is routed into the shader's ``uY`` uniform; the result is
+the standard "diagram dims with the slider" behaviour that Krita / GIMP /
+DearWidgets ship.
+"""
+
+from __future__ import annotations
+
+from logging import getLogger
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QRegularExpression, QSignalBlocker, Qt, Signal
+from PySide6.QtGui import QPalette, QRegularExpressionValidator
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QSizePolicy,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.color_hsi import ColorHSI
+from view.utility_widgets.color_picker import cie_constants as cie
+from view.utility_widgets.color_picker.chromaticity_gl_widget import ChromaticityDiagramGLWidget
+from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox, JogwheelSpinBox
 
-logger = getLogger(__file__)
+if TYPE_CHECKING:
+    pass
+
+logger = getLogger(__name__)
 
 
-class ColorPickerWidget(QOpenGLWidget):
+_INTENSITY_SLIDER_RESOLUTION = 1000
+
+
+class ColorPickerWidget(QWidget):
 
     color_changed: Signal = Signal(ColorHSI)
-    END_Z_CLIPPING_DISTANCE = 30
-    BEGIN_Z_CLIPPING_DISTANCE = 0
 
-    _COLOR_SELECTION_SURFACE_FRAG_SHADER: QOpenGLShader | None = None
-    _SIMPLE_VERT_SHADER: QOpenGLShader | None = None
-
-    def __init__(self, parent: QWidget | None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._gl_program: QOpenGLShaderProgram = None
-        self._gl_vbo_color_quad: QOpenGLBuffer = None
-        self._gl_vao: QOpenGLVertexArrayObject = None
-        self._r: float = 0
-        self._g: float = 0
-        self._b: float = 0
-        self._selection_diagram_coordinates = np.array([
-            -1, 1,
-            1, 1,
-            1, -1,
-            -1, 1,
-            1, -1,
-            -1, -1
-        ], dtype=np.float32)
 
-        self.setMinimumHeight(800)
-        self.setMinimumWidth(600)
-        # FIXME due to yet unknown reasons we cannot set the dimensions after the constructor finished.
+        self.setMinimumSize(800, 600)
 
-    def initializeGL(self):
-        super().initializeGL()
-        context = self.context()
-        if context is not None:
-            context.aboutToBeDestroyed.connect(self._cleanup_gl)
-        else:
-            raise Exception("There must be an OpenGL context by now.")
-        f = context.functions()
-        f.initializeOpenGLFunctions()
+        self._color: ColorHSI = ColorHSI(0.0, 0.0, 1.0)
+        self._updating: bool = False
 
-        # self._gl_vao = QOpenGLVertexArrayObject()
-        # self._gl_vao.create()
-        # self._gl_vao.bind()
-        # self._gl_vao.release()
+        # --- OpenGL chromaticity diagram ---
+        self._chromaticity = ChromaticityDiagramGLWidget(self)
+        self._chromaticity.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._chromaticity.xy_picked.connect(self._on_xy_picked)
 
-        self._gl_vbo_color_quad = QOpenGLBuffer()
-        self._gl_vbo_color_quad.create()
-        self._gl_vbo_color_quad.bind()
-        self._gl_vbo_color_quad.allocate(self._selection_diagram_coordinates.nbytes)
-        self._gl_vbo_color_quad.write(0, self._selection_diagram_coordinates.data, self._selection_diagram_coordinates.nbytes)
-        self._gl_vbo_color_quad.release()
-        # TODO set self.glVertexAttribPointer(...) here
+        # --- Preview swatch ---
+        self._preview = QFrame(self)
+        self._preview.setMinimumHeight(40)
+        self._preview.setAutoFillBackground(True)
+        self._preview.setFrameShape(QFrame.Shape.Panel)
+        self._preview.setFrameShadow(QFrame.Shadow.Sunken)
 
-        # TODO repeat for controls interface
+        # --- Intensity slider ---
+        self._intensity_slider = QSlider(Qt.Orientation.Vertical, self)
+        self._intensity_slider.setRange(0, _INTENSITY_SLIDER_RESOLUTION)
+        self._intensity_slider.setValue(_INTENSITY_SLIDER_RESOLUTION)
+        self._intensity_slider.setTickPosition(QSlider.TickPosition.TicksRight)
+        self._intensity_slider.setTickInterval(_INTENSITY_SLIDER_RESOLUTION // 10)
+        self._intensity_slider.valueChanged.connect(self._on_intensity_slider_changed)
 
-        self._gl_program = QOpenGLShaderProgram()
-        self._gl_program.create()
-        if ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER is None:
-            shader_source = os.path.dirname(__file__) + "/color_selection_surface_frag_shader.glsl"
-            ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER = QOpenGLShader(QOpenGLShader.ShaderTypeBit.Fragment)
-            if not ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER.compileSourceFile(shader_source):
-                logger.error("Failed to compile fragment shader.\nSource file: %s\nLog: %s\n",
-                             ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER.log(), shader_source)
-            else:
-                logger.debug("Successfully compiled fragment shader from %s.", shader_source)
+        # --- HSI inputs ---
+        self._hue_spin = JogwheelDoubleSpinBox(self)
+        self._hue_spin.setRange(0.0, 359.9)
+        self._hue_spin.setDecimals(1)
+        self._hue_spin.setSingleStep(1.0)
+        self._hue_spin.setSuffix("°")
+        self._sat_spin = JogwheelDoubleSpinBox(self)
+        self._sat_spin.setRange(0.0, 100.0)
+        self._sat_spin.setDecimals(1)
+        self._sat_spin.setSingleStep(1.0)
+        self._sat_spin.setSuffix(" %")
+        self._int_spin = JogwheelDoubleSpinBox(self)
+        self._int_spin.setRange(0.0, 100.0)
+        self._int_spin.setDecimals(1)
+        self._int_spin.setSingleStep(1.0)
+        self._int_spin.setSuffix(" %")
 
-        if ColorPickerWidget._SIMPLE_VERT_SHADER is None:
-            ColorPickerWidget._SIMPLE_VERT_SHADER = QOpenGLShader(QOpenGLShader.ShaderTypeBit.Vertex)
-            shader_source = os.path.dirname(__file__) + "/simple_vert_shader.glsl"
-            if not ColorPickerWidget._SIMPLE_VERT_SHADER.compileSourceFile(shader_source):
-                logger.error("Failed to compile vertex shader.\nSource File: %s\nLog: %s\n",
-                             ColorPickerWidget._SIMPLE_VERT_SHADER.log(), shader_source)
-            else:
-                logger.debug("Successfully compiled vertex shader from %s.", shader_source)
+        for spin in (self._hue_spin, self._sat_spin, self._int_spin):
+            spin.valueChanged.connect(self._on_hsi_changed)
 
-        self._gl_program.bind()
-        self._gl_program.addShader(ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER)
-        self._gl_program.addShader(ColorPickerWidget._SIMPLE_VERT_SHADER)
-        self._gl_program.bindAttributeLocation("position", 0)
-        self._gl_program.bindAttributeLocation("texture_coordinate", 1)
-        if not self._gl_program.link():
-            raise RuntimeError("Failed to link shaders. Log={}".format(self._gl_program.log()))
-        else:
-            logger.debug("Successfully linked GL program")
+        # --- RGB inputs ---
+        self._r_spin = JogwheelSpinBox(self)
+        self._g_spin = JogwheelSpinBox(self)
+        self._b_spin = JogwheelSpinBox(self)
+        for spin in (self._r_spin, self._g_spin, self._b_spin):
+            spin.setRange(0, 255)
+            spin.setSingleStep(1)
+            spin.valueChanged.connect(self._on_rgb_changed)
 
-        self.setBackgroundColor(5, 5, 5, 255)
-        self.set_cursor_position((10, 10), (self.width(), self.height()))
-        self._recalculate_projection()
-        self._gl_program.release()
+        # --- CMY inputs ---
+        self._c_spin = JogwheelDoubleSpinBox(self)
+        self._m_spin = JogwheelDoubleSpinBox(self)
+        self._y_spin = JogwheelDoubleSpinBox(self)
+        for spin in (self._c_spin, self._m_spin, self._y_spin):
+            spin.setRange(0.0, 100.0)
+            spin.setDecimals(1)
+            spin.setSingleStep(1.0)
+            spin.setSuffix(" %")
+            spin.valueChanged.connect(self._on_cmy_changed)
 
-    def _cleanup_gl(self):
-        self.makeCurrent()
-        del self._gl_vbo_color_quad
-        self._gl_vbo_color_quad = None
-        del self._gl_program
-        self._gl_program = None
-        del self._gl_vao
-        self._gl_vao = None
-        self.doneCurrent()
-        self.context().aboutToBeDestroyed.disconnect(self._cleanup_gl)
+        # --- Hex input ---
+        self._hex_edit = QLineEdit(self)
+        self._hex_edit.setPlaceholderText("#RRGGBB")
+        self._hex_edit.setMaxLength(7)
+        self._hex_edit.setValidator(
+            QRegularExpressionValidator(QRegularExpression(r"^#?[0-9A-Fa-f]{6}$"), self),
+        )
+        self._hex_edit.editingFinished.connect(self._on_hex_edited)
 
-    def _recalculate_projection(self):
-        """
-        This calculates and sets an orthogonal projection matrix as described in
-        https://songho.ca/opengl/gl_projectionmatrix.html.
-        """
-        self.makeCurrent()
-        vert_projection_matrix = self._gl_program.uniformLocation("projectionMatrix")
-        vert_model_matrix = self._gl_program.uniformLocation("modelMatrix")
-        r = self.width()
-        t = self.height()
-        f = self.END_Z_CLIPPING_DISTANCE
-        n = self.BEGIN_Z_CLIPPING_DISTANCE
-        projection_matrix = np.array([
-            1.0 / r, 0.0, 0.0, 0.0,
-            0.0, 1.0 / t, 0.0, 0.0,
-            0.0, 0.0, -2.0 / (f - n), -(f + n) / (f - n),
-            0.0, 0.0, 0.0, 1.0
-        ], dtype=np.float32)
-        model_matrix = np.array([
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        ], dtype=np.float32)
-        f = self.context().functions()
-        f.glUniformMatrix4fv(vert_projection_matrix, 1, 0, projection_matrix)
-        f.glUniformMatrix4fv(vert_model_matrix, 1, 0, model_matrix)
-        self.doneCurrent()
+        self._build_layout()
 
-    def set_cursor_position(self, cursor: tuple[int, int], cord_size: tuple[int, int]):
-        self.makeCurrent()
-        cursor_url = self._gl_program.uniformLocation("in_cursor_position")
-        cord_size_url = self._gl_program.uniformLocation("in_cord_size")
-        f = self.context().functions()
-        f.glUniform2i(cursor_url, cursor[0], cursor[1])
-        f.glUniform2i(cord_size_url, cord_size[0], cord_size[1])
-        self.doneCurrent()
+        # Seed the UI with the initial color.
+        self._refresh_all_from_color()
 
-    def paintGL(self):
-        super().paintGL()
-        f = self.context().functions()
-        f.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        # TODO theoretically we somehow need to call self.glUseProgram(self._gl_program) here.
-        #  But how do we get the pointer from our program?
-        self._gl_program.bind()
-        self._gl_vbo_color_quad.bind()  # _gl_vao?
-        trig_count = int(self._selection_diagram_coordinates.size / (2*3))
-        f.glDrawArrays(GL.GL_TRIANGLES, 0, trig_count)
-        self._gl_vbo_color_quad.release()
-        self._gl_program.release()
-
-    def resizeGL(self, w, h):
-        super().resizeGL(w, h)
-        self._recalculate_projection()
-
-    def setBackgroundColor(self, r: int, g: int, b: int, a: int):
-        """
-        :param r: The red value of the new background color, ranging from 0 to 255
-        :param g: The green value of the new background color, ranging from 0 to 255
-        :param b: The blue value of the new background color, ranging from 0 to 255
-        :param a: The alpha value of the new background color, ranging from 0 to 255
-        """
-        self.makeCurrent()
-        f = self.context().functions()
-        f.glClearColor(r / 255, g / 255, b / 255, a / 255)
-        self.update()
+    # -----------------------------------------------------------------
+    # Public API
+    # -----------------------------------------------------------------
 
     @property
     def color(self) -> ColorHSI:
-        return ColorHSI.from_rgb(self._r, self._g, self._b)
+        return self._color.copy()
 
     @color.setter
-    def color(self, new_color: ColorHSI):
-        """
-        Use this method to set a new color.
-        :param new_color: The new color to set
-        :warn: This setter may emit the color_changed signal
-        """
-        r, g, b = new_color.to_rgb()
-        if r != self._r or g != self._g or b != self._b:
-            self._r = r
-            self._g = g
-            self._b = b
-            self.update()
-            self.color_changed.emit(new_color)
+    def color(self, new_color: ColorHSI) -> None:
+        """Set the current color.
 
+        Emits ``color_changed`` only when the value actually differs.
+        """
+        self._apply_color(new_color, origin="external")
+
+    # -----------------------------------------------------------------
+    # Layout
+    # -----------------------------------------------------------------
+
+    def _build_layout(self) -> None:
+        root = QHBoxLayout(self)
+
+        left = QVBoxLayout()
+        left.addWidget(self._chromaticity, 1)
+        left.addWidget(self._preview)
+        root.addLayout(left, 3)
+
+        slider_box = QVBoxLayout()
+        slider_label = QLabel("Intensity", self)
+        slider_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        slider_box.addWidget(slider_label)
+        slider_box.addWidget(self._intensity_slider, 1, Qt.AlignmentFlag.AlignHCenter)
+        root.addLayout(slider_box)
+
+        right = QVBoxLayout()
+
+        hsi_group = QGroupBox("HSI", self)
+        hsi_form = QFormLayout(hsi_group)
+        hsi_form.addRow("Hue", self._hue_spin)
+        hsi_form.addRow("Saturation", self._sat_spin)
+        hsi_form.addRow("Intensity", self._int_spin)
+        right.addWidget(hsi_group)
+
+        rgb_group = QGroupBox("RGB", self)
+        rgb_form = QFormLayout(rgb_group)
+        rgb_form.addRow("Red", self._r_spin)
+        rgb_form.addRow("Green", self._g_spin)
+        rgb_form.addRow("Blue", self._b_spin)
+        right.addWidget(rgb_group)
+
+        cmy_group = QGroupBox("CMY", self)
+        cmy_form = QFormLayout(cmy_group)
+        cmy_form.addRow("Cyan", self._c_spin)
+        cmy_form.addRow("Magenta", self._m_spin)
+        cmy_form.addRow("Yellow", self._y_spin)
+        right.addWidget(cmy_group)
+
+        hex_group = QGroupBox("Hex", self)
+        hex_form = QFormLayout(hex_group)
+        hex_form.addRow("HTML", self._hex_edit)
+        right.addWidget(hex_group)
+
+        right.addStretch(1)
+        root.addLayout(right, 2)
+
+    # -----------------------------------------------------------------
+    # Signal flow
+    # -----------------------------------------------------------------
+
+    def _apply_color(self, new_color: ColorHSI, origin: str) -> None:
+        if self._updating:
+            return
+        if new_color == self._color:
+            return
+        self._updating = True
+        try:
+            self._color = new_color.copy()
+            self._refresh_all_from_color(exclude=origin)
+        finally:
+            self._updating = False
+        self.color_changed.emit(self._color.copy())
+
+    def _refresh_all_from_color(self, exclude: str | None = None) -> None:
+        self._refresh_hsi(skip=(exclude == "hsi"))
+        self._refresh_rgb(skip=(exclude == "rgb"))
+        self._refresh_cmy(skip=(exclude == "cmy"))
+        self._refresh_hex(skip=(exclude == "hex"))
+        self._refresh_intensity_slider(skip=(exclude == "intensity_slider"))
+        self._refresh_diagram(skip=(exclude == "chromaticity"))
+        self._refresh_preview()
+
+    def _refresh_hsi(self, *, skip: bool = False) -> None:
+        if skip:
+            return
+        with QSignalBlocker(self._hue_spin), QSignalBlocker(self._sat_spin), QSignalBlocker(self._int_spin):
+            self._hue_spin.setValue(self._color.hue)
+            self._sat_spin.setValue(self._color.saturation * 100.0)
+            self._int_spin.setValue(self._color.intensity * 100.0)
+
+    def _refresh_rgb(self, *, skip: bool = False) -> None:
+        if skip:
+            return
+        r, g, b = self._color.to_rgb()
+        with QSignalBlocker(self._r_spin), QSignalBlocker(self._g_spin), QSignalBlocker(self._b_spin):
+            self._r_spin.setValue(r)
+            self._g_spin.setValue(g)
+            self._b_spin.setValue(b)
+
+    def _refresh_cmy(self, *, skip: bool = False) -> None:
+        if skip:
+            return
+        c, m, y = self._color.to_cmy()
+        with QSignalBlocker(self._c_spin), QSignalBlocker(self._m_spin), QSignalBlocker(self._y_spin):
+            self._c_spin.setValue(c * 100.0)
+            self._m_spin.setValue(m * 100.0)
+            self._y_spin.setValue(y * 100.0)
+
+    def _refresh_hex(self, *, skip: bool = False) -> None:
+        if skip:
+            return
+        with QSignalBlocker(self._hex_edit):
+            self._hex_edit.setText(str(self._color))
+
+    def _refresh_intensity_slider(self, *, skip: bool = False) -> None:
+        if skip:
+            return
+        with QSignalBlocker(self._intensity_slider):
+            self._intensity_slider.setValue(round(self._color.intensity * _INTENSITY_SLIDER_RESOLUTION))
+
+    def _refresh_diagram(self, *, skip: bool = False) -> None:
+        if skip:
+            self._chromaticity.set_luminance(self._color.intensity)
+            return
+        self._chromaticity.set_xy(*self._color_to_xy(self._color))
+        self._chromaticity.set_luminance(self._color.intensity)
+
+    def _refresh_preview(self) -> None:
+        r, g, b = self._color.to_rgb()
+        palette = self._preview.palette()
+        palette.setColor(QPalette.ColorRole.Window, self._color.to_qt_color())
+        self._preview.setPalette(palette)
+
+    # -----------------------------------------------------------------
+    # xy ↔ ColorHSI helpers
+    # -----------------------------------------------------------------
+
+    @staticmethod
+    def _color_to_xy(color: ColorHSI) -> tuple[float, float]:
+        """Project a ColorHSI onto CIE xy at its own intensity.
+
+        Fully desaturated or fully black colors fall back to D65, which is
+        where the crosshair is placed when no actual chromaticity is defined.
+        """
+        if color.saturation <= 1e-6 or color.intensity <= 1e-6:
+            return cie.D65_WHITE_XY
+        r, g, b = color.to_rgb_float()
+        linear = (cie.srgb_to_linear_eotf(r), cie.srgb_to_linear_eotf(g), cie.srgb_to_linear_eotf(b))
+        xyz = cie.linear_srgb_to_xyz_d65(linear)
+        x, y, _ = cie.xyz_to_xyY(xyz)
+        return x, y
+
+    def _color_from_xy(self, x: float, y: float) -> ColorHSI:
+        luminance = max(self._color.intensity, 1e-4)
+        xyz = cie.xyY_to_xyz(x, y, luminance)
+        linear = cie.xyz_to_linear_srgb_d65(xyz)
+        srgb = cie.linear_srgb_tuple_to_srgb(linear)
+        return ColorHSI.from_rgb_float(*srgb)
+
+    # -----------------------------------------------------------------
+    # Slots
+    # -----------------------------------------------------------------
+
+    def _on_xy_picked(self, x: float, y: float) -> None:
+        if self._updating:
+            return
+        self._apply_color(self._color_from_xy(x, y), origin="chromaticity")
+
+    def _on_intensity_slider_changed(self, value: int) -> None:
+        if self._updating:
+            return
+        intensity = value / _INTENSITY_SLIDER_RESOLUTION
+        self._apply_color(ColorHSI(self._color.hue, self._color.saturation, intensity), origin="intensity_slider")
+
+    def _on_hsi_changed(self, _: float) -> None:
+        if self._updating:
+            return
+        new_color = ColorHSI(self._hue_spin.value(), self._sat_spin.value() / 100.0, self._int_spin.value() / 100.0)
+        self._apply_color(new_color, origin="hsi")
+
+    def _on_rgb_changed(self, _: int) -> None:
+        if self._updating:
+            return
+        new_color = ColorHSI.from_rgb(self._r_spin.value(), self._g_spin.value(), self._b_spin.value())
+        self._apply_color(new_color, origin="rgb")
+
+    def _on_cmy_changed(self, _: float) -> None:
+        if self._updating:
+            return
+        new_color = ColorHSI.from_cmy(
+            self._c_spin.value() / 100.0,
+            self._m_spin.value() / 100.0,
+            self._y_spin.value() / 100.0,
+        )
+        self._apply_color(new_color, origin="cmy")
+
+    def _on_hex_edited(self) -> None:
+        if self._updating:
+            return
+        text = self._hex_edit.text().lstrip("#")
+        if len(text) != 6:
+            # Validator rejects partial input, but editingFinished can still fire
+            # with a prefix on focus loss — snap the field back to the model value.
+            self._refresh_hex()
+            return
+        try:
+            r = int(text[0:2], 16)
+            g = int(text[2:4], 16)
+            b = int(text[4:6], 16)
+        except ValueError:
+            self._refresh_hex()
+            return
+        self._apply_color(ColorHSI.from_rgb(r, g, b), origin="hex")
