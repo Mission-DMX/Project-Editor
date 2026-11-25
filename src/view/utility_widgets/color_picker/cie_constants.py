@@ -219,6 +219,7 @@ def snap_to_locus(x: float, y: float) -> tuple[float, float]:
 
 
 def clamp01(c: float) -> float:
+    """Clamp a float to the closed interval [0, 1]."""
     return max(0.0, min(c, 1.0))
 
 

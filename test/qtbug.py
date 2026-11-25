@@ -1,3 +1,5 @@
+"""Standalone Qt + OpenGL bug reproduction harness."""
+
 import os
 
 import numpy as np
@@ -37,14 +39,18 @@ void main() {
 
 
 class TestWidget(QOpenGLWidget):
+    """QOpenGLWidget used to reproduce a Qt shader binding bug."""
+
     END_Z_CLIPPING_DISTANCE = 30
     BEGIN_Z_CLIPPING_DISTANCE = 0
 
     def __init__(self, parent):
+        """Initialize the widget and reset the shader program handle."""
         super().__init__(parent)
         self._gl_program: QOpenGLShaderProgram = None
 
     def initializeGL(self):
+        """Create the context-bound GL resources used by the bug reproduction."""
         super().initializeGL()
         context = self.context()
         if context is not None:
@@ -85,9 +91,7 @@ class TestWidget(QOpenGLWidget):
         self.context().aboutToBeDestroyed.disconnect(self._cleanup_gl)
 
     def _recalculate_projection(self):
-        """
-        This calculates and sets an orthogonal projection matrix
-        """
+        """Calculate and set an orthogonal projection matrix."""
         vert_projection_matrices = self._gl_program.uniformLocation("projection_matrices")
         r = self.width()
         t = self.height()
@@ -108,6 +112,7 @@ class TestWidget(QOpenGLWidget):
         #self._gl_program.setUniformValueArray(vert_projection_matrices, np.array(projection_matrix, dtype=np.float32).data, count) # Fails
 
     def paintGL(self):
+        """Clear and re-bind the shader; no actual drawing happens in this repro."""
         super().paintGL()
         f = self.context().functions()
         f.glClear(GL.GL_COLOR_BUFFER_BIT)
@@ -116,7 +121,8 @@ class TestWidget(QOpenGLWidget):
         self._gl_program.release()
 
     def setBackgroundColor(self, r: int, g: int, b: int, a: int):
-        """
+        """Set the OpenGL clear color.
+
         :param r: The red value of the new background color, ranging from 0 to 255
         :param g: The green value of the new background color, ranging from 0 to 255
         :param b: The blue value of the new background color, ranging from 0 to 255

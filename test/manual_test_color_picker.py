@@ -42,6 +42,7 @@ if __name__ == "__main__":
     readout.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
     def on_color_changed(c: ColorHSI) -> None:
+        """Mirror the picker's current color into the readout label and stdout."""
         r, g, b = c.to_rgb()
         readout.setText(
             f"HSI=({c.hue:.1f}°, {c.saturation * 100:.1f}%, {c.intensity * 100:.1f}%)  "

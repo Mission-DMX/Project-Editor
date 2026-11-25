@@ -209,6 +209,7 @@ class ColorHSI:
         )
 
     def __hash__(self) -> int:
+        """Hash rounded HSV components so equal colors (within tolerance) hash equal."""
         return hash((round(self._hue, 6), round(self._saturation, 6), round(self._intensity, 6)))
 
     def __str__(self) -> str:

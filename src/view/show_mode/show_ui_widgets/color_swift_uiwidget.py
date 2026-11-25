@@ -1,3 +1,5 @@
+"""Show-mode color picker widget backed by the chromaticity ``ColorPickerWidget``."""
+
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget
 
@@ -6,10 +8,12 @@ from view.utility_widgets.color_picker.color_picker_widget import ColorPickerWid
 
 
 class ColorSwiftUIWidget(UIWidget):
+    """UIWidget that lets the operator pick a color from a chromaticity diagram and store presets."""
 
     def __init__(
         self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str],
     ) -> None:
+        """Initialize the UI widget state from an optional filter model and configuration dict."""
         super().__init__(fid, parent, configuration)
         if filter_model:
             self._value = ColorHSI.from_filter_str(filter_model.initial_parameters.get("value"))
@@ -24,9 +28,11 @@ class ColorSwiftUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
 
     def generate_update_content(self) -> list[tuple[str, str]]:
+        """Return the current color as a filter-formatted (key, value) pair."""
         return [("value", self._value.format_for_filter())]
 
     def push_value(self, new_value: ColorHSI) -> None:
+        """Replace the currently-held color and transmit the update to the show runtime."""
         self._value = new_value
         self.push_update()
 
@@ -71,23 +77,27 @@ class ColorSwiftUIWidget(UIWidget):
         return w
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
+        """Return a fresh ``ColorPickerWidget`` for the show-mode player surface."""
         if self._player_widget:
             self._player_widget.deleteLater()
         self._player_widget = ColorPickerWidget(parent)
         return self._player_widget
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
+        """Return the preset-row widget shown inside the UI-editor configuration surface."""
         if not self._config_widget:
             self._config_widget = self._build_base_widget(parent, False)
         return self._config_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
+        """Return a deep copy of this widget attached to a different parent UI page."""
         w = ColorSwiftUIWidget(self.filter_id, new_parent, None, self.configuration)
         self.copy_base(w)
         w._value = self._value.copy()
         return w
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+        """Return the modal configuration dialog that lets the designer manage presets."""
         w = QWidget(parent)
         layout = QVBoxLayout()
         toolbar = QToolBar(w)

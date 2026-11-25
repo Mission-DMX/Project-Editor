@@ -41,6 +41,7 @@ class ChromaticityDiagramGLWidget(QOpenGLWidget):
     xy_picked = Signal(float, float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize GL state, diagram defaults and mouse state."""
         super().__init__(parent)
         self.setMinimumSize(360, 360)
         self.setMouseTracking(False)
@@ -63,17 +64,21 @@ class ChromaticityDiagramGLWidget(QOpenGLWidget):
 
     @property
     def xy(self) -> tuple[float, float]:
+        """Return the currently-selected CIE chromaticity (x, y)."""
         return self._xy
 
     def set_xy(self, x: float, y: float) -> None:
+        """Set the selected CIE chromaticity and schedule a repaint."""
         self._xy = (float(x), float(y))
         self.update()
 
     @property
     def luminance(self) -> float:
+        """Return the luminance uniform (HSV V) currently used to shade the diagram."""
         return self._luminance
 
     def set_luminance(self, luminance: float) -> None:
+        """Set the luminance uniform (clamped to [0, 1]) and schedule a repaint."""
         self._luminance = max(0.0, min(float(luminance), 1.0))
         self.update()
 

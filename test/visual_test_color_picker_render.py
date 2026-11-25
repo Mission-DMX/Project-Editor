@@ -87,13 +87,16 @@ _SCENARIOS: tuple[tuple[str, ColorHSI], ...] = (
 
 
 class VisualRenderTest(unittest.TestCase):
+    """Headless render-to-PNG regression test for the chromaticity color picker."""
 
     @classmethod
     def setUpClass(cls) -> None:
+        """Create the shared QApplication and prepare the output directory."""
         cls.app = _ensure_app()
         _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     def test_render_all_scenarios(self) -> None:
+        """Render each scenario to PNG and assert the output file is non-trivially sized."""
         picker = ColorPickerWidget(None)
         _render(picker, self.app)
 

@@ -11,8 +11,10 @@ from model.color_hsi import ColorHSI
 
 
 class ColorHSIConversionTest(unittest.TestCase):
+    """Conversion round-trips and HSV-vs-HLS guards for the ColorHSI model."""
 
     def test_from_rgb_to_rgb_round_trip(self) -> None:
+        """RGB int → ColorHSI → RGB int must round-trip within one LSB per channel."""
         for r, g, b in [(255, 128, 32), (0, 0, 0), (255, 255, 255), (1, 2, 3), (240, 17, 99)]:
             c = ColorHSI.from_rgb(r, g, b)
             rr, gg, bb = c.to_rgb()
@@ -21,6 +23,7 @@ class ColorHSIConversionTest(unittest.TestCase):
             self.assertLessEqual(abs(bb - b), 1)
 
     def test_from_rgb_float_round_trip(self) -> None:
+        """RGB float → ColorHSI → RGB float must round-trip to 1e-6."""
         for r, g, b in [(0.2, 0.5, 0.9), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), (0.123, 0.456, 0.789)]:
             c = ColorHSI.from_rgb_float(r, g, b)
             rr, gg, bb = c.to_rgb_float()
@@ -54,6 +57,7 @@ class ColorHSIConversionTest(unittest.TestCase):
         self.assertEqual(c_cmy, c_rgb)
 
     def test_to_cmy_round_trip(self) -> None:
+        """ColorHSI → CMY → ColorHSI must round-trip identically."""
         for h, s, v in [(0.0, 1.0, 1.0), (120.0, 0.8, 0.6), (240.0, 0.4, 0.9)]:
             original = ColorHSI(h, s, v)
             c, m, y = original.to_cmy()
@@ -67,6 +71,7 @@ class ColorHSIConversionTest(unittest.TestCase):
         self.assertEqual((r, g, b), (128, 64, 200))
 
     def test_equality(self) -> None:
+        """Equal colors compare equal and hash equal; different ones compare unequal."""
         a = ColorHSI(120.0, 0.5, 0.5)
         b = ColorHSI(120.0, 0.5, 0.5)
         self.assertEqual(a, b)
@@ -75,11 +80,13 @@ class ColorHSIConversionTest(unittest.TestCase):
         self.assertNotEqual(a, c)
 
     def test_equality_within_tolerance(self) -> None:
+        """Colors differing by less than the HSV tolerance must still compare equal."""
         a = ColorHSI(120.0, 0.5, 0.5)
         b = ColorHSI(120.0 + 1e-8, 0.5, 0.5 - 1e-8)
         self.assertEqual(a, b)
 
     def test_equality_with_non_coloract(self) -> None:
+        """Comparing a ColorHSI to a non-ColorHSI must yield NotImplemented (false)."""
         a = ColorHSI(0.0, 0.0, 0.0)
         self.assertNotEqual(a, "not a color")
         self.assertNotEqual(a, 0)
@@ -98,22 +105,27 @@ class ColorHSIConversionTest(unittest.TestCase):
 
 
 class ColorHSIClampingTest(unittest.TestCase):
+    """Boundary / clamping behavior for the ColorHSI constructor and from-RGB helpers."""
 
     def test_hue_modulo(self) -> None:
+        """Hue values outside [0, 360) must wrap via modulo."""
         c = ColorHSI(720.0 + 45.0, 0.5, 0.5)
         self.assertAlmostEqual(c.hue, 45.0, places=6)
 
     def test_saturation_clamped(self) -> None:
+        """Out-of-range saturation values must clamp to [0, 1]."""
         self.assertAlmostEqual(ColorHSI(0.0, -0.3, 0.5).saturation, 0.0)
         self.assertAlmostEqual(ColorHSI(0.0, 1.7, 0.5).saturation, 1.0)
 
     def test_intensity_clamped(self) -> None:
+        """Out-of-range intensity values must clamp to [0, 1]."""
         self.assertAlmostEqual(ColorHSI(0.0, 0.5, -0.1).intensity, 0.0)
         self.assertAlmostEqual(ColorHSI(0.0, 0.5, 2.0).intensity, 1.0)
 
     def test_from_rgb_float_clamped(self) -> None:
+        """RGB floats outside [0, 1] must clamp before HSV conversion."""
         c = ColorHSI.from_rgb_float(-0.5, 2.0, 0.5)
-        # Clamped input → equivalent to from_rgb_float(0, 1, 0.5)
+        # Clamped input is equivalent to from_rgb_float(0, 1, 0.5).
         expected = ColorHSI.from_rgb_float(0.0, 1.0, 0.5)
         self.assertEqual(c, expected)
 

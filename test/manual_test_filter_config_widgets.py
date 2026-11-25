@@ -1,3 +1,5 @@
+"""Manual smoke test for the filter configuration column-select widget."""
+
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout
 from view.show_mode.editor.node_editor_widgets import ColumnSelect

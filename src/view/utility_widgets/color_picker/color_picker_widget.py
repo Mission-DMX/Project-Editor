@@ -47,10 +47,12 @@ _INTENSITY_SLIDER_RESOLUTION = 1000
 
 
 class ColorPickerWidget(QWidget):
+    """Composite color picker: chromaticity diagram + HSI/RGB/CMY inputs + intensity slider."""
 
     color_changed: Signal = Signal(ColorHSI)
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the composite layout and seed the inputs with the initial color."""
         super().__init__(parent)
 
         self.setMinimumSize(800, 600)
@@ -138,6 +140,7 @@ class ColorPickerWidget(QWidget):
 
     @property
     def color(self) -> ColorHSI:
+        """Return a copy of the currently-selected color."""
         return self._color.copy()
 
     @color.setter
