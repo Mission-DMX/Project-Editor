@@ -90,10 +90,10 @@ def fetch_fixture_json(file_path: Path) -> dict:
 
 def _collect_colour_names(obj, out: Set[str]) -> None:
     """Find all used color names.
-    
+
     Recursively walk *obj* and add every string value whose key is
     ``color`` or ``colour`` (case‑insensitive) to *out*.
-    
+
     """
     if isinstance(obj, dict):
         for k, v in obj.items():
@@ -125,7 +125,7 @@ def _scrape_page(url: str) -> BeautifulSoup:
 
 def lookup_colour(name: str) -> Tuple[float, float, float]:
     """Try to fetch color name values online.
-    
+
     Scrape https://www.colornames.org/color/<name> and extract:
         Hue (°), Saturation (%), Value (%)
 
@@ -138,7 +138,7 @@ def lookup_colour(name: str) -> Tuple[float, float, float]:
            (e.g. ``cold white`` → ``cold-white``)
 
     If both attempts fail a ``ValueError`` is raised.
-    
+
     """
     # Normalise the name for the URL
     raw = name.strip().lower()

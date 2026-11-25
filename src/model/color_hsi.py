@@ -135,7 +135,50 @@ class ColorHSI:
     def to_rgb(self) -> tuple[int, int, int]:
         """RGB representations as int between 0 and 255."""
         rr, rg, rb = colorsys.hsv_to_rgb(self._hue / 360.0, self._saturation, self._intensity)
-        return int(rr * 255), int(rg * 255), int(rb * 255)
+        return (
+            max(0, min(round(rr * 255), 255)),
+            max(0, min(round(rg * 255), 255)),
+            max(0, min(round(rb * 255), 255)),
+        )
+
+    @classmethod
+    def from_rgb_float(cls, red: float, green: float, blue: float) -> ColorHSI:
+        """Initialize an HSI color from RGB floats in [0, 1].
+
+        Uses HSV internally to match ``to_rgb_float`` (and the whole-model HSV convention).
+
+        Args:
+            red: Red component in the range [0, 1]. Values outside the range are clamped.
+            green: Green component in the range [0, 1]. Values outside the range are clamped.
+            blue: Blue component in the range [0, 1]. Values outside the range are clamped.
+
+        Returns:
+            The HSI color object. The conversion is the inverse of ``to_rgb_float`` and therefore lossless.
+
+        """
+        r = max(0.0, min(red, 1.0))
+        g = max(0.0, min(green, 1.0))
+        b = max(0.0, min(blue, 1.0))
+        hue, saturation, intensity = colorsys.rgb_to_hsv(r, g, b)
+        return ColorHSI(hue * 360.0, saturation, intensity)
+
+    def to_rgb_float(self) -> tuple[float, float, float]:
+        """RGB representations as floats in [0, 1]. Inverse of ``from_rgb_float``."""
+        return colorsys.hsv_to_rgb(self._hue / 360.0, self._saturation, self._intensity)
+
+    @classmethod
+    def from_cmy(cls, cyan: float, magenta: float, yellow: float) -> ColorHSI:
+        """Initialize an HSI color from CMY components in [0, 1].
+
+        CMY is 1 - RGB in normalized space.
+
+        """
+        return cls.from_rgb_float(1.0 - cyan, 1.0 - magenta, 1.0 - yellow)
+
+    def to_cmy(self) -> tuple[float, float, float]:
+        """CMY representation as floats in [0, 1]."""
+        r, g, b = self.to_rgb_float()
+        return 1.0 - r, 1.0 - g, 1.0 - b
 
     def to_qt_color(self) -> QColor:
         """Return color in qt color format."""
@@ -153,6 +196,26 @@ class ColorHSI:
 
         """
         return ColorHSI(color.hsvHueF() * 360.0, color.hsvSaturationF(), color.valueF())
+
+    _EQ_QUANT = 1e5  # 5-decimal grid shared by __eq__ and __hash__ to satisfy a == b ⇒ hash(a) == hash(b).
+
+    @classmethod
+    def _quantize(cls, value: float) -> int:
+        return round(value * cls._EQ_QUANT)
+
+    def __eq__(self, other: object) -> bool:
+        """Compare two ColorHSI by HSV components quantized to a shared 1e-5 grid."""
+        if not isinstance(other, ColorHSI):
+            return NotImplemented
+        return (
+            self._quantize(self._hue) == self._quantize(other._hue)
+            and self._quantize(self._saturation) == self._quantize(other._saturation)
+            and self._quantize(self._intensity) == self._quantize(other._intensity)
+        )
+
+    def __hash__(self) -> int:
+        """Hash on the same quantized grid that __eq__ uses so equal values hash equal."""
+        return hash((self._quantize(self._hue), self._quantize(self._saturation), self._quantize(self._intensity)))
 
     def __str__(self) -> str:
         """Format color as HTML color code."""

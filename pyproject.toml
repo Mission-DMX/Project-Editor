@@ -140,4 +140,3 @@ mypy_path = ["src"]
 [[tool.mypy.overrides]]
 module = ["OpenGL", "OpenGL.*", "pyelk", "pyelk.*"]
 ignore_missing_imports = true
-

@@ -9,7 +9,7 @@ The following tools need to be in PATH for the editor to work properly:
  * `swaymsg` (In order to let the editor direct its windows)
 
 ## Dev
-For dev use pdm as package manager: 
+For dev use pdm as package manager:
 ```
 pip install pdm
 pdm install --dev
