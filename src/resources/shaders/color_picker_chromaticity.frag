@@ -100,22 +100,34 @@ void main() {
         return;
     }
 
-    // xyY -> XYZ.  Guard against y == 0.
-    float Y = max(uY, 1e-4);
+    // Project xy onto a unit-luminance XYZ, then into linear sRGB.  We
+    // normalize to the pure-hue representation (max channel = 1) so the
+    // displayed color is modulated purely by the HSV V uniform.  This keeps
+    // the diagram looking uniformly bright at any intensity (otherwise
+    // in-gamut pixels pick up natural CIE luminance scaling while out-of-gamut
+    // pixels get dimmed, which yields the "bright triangle, dim horseshoe"
+    // artifact at intermediate V values).
     float y_safe = max(xy.y, 1e-4);
-    vec3 XYZ = vec3(xy.x * Y / y_safe, Y, (1.0 - xy.x - xy.y) * Y / y_safe);
+    vec3 XYZ_unit = vec3(xy.x / y_safe, 1.0, (1.0 - xy.x - xy.y) / y_safe);
+    vec3 linear_rgb = M_XYZ_TO_LRGB * XYZ_unit;
 
-    vec3 linear_rgb = M_XYZ_TO_LRGB * XYZ;
-    bool oog = any(lessThan(linear_rgb, vec3(0.0))) || any(greaterThan(linear_rgb, vec3(1.0)));
-    vec3 clamped = clamp(linear_rgb, vec3(0.0), vec3(1.0));
-    vec3 srgb = srgb_oetf_vec(clamped);
+    // OOG = any negative component (xy outside sRGB triangle).
+    bool oog = any(lessThan(linear_rgb, vec3(0.0)));
+
+    // Clamp negatives (project OOG onto the gamut boundary).
+    linear_rgb = max(linear_rgb, vec3(0.0));
+
+    // Normalize: max channel = 1 → fully saturated hue at this chromaticity.
+    float max_ch = max(linear_rgb.r, max(linear_rgb.g, linear_rgb.b));
+    linear_rgb /= max(max_ch, 1e-6);
+
+    // Apply OETF, then dim by intensity as a straight sRGB multiplier (HSV V semantics).
+    vec3 srgb = srgb_oetf_vec(linear_rgb) * uY;
 
     if (oog) {
-        // Dim + desaturate so the user still sees the out-of-gamut hue but
-        // can tell it is unreachable on sRGB.
+        // Dim + desaturate to indicate "unreachable on sRGB".
         float gray = dot(srgb, vec3(0.2126, 0.7152, 0.0722));
-        vec3 desat = mix(vec3(gray), srgb, 0.35);
-        srgb = desat * 0.55;
+        srgb = mix(vec3(gray), srgb, 0.4) * 0.6;
     }
 
     // Overlay: spectral-locus outline (black with 1px AA).

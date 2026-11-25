@@ -299,11 +299,26 @@ class ColorPickerWidget(QWidget):
         return x, y
 
     def _color_from_xy(self, x: float, y: float) -> ColorHSI:
-        luminance = max(self._color.intensity, 1e-4)
-        xyz = cie.xyY_to_xyz(x, y, luminance)
-        linear = cie.xyz_to_linear_srgb_d65(xyz)
-        srgb = cie.linear_srgb_tuple_to_srgb(linear)
-        return ColorHSI.from_rgb_float(*srgb)
+        """Convert a chromaticity pick into a ``ColorHSI`` without touching the intensity.
+
+        The xy diagram only encodes hue + saturation.  To keep the intensity
+        slider stable while picking, we normalize to the pure-hue
+        representation (linear max = 1) and then re-apply the current HSV V
+        as a straight sRGB multiplier — mirroring what the shader does.
+        """
+        xyz = cie.xyY_to_xyz(x, y, 1.0)
+        linear = list(cie.xyz_to_linear_srgb_d65(xyz))
+        # Clamp negatives (project OOG onto the sRGB boundary).
+        linear = [max(0.0, c) for c in linear]
+        max_c = max(linear)
+        if max_c < 1e-6:
+            # Degenerate chromaticity (near-black XYZ); keep the current
+            # intensity but drop saturation so we end up at achromatic.
+            return ColorHSI(self._color.hue, 0.0, self._color.intensity)
+        normalized = tuple(c / max_c for c in linear)
+        srgb_at_v1 = cie.linear_srgb_tuple_to_srgb(normalized)
+        v = self._color.intensity
+        return ColorHSI.from_rgb_float(srgb_at_v1[0] * v, srgb_at_v1[1] * v, srgb_at_v1[2] * v)
 
     # -----------------------------------------------------------------
     # Slots
