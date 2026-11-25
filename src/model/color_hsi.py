@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import colorsys
-import math
 
 import numpy as np
 from PySide6.QtGui import QColor
@@ -198,19 +197,25 @@ class ColorHSI:
         """
         return ColorHSI(color.hsvHueF() * 360.0, color.hsvSaturationF(), color.valueF())
 
+    _EQ_QUANT = 1e5  # 5-decimal grid shared by __eq__ and __hash__ to satisfy a == b ⇒ hash(a) == hash(b).
+
+    @classmethod
+    def _quantize(cls, value: float) -> int:
+        return round(value * cls._EQ_QUANT)
+
     def __eq__(self, other: object) -> bool:
-        """Compare two ColorHSI by HSV components with a tiny tolerance."""
+        """Compare two ColorHSI by HSV components quantized to a shared 1e-5 grid."""
         if not isinstance(other, ColorHSI):
             return NotImplemented
         return (
-            math.isclose(self._hue, other._hue, abs_tol=1e-6)
-            and math.isclose(self._saturation, other._saturation, abs_tol=1e-6)
-            and math.isclose(self._intensity, other._intensity, abs_tol=1e-6)
+            self._quantize(self._hue) == self._quantize(other._hue)
+            and self._quantize(self._saturation) == self._quantize(other._saturation)
+            and self._quantize(self._intensity) == self._quantize(other._intensity)
         )
 
     def __hash__(self) -> int:
-        """Hash rounded HSV components so equal colors (within tolerance) hash equal."""
-        return hash((round(self._hue, 6), round(self._saturation, 6), round(self._intensity, 6)))
+        """Hash on the same quantized grid that __eq__ uses so equal values hash equal."""
+        return hash((self._quantize(self._hue), self._quantize(self._saturation), self._quantize(self._intensity)))
 
     def __str__(self) -> str:
         """Format color as HTML color code."""

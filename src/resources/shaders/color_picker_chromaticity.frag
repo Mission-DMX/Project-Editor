@@ -66,10 +66,9 @@ float distance_to_locus(vec2 p) {
     int n = uLocusCount;
     for (int i = 0; i < n; ++i) {
         vec2 a = uLocus[i];
-        vec2 b = uLocus[(i + 1) % MAX_LOCUS];
-        // Wrap guard when (i+1) >= uLocusCount: clamp manually.
+        // Wrap around to index 0 instead of wrapping into stale slots past uLocusCount.
         int j = (i + 1 < n) ? (i + 1) : 0;
-        b = uLocus[j];
+        vec2 b = uLocus[j];
         best = min(best, point_to_segment(p, a, b));
     }
     return best;
@@ -107,6 +106,13 @@ void main() {
     // in-gamut pixels pick up natural CIE luminance scaling while out-of-gamut
     // pixels get dimmed, which yields the "bright triangle, dim horseshoe"
     // artifact at intermediate V values).
+    //
+    // Invariant: point_in_locus(xy) has already returned true, so xy lies
+    // inside the spectral horseshoe.  That guarantees xy.y > 0 (the horseshoe
+    // never touches the x-axis) and x + y <= 1 within the locus, so
+    // (1 - xy.x - xy.y) >= 0 and the z component below is non-negative.  The
+    // y_safe clamp is only belt-and-braces for fragments at the extreme
+    // bottom edge of the mapping.
     float y_safe = max(xy.y, 1e-4);
     vec3 XYZ_unit = vec3(xy.x / y_safe, 1.0, (1.0 - xy.x - xy.y) / y_safe);
     vec3 linear_rgb = M_XYZ_TO_LRGB * XYZ_unit;

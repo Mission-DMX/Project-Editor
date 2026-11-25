@@ -303,6 +303,16 @@ class ColorPickerWidget(QWidget):
         slider stable while picking, we normalize to the pure-hue
         representation (linear max = 1) and then re-apply the current HSV V
         as a straight sRGB multiplier — mirroring what the shader does.
+
+        This intentionally duplicates the shader math instead of calling
+        :func:`cie.xy_to_srgb_at_luminance` because that reference helper
+        feeds the slider value in as CIE Y, which couples hue/saturation
+        picking to CIE luminance.  HSV V (what the picker exposes to the
+        caller as ``intensity``) is not CIE Y, so routing picks through the
+        reference helper would make dragging the chromaticity marker shift
+        the intensity slider — exactly the bug this method exists to avoid.
+        See the matching fragment-shader pipeline in
+        ``src/resources/shaders/color_picker_chromaticity.frag``.
         """
         xyz = cie.xyY_to_xyz(x, y, 1.0)
         linear = list(cie.xyz_to_linear_srgb_d65(xyz))

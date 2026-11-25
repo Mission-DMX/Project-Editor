@@ -120,10 +120,13 @@ LINEAR_SRGB_TO_XYZ_D65: tuple[tuple[float, float, float], ...] = (
 def xyY_to_xyz(x: float, y: float, Y: float) -> tuple[float, float, float]:  # noqa: N802,N803
     """Convert CIE xyY to XYZ.
 
-    Returns (0, 0, 0) when ``y`` is degenerate (near zero) to avoid NaN.
+    Degenerate inputs (``y`` near zero, or luminance ``Y`` near zero) collapse
+    to the all-zero XYZ.  The companion :func:`xyz_to_xyY` maps this sentinel
+    back to the D65 chromaticity with ``Y = 0``, so a degenerate round-trip
+    lands on a stable fallback.
 
     """
-    if y < 1e-6:
+    if y < 1e-6 or Y < 1e-12:
         return 0.0, 0.0, 0.0
     big_x = x * Y / y
     big_z = (1.0 - x - y) * Y / y
@@ -131,11 +134,15 @@ def xyY_to_xyz(x: float, y: float, Y: float) -> tuple[float, float, float]:  # n
 
 
 def xyz_to_xyY(xyz: tuple[float, float, float]) -> tuple[float, float, float]:  # noqa: N802
-    """Convert CIE XYZ to xyY."""
+    """Convert CIE XYZ to xyY.
+
+    When ``X + Y + Z`` is near zero (the all-zero XYZ emitted by
+    :func:`xyY_to_xyz` for degenerate inputs), returns the D65 chromaticity
+    with ``Y = 0`` as a stable fallback.
+    """
     big_x, big_y, big_z = xyz
     total = big_x + big_y + big_z
     if total < 1e-12:
-        # Degenerate; return D65 chromaticity with Y=0.
         return D65_WHITE_XY[0], D65_WHITE_XY[1], 0.0
     return big_x / total, big_y / total, big_y
 

@@ -1,6 +1,9 @@
 """Manual smoke test for ColorPickerWidget.
 
 Run from the ``src/`` directory so ``resource_path`` resolves the shader files.
+Set the ``COLOR_PICKER_VERBOSE`` environment variable to any non-empty value
+to echo every ``color_changed`` filter payload to stdout — useful when
+spotting over-emission during drag but noisy by default.
 
 Manual checklist:
     * Click inside the horseshoe → marker moves, swatch updates, all numeric
@@ -18,6 +21,8 @@ Manual checklist:
     * Close the window → cleanup runs without error (watch logs).
 """
 
+import os
+
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QVBoxLayout
@@ -26,6 +31,8 @@ import style
 from gl_init import opengl_context_init
 from model.color_hsi import ColorHSI
 from view.utility_widgets.color_picker.color_picker_widget import ColorPickerWidget
+
+_VERBOSE = bool(os.environ.get("COLOR_PICKER_VERBOSE"))
 
 if __name__ == "__main__":
     opengl_context_init()
@@ -42,13 +49,14 @@ if __name__ == "__main__":
     readout.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
     def on_color_changed(c: ColorHSI) -> None:
-        """Mirror the picker's current color into the readout label and stdout."""
+        """Mirror the picker's current color into the readout label (and stdout when verbose)."""
         r, g, b = c.to_rgb()
         readout.setText(
             f"HSI=({c.hue:.1f}°, {c.saturation * 100:.1f}%, {c.intensity * 100:.1f}%)  "
             f"RGB=({r}, {g}, {b})  {c!s}  filter={c.format_for_filter()}"
         )
-        print(c.format_for_filter())
+        if _VERBOSE:
+            print(c.format_for_filter())
 
     picker.color_changed.connect(on_color_changed)
 
