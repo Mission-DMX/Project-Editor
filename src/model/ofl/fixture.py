@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from model import BoardConfiguration
+    from model.ofl.ofl_fixture import ChannelTemplate
 
 logger = getLogger(__name__)
 
@@ -343,8 +344,21 @@ class UsedFixture(QtCore.QObject):
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
+        # Fine-resolution channels are not listed in ``availableChannels`` directly; they are declared
+        # via ``fineChannelAliases`` on their coarse counterpart. Build the reverse lookup once so
+        # per-channel resolution stays O(1).
+        fine_alias_to_template: dict[str, ChannelTemplate] = {}
+        for template in fixture_template.availableChannels.values():
+            for alias in template.fineChannelAliases or ():
+                fine_alias_to_template[alias] = template
+
         def append_channel(cn: str, i: int) -> None:
-            channel = FixtureChannel(cn, fixture_template)
+            template = fixture_template.availableChannels.get(cn)
+            is_fine = False
+            if template is None:
+                template = fine_alias_to_template.get(cn)
+                is_fine = template is not None
+            channel = FixtureChannel(cn, template, is_fine)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
                 segment_map[channel_type].append(i)

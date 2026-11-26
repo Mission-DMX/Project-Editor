@@ -11,7 +11,7 @@ from PySide6 import QtCore
 from model.ofl.ofl_fixture import CapabilityType
 
 if TYPE_CHECKING:
-    from model.ofl.ofl_fixture import ChannelTemplate, OflFixture
+    from model.ofl.ofl_fixture import ChannelTemplate
 
 logger = getLogger(__name__)
 
@@ -33,6 +33,7 @@ class FixtureChannelType(IntFlag):
     ROTATION = 512
     SPEED = 1024
     COLORWHEEL = 2048
+    INTENSITY = 4096
     # TODO vielleicht als enum
 
 
@@ -41,10 +42,27 @@ class FixtureChannel:
 
     updated: QtCore.Signal(int) = QtCore.Signal(int)
 
-    def __init__(self, name: str, parent_fixture_template: OflFixture) -> None:
-        """Initialize a fixture channel."""
+    def __init__(
+        self,
+        name: str,
+        channel_template: ChannelTemplate | None,
+        is_fine: bool = False,
+    ) -> None:
+        """Initialize a fixture channel.
+
+        Args:
+            name: The channel name as it appears in the fixture mode.
+            channel_template: The OFL ``ChannelTemplate`` for this channel, already resolved by the
+                caller — either directly from ``availableChannels`` or via a coarse channel's
+                ``fineChannelAliases`` reverse lookup. ``None`` for template-less channels (e.g.
+                matrix-expanded channels without a dedicated template entry).
+            is_fine: ``True`` when ``channel_template`` was resolved via a coarse channel's
+                ``fineChannelAliases`` (i.e. this channel carries the low byte of a 16-bit value).
+
+        """
         self._name: Final[str] = name
-        self._channel_template: Final[ChannelTemplate | None] = parent_fixture_template.availableChannels.get(self.name)
+        self._channel_template: Final[ChannelTemplate | None] = channel_template
+        self._is_fine: Final[bool] = is_fine
         self._type: Final[FixtureChannelType] = self._get_channel_type_from_template_or_string()
         self._ignore_black = True
 
@@ -73,6 +91,11 @@ class FixtureChannel:
         """Returns the channel template."""
         return self._channel_template
 
+    @property
+    def is_fine(self) -> bool:
+        """Return True if this channel is the fine-resolution companion of a coarse channel."""
+        return self._is_fine
+
     @ignore_black.setter
     def ignore_black(self, ignore_black: bool) -> None:
         self._ignore_black = ignore_black
@@ -99,6 +122,8 @@ class FixtureChannel:
                             types |= FixtureChannelType.AMBER
                         elif "uv" in name:
                             types |= FixtureChannelType.UV
+                    case CapabilityType.INTENSITY:
+                        types |= FixtureChannelType.INTENSITY
                     case CapabilityType.PAN:
                         types |= FixtureChannelType.PAN
                     case CapabilityType.TILT:
@@ -115,10 +140,14 @@ class FixtureChannel:
                         continue
             return types
 
+        # No template available (e.g. matrix-expanded channels like "All Zones Red"). Fall back to a
+        # name-based heuristic so matrix/segment channels still receive meaningful colour types.
         for channel_type in FixtureChannelType:
-            if str(channel_type.name).lower() in name:
-                types &= channel_type
+            if channel_type == FixtureChannelType.UNDEFINED:
+                continue
+            if channel_type.name.lower() in name:
+                types |= channel_type
                 if channel_type in (FixtureChannelType.PAN, FixtureChannelType.TILT):
-                    types &= FixtureChannelType.POSITION
+                    types |= FixtureChannelType.POSITION
 
         return types
