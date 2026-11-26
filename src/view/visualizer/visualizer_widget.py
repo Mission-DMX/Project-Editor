@@ -116,13 +116,13 @@ def _build_color_section(device: UsedFixture) -> dict[str, Any] | None:
     """Build the ``color`` section of ``device_config`` for a beam fixture.
 
     Combines auto-detected per-colour-role channel offsets with the first
-    colour-carrying wheel extracted via :func:`_extract_wheel_configs`. Returns
+    colour-carrying wheel extracted via :func:`extract_wheel_configs`. Returns
     ``None`` if the fixture exposes no colour source at all so the caller can
     skip adding an empty section to ``device_config``.
     """
     ch_names = [ch.name for ch in device.fixture_channels]
     col_mapping = auto_detect_mapping(ch_names, ColorRole)
-    wheel_configs = _extract_wheel_configs(device)
+    wheel_configs = extract_wheel_configs(device)
 
     has_direct = any(col_mapping.get(role, -1) >= 0 for role in ("red", "green", "blue", "white", "amber", "uv"))
     if not has_direct and not wheel_configs:
@@ -141,7 +141,7 @@ def _build_color_section(device: UsedFixture) -> dict[str, Any] | None:
     return cfg
 
 
-def _extract_wheel_configs(device: UsedFixture) -> list[dict[str, Any]]:
+def extract_wheel_configs(device: UsedFixture) -> list[dict[str, Any]]:
     """Build ``[{channel, slots: [{dmx_min, dmx_max, color}]}, ...]`` for wheel channels.
 
     Uses each channel's template ``WheelSlot`` capabilities together with the
@@ -576,7 +576,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         # Colour wheels are fixture-wide; store the first one at the top level so
         # every pixel shares it when the parser computes the pixel colour.
-        wheel_configs = _extract_wheel_configs(device)
+        wheel_configs = extract_wheel_configs(device)
 
         pixels_cfg: dict[str, Any] = {
             "universe": universe_id,

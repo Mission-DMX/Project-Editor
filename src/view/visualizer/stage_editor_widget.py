@@ -25,14 +25,30 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-def _fixture_combo_data(fix: UsedFixture) -> dict[str, int | list[str]]:
+def _fixture_combo_data(fix: UsedFixture) -> dict[str, int | list[str] | list[dict]]:
     """Extract the data dict needed for device combo boxes from a UsedFixture."""
+    # Local import avoids a circular dependency with ``visualizer_widget`` at module load.
+    from view.visualizer.visualizer_widget import extract_wheel_configs
+
     ch_names = [ch.name for ch in fix.fixture_channels]
+    wheel_entries: list[dict] = []
+    for raw in extract_wheel_configs(fix):
+        offset = int(raw["channel"]) - int(fix.start_index)
+        if 0 <= offset < len(ch_names):
+            wheel_entries.append(
+                {
+                    "channel": raw["channel"],
+                    "slots": raw["slots"],
+                    "offset": offset,
+                    "name": ch_names[offset],
+                }
+            )
     return {
         "universe": fix.universe_id,
         "start_channel": fix.start_index,
         "channel_count": fix.channel_length,
         "channel_names": ch_names,
+        "wheel_channels": wheel_entries,
     }
 
 
@@ -1020,6 +1036,16 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._col_combos: dict[ColorRole, QtWidgets.QComboBox] = {}
         self._rebuild_col_combos(obj)
 
+        # Colour-wheel channel selector (lives in its own sub-container so the
+        # whole row can be hidden when the linked fixture has no colour wheel).
+        self._col_wheel_container = QtWidgets.QWidget()
+        self._col_wheel_layout = QtWidgets.QFormLayout(self._col_wheel_container)
+        self._col_wheel_layout.setContentsMargins(0, 0, 0, 0)
+        self._col_wheel_layout.setVerticalSpacing(3)
+        self._prop_layout.addRow(self._col_wheel_container)
+        self._col_wheel_combo: QtWidgets.QComboBox | None = None
+        self._rebuild_wheel_combo(obj)
+
     def _rebuild_mv_combos(self, obj: StageObject) -> None:
         """Rebuild the movement channel mapping combo boxes."""
         while self._mv_ch_layout.rowCount() > 0:
@@ -1089,6 +1115,37 @@ class StageEditorWidget(QtWidgets.QWidget):
             self._col_ch_layout.addRow(labels.get(role, role), combo)
             self._col_combos[role] = combo
 
+    def _rebuild_wheel_combo(self, obj: StageObject) -> None:
+        """Rebuild the colour-wheel channel selector for the linked colour device."""
+        while self._col_wheel_layout.rowCount() > 0:
+            self._col_wheel_layout.removeRow(0)
+        self._col_wheel_combo = None
+
+        device_data = self._col_device_combo.currentData()
+        wheel_entries = device_data.get("wheel_channels", []) if device_data else []
+        if not wheel_entries:
+            self._col_wheel_container.setVisible(False)
+            return
+        self._col_wheel_container.setVisible(True)
+
+        combo = QtWidgets.QComboBox(self._col_wheel_container)
+        combo.addItem("(None)", None)
+        for entry in wheel_entries:
+            combo.addItem(f"CH{entry['offset']}: {entry['name']}", entry)
+
+        current = (obj.device_config or {}).get("color", {}).get("wheel")
+        if current is not None:
+            current_ch = current.get("channel")
+            for ci in range(1, combo.count()):
+                data = combo.itemData(ci)
+                if data and data["channel"] == current_ch:
+                    combo.setCurrentIndex(ci)
+                    break
+
+        combo.currentIndexChanged.connect(self._on_wheel_channel_changed)
+        self._col_wheel_layout.addRow("Color Wheel:", combo)
+        self._col_wheel_combo = combo
+
     def _on_mv_device_changed(self, _: int) -> None:  # Index argument is not required
         if self._updating_ui or not self._current_obj:
             return
@@ -1121,14 +1178,20 @@ class StageEditorWidget(QtWidgets.QWidget):
             self._current_obj.device_config.pop("color", None)
         else:
             mapping = auto_detect_mapping(dd["channel_names"], ColorRole)
-            self._current_obj.device_config["color"] = {
+            color_cfg: dict = {
                 "universe": dd["universe"],
                 "start_channel": dd["start_channel"],
                 "channel_count": dd["channel_count"],
                 "mapping": mapping,
             }
+            # Preserve today's "first wheel wins" auto-detection on (re-)link.
+            wheels = dd.get("wheel_channels") or []
+            if wheels:
+                color_cfg["wheel"] = {"channel": wheels[0]["channel"], "slots": wheels[0]["slots"]}
+            self._current_obj.device_config["color"] = color_cfg
         self._updating_ui = True
         self._rebuild_col_combos(self._current_obj)
+        self._rebuild_wheel_combo(self._current_obj)
         self._updating_ui = False
         self._refresh_locks()
         self._emit_changed()
@@ -1155,6 +1218,19 @@ class StageEditorWidget(QtWidgets.QWidget):
         if combo:
             dc["color"]["mapping"][role.value] = combo.currentData()
         self._refresh_locks()
+        self._emit_changed()
+
+    def _on_wheel_channel_changed(self, _: int) -> None:
+        if self._updating_ui or not self._current_obj or self._col_wheel_combo is None:
+            return
+        dc = self._current_obj.device_config
+        if not dc or "color" not in dc:
+            return
+        data = self._col_wheel_combo.currentData()
+        if data is None:
+            dc["color"].pop("wheel", None)
+        else:
+            dc["color"]["wheel"] = {"channel": data["channel"], "slots": data["slots"]}
         self._emit_changed()
 
     # Fixture change handlers
