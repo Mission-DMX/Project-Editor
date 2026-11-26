@@ -134,8 +134,10 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         self.filter_configurations.setdefault("has_8bit_output", "true")
         self.filter_configurations.setdefault("input_method", "8bit")
         self.filter_configurations.setdefault("input_method_mixin", "8bit")
-        self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
-        self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
+        if self.filter_configurations.get("has_8bit_output") == "true":
+            self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
+        if self.filter_configurations.get("has_16bit_output") == "true":
+            self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
         self._in_data_types["offset"] = DataType.DT_DOUBLE
         self.deserialize()
 

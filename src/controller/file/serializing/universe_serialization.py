@@ -100,5 +100,7 @@ def _create_fixture_element(fixture: UsedFixture, patching_element: ET.Element, 
             "start": str(fixture.start_index),
             "fixture_file": fixture.fixture_file,
             "mode": str(fixture.mode_index),
+            "id": str(fixture.uuid),
+            "color": str(fixture.color_on_stage)
         },
     )

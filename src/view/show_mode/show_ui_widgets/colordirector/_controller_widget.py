@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
 
 from view.show_mode.show_ui_widgets.colordirector._preview_bitmap_generator import PreviewBitmapGenerator
 from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
@@ -95,18 +95,10 @@ class ControllerWidget(QWidget):
             self._apply_single_buttons.append(preset_buttons)
         preview_generator.preset_preview_generated.connect(self._add_preview_on_buttons)
         self.destroyed.connect(preview_generator.requestInterruption)
-        grid_content = QWidget()
-        grid_content.setLayout(layout)
-        grid_content.setMinimumSize(
+        self.setLayout(layout)
+        self.setMinimumSize(
             number_of_presets * _ELEMENT_SIZE + _GROUP_LABEL_WIDTH, (number_of_groups + 1) * _ELEMENT_SIZE
         )
-        scroll_area = QScrollArea()
-        scroll_area.setWidget(grid_content)
-        scroll_area.setWidgetResizable(True)
-        outer_layout = QVBoxLayout()
-        outer_layout.setContentsMargins(0, 0, 0, 0)
-        outer_layout.addWidget(scroll_area)
-        self.setLayout(outer_layout)
         preview_generator.start()
         self._model.configuration_changed.mapped_signal.connect(self._update_recall_spinbox)
         if feedback_enabled:
