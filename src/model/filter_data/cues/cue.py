@@ -116,7 +116,7 @@ class State(ABC):
 
     @classmethod
     def from_value(cls, data_type: DataType, transition: TransferFunction | str,
-                   value: float | int | ColorHSI) -> State:
+                   value: float | ColorHSI) -> State:
         """Create the ``State`` subclass matching ``data_type`` and populate it.
 
         ``transition`` may be either a :class:`TransferFunction` member or its

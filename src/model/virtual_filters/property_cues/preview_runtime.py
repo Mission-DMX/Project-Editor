@@ -23,6 +23,7 @@ from model.filters.factory import construct_filter_instance
 if TYPE_CHECKING:
     from model import Scene
     from model.filter_data.cues.cue import Cue, KeyFrame
+    from model.virtual_filters.property_cues.channel_consolidator import ConsolidationMap
     from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
 
 logger = getLogger(__name__)
@@ -157,7 +158,7 @@ def build_preview_filters(
 
 def _preview_rewrite(
     source: str, cue_fid: str,
-    consolidation, canonical_to_const_id: dict[str, str],
+    consolidation: ConsolidationMap, canonical_to_const_id: dict[str, str],
 ) -> str:
     """Rewrite one strategy channel_link from cue-filter ref to PREVIEW_CONST ref."""
     if not source:

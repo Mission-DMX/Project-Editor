@@ -22,7 +22,7 @@ import unittest
 
 import varint
 
-from controller.network import NetworkManager, _read_varint, _VarintIncomplete
+from controller.network import NetworkManager, _read_varint, _VarintIncompleteError
 
 
 def _frame(msg_type: int, body: bytes) -> bytes:
@@ -48,9 +48,9 @@ class ReadVarintTest(unittest.TestCase):
         """A split varint must NOT raise ``EOFError`` or decode garbage; it
         must signal "need more bytes" so the reader can wait for the next
         chunk without disconnecting the socket."""
-        with self.assertRaises(_VarintIncomplete):
+        with self.assertRaises(_VarintIncompleteError):
             _read_varint(b"\xc8", 0)  # high bit set; waiting for continuation
-        with self.assertRaises(_VarintIncomplete):
+        with self.assertRaises(_VarintIncompleteError):
             _read_varint(b"", 0)
 
     def test_offset_respected(self) -> None:

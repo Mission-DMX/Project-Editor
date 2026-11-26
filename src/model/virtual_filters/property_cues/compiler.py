@@ -476,8 +476,10 @@ def _build_ports(all_specs: dict[str, ChannelSpec], consolidation: Consolidation
                 # ``corresponding output channel wasn't found``).
                 const_ref = defaulted_source_map[f"{cue_filter_id}:{port_ch}"]
                 const_id, _, const_port_name = const_ref.partition(":")
-                port = (const_id, const_port_name)
-            external_ports.setdefault(f"{virtual_prefix}__{cap_name}", port)
+                resolved_port = (const_id, const_port_name)
+            else:
+                resolved_port = port
+            external_ports.setdefault(f"{virtual_prefix}__{cap_name}", resolved_port)
         # Passthrough fallback: for raw channels the vfilter still has to be
         # addressable by, point at the native cue filter unless the channel
         # was defaulted -- in which case point at the constant filter the

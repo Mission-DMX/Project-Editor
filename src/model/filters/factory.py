@@ -89,11 +89,11 @@ def construct_filter_instance(
             instance._rebuild_io()
         return instance
 
-        return Filter(
-            scene=scene,
-            filter_id=filter_id,
-            filter_type=type_code,
-            pos=pos,
-            filter_configurations=filter_configurations,
-            initial_parameters=initial_parameters,
-        )
+    return Filter(
+        scene=scene,
+        filter_id=filter_id,
+        filter_type=type_code,
+        pos=pos,
+        filter_configurations=filter_configurations,
+        initial_parameters=initial_parameters,
+    )

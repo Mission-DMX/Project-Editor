@@ -95,7 +95,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
     "cuecontrol": (
         "Cue Control",
         CueControlUIWidget,
-        [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES, FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES]],
+        [[
+            FilterTypeEnumeration.FILTER_TYPE_CUES,
+            FilterTypeEnumeration.VFILTER_CUES,
+            FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES,
+        ]],
         None,
     ),
     "pantiltconstant": (

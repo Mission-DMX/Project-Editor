@@ -32,14 +32,14 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class _VarintIncomplete(Exception):
+class _VarintIncompleteError(Exception):
     """Raised by :func:`_read_varint` when the buffer runs out mid-varint."""
 
 
 def _read_varint(buf: bytes, offset: int) -> tuple[int, int]:
     """Read one little-endian protobuf-style varint starting at ``offset``.
 
-    Returns ``(value, bytes_consumed)``. Raises :class:`_VarintIncomplete`
+    Returns ``(value, bytes_consumed)``. Raises :class:`_VarintIncompleteError`
     if ``buf`` ends before the varint's continuation bit clears (i.e.
     the header is split across two socket reads). Raises
     :class:`ValueError` if the varint would exceed the 10-byte cap
@@ -50,7 +50,7 @@ def _read_varint(buf: bytes, offset: int) -> tuple[int, int]:
     pos = offset
     while True:
         if pos >= len(buf):
-            raise _VarintIncomplete
+            raise _VarintIncompleteError
         byte = buf[pos]
         pos += 1
         value |= (byte & 0x7F) << shift
@@ -364,7 +364,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         try:
             msg_type, type_len = _read_varint(buf, 0)
             msg_len, len_len = _read_varint(buf, type_len)
-        except _VarintIncomplete:
+        except _VarintIncompleteError:
             return None
         header_len = type_len + len_len
         end = header_len + msg_len
