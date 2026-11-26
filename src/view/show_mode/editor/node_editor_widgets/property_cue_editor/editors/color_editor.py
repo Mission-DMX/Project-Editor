@@ -61,6 +61,7 @@ class ColorEditor(PropertyEditorBase):
     """Edit one HSI colour per fixture segment (compact single picker when N=1)."""
 
     def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
+        """Initialize the colour editor bound to the given cue filter model."""
         super().__init__(model, "color", parent)
         self._fixtures: list[UsedFixture] = []
 

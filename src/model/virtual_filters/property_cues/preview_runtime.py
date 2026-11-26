@@ -237,6 +237,7 @@ class PropertyCuesPreviewThread(QThread):
         tick_hz: float = 24.0,
         parent: QObject | None = None,
     ) -> None:
+        """Initialise the preview thread with its vfilter, channel map, tick rate and parent."""
         super().__init__(parent)
         self._vfilter_ref = weakref.ref(vfilter)
         # Strip the ":value" suffix if present — we add it back when sending.
@@ -252,12 +253,15 @@ class PropertyCuesPreviewThread(QThread):
         self.finished.connect(self.deleteLater)
 
     def set_timecode(self, seconds: float) -> None:
+        """Update the current playback timecode in seconds."""
         self._timecode = float(seconds)
 
     def set_playing(self, playing: bool) -> None:
+        """Set whether the preview thread is actively emitting tick updates."""
         self._playing = bool(playing)
 
     def set_cue_index(self, index: int) -> None:
+        """Select which cue index is evaluated on each tick."""
         self._cue_index = int(index)
 
     def run(self) -> None:

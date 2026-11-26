@@ -31,6 +31,7 @@ class FocusProperty(Property):
 
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
+        """Return the single 8-bit focus channel spec."""
         return (ChannelSpec(name=_FOCUS, data_type=DataType.DT_8_BIT),)
 
     def generate_requests(
@@ -40,6 +41,7 @@ class FocusProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
+        """Emit a keyframe request for the focus channel."""
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         return {

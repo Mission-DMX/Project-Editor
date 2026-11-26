@@ -53,11 +53,13 @@ def _value_from_json(blob: dict | list | float | str | bool | None) -> object:
 @dataclass(slots=True)
 class ManualPropertyAssignment:
     """User-dialed manual property values plus a distribution."""
+
     values: dict[str, Any]
     distribution: Distribution = field(default_factory=Distribution)
     transition: str = "lin"
 
     def to_json(self) -> dict:
+        """Serialize this manual assignment to a JSON-compatible dict."""
         return {
             "mode": "manual",
             "value": {k: _value_to_json(v) for k, v in self.values.items()},
@@ -67,6 +69,7 @@ class ManualPropertyAssignment:
 
     @classmethod
     def from_json(cls, blob: dict) -> ManualPropertyAssignment:
+        """Build a ``ManualPropertyAssignment`` from its JSON-compatible dict form."""
         raw_values = blob.get("value", {}) or {}
         values = {k: _value_from_json(v) for k, v in raw_values.items()}
         distribution = _distribution_from_json(blob.get("distribution", {}))
@@ -76,11 +79,14 @@ class ManualPropertyAssignment:
 
 @dataclass(slots=True)
 class PresetPropertyAssignment:
+    """Reference to a named preset plus optional hint values and a distribution."""
+
     preset_id: str
     hint_values: dict[str, Any] = field(default_factory=dict)
     distribution: Distribution = field(default_factory=Distribution)
 
     def to_json(self) -> dict:
+        """Serialize this preset assignment to a JSON-compatible dict."""
         return {
             "mode": "preset",
             "preset_id": self.preset_id,
@@ -90,6 +96,7 @@ class PresetPropertyAssignment:
 
     @classmethod
     def from_json(cls, blob: dict) -> PresetPropertyAssignment:
+        """Build a ``PresetPropertyAssignment`` from its JSON-compatible dict form."""
         raw_hints = blob.get("hint_values", {}) or {}
         hint_values = {k: _value_from_json(v) for k, v in raw_hints.items()}
         return cls(
@@ -114,13 +121,16 @@ def _assignment_from_json(blob: dict) -> PropertyAssignment:
 @dataclass(slots=True)
 class PropertyAssignments:
     """Map from property_id ("dimmer", "position", ...) to an assignment for a single node."""
+
     by_property: dict[str, PropertyAssignment] = field(default_factory=dict)
 
     def to_json(self) -> dict:
+        """Serialize all per-property assignments to a JSON-compatible dict."""
         return {prop_id: assignment.to_json() for prop_id, assignment in self.by_property.items()}
 
     @classmethod
     def from_json(cls, blob: dict) -> PropertyAssignments:
+        """Build ``PropertyAssignments`` from its JSON-compatible dict form."""
         by_property: dict[str, PropertyAssignment] = {}
         for prop_id, assignment_blob in blob.items():
             by_property[prop_id] = _assignment_from_json(assignment_blob)
@@ -129,12 +139,15 @@ class PropertyAssignments:
 
 @dataclass(slots=True)
 class PropertyStep:
+    """Single cue step: name, timing (in 40Hz ticks), and per-node property assignments."""
+
     name: str = ""
     duration_40hz: int = 40
     fade_in_40hz: int = 0
     assignments: dict[str, PropertyAssignments] = field(default_factory=dict)
 
     def to_json(self) -> dict:
+        """Serialize this step to a JSON-compatible dict."""
         return {
             "name": self.name,
             "duration_40hz": self.duration_40hz,
@@ -147,6 +160,7 @@ class PropertyStep:
 
     @classmethod
     def from_json(cls, blob: dict) -> PropertyStep:
+        """Build a ``PropertyStep`` from its JSON-compatible dict form."""
         assignments_blob = blob.get("assignments", {}) or {}
         assignments = {
             node_path: PropertyAssignments.from_json(node_blob)

@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 
 
 class DimmerEditor(PropertyEditorBase):
+    """Edit dimmer brightness and strobe parameters for a step."""
+
     def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
+        """Initialize the dimmer editor bound to the given cue filter model."""
         super().__init__(model, "dimmer", parent)
 
     def _install_manual_widgets(self, layout: QVBoxLayout) -> None:

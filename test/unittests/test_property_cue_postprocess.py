@@ -39,8 +39,10 @@ def _ctx(**overrides: object) -> CapabilityContext:
 
 
 class PassthroughDefaultTest(unittest.TestCase):
+    """Verify the passthrough default behaviour for unknown capabilities."""
 
     def test_passthrough_default(self) -> None:
+        """Verify an unknown capability yields a passthrough port and no filters."""
         ctx = _ctx()
         out = build_postprocess_chain("unknown_capability", ctx)
         self.assertEqual((), out.filters)
@@ -51,11 +53,14 @@ class PassthroughDefaultTest(unittest.TestCase):
 
 
 class PanStrategyTest(unittest.TestCase):
+    """Verify the pan post-processing strategy builds the expected filter chain."""
 
     def _build(self, pan_range: tuple[int, int] | None = (0, 65535)) -> PostprocessOutput:
+        """Return the pan post-process chain for the given pan range."""
         return build_postprocess_chain("pan", _ctx(pan_range=pan_range))
 
     def test_pan_strategy_wires_chain(self) -> None:
+        """Verify the pan strategy wires sin/cos/switch/range filters together correctly."""
         out = self._build()
         self.assertEqual(4, len(out.filters))
         by_type: dict[int, Filter] = {int(f.filter_type): f for f in out.filters}
@@ -82,6 +87,7 @@ class PanStrategyTest(unittest.TestCase):
         self.assertEqual({"pan": (range_f.filter_id, "value")}, out.external_ports)
 
     def test_pan_range_defaults(self) -> None:
+        """Verify the pan strategy falls back to the full 16-bit range when no pan_range is given."""
         default_out = build_postprocess_chain("pan", _ctx(pan_range=None))
         range_filters = [
             f for f in default_out.filters
@@ -97,8 +103,10 @@ class PanStrategyTest(unittest.TestCase):
 
 
 class TiltStrategyTest(unittest.TestCase):
+    """Verify the tilt post-processing strategy uses the tilt range and channels."""
 
     def test_tilt_uses_tilt_range_and_channels(self) -> None:
+        """Verify the tilt strategy references the tilt range and tilt_value/tilt_curvesel channels."""
         out = build_postprocess_chain("tilt", _ctx(tilt_range=(100, 50000)))
         range_f = next(
             f for f in out.filters
@@ -116,17 +124,21 @@ class TiltStrategyTest(unittest.TestCase):
 
 
 class RegisterOverridesTest(unittest.TestCase):
+    """Verify register_strategy overrides existing entries in the strategy table."""
 
     def setUp(self) -> None:
+        """Snapshot the current frost strategy so it can be restored after each test."""
         self._previous = _factory._STRATEGIES.get("frost")
 
     def tearDown(self) -> None:
+        """Restore the original frost strategy to isolate tests from one another."""
         if self._previous is None:
             _factory._STRATEGIES.pop("frost", None)
         else:
             _factory._STRATEGIES["frost"] = self._previous
 
     def test_register_overrides(self) -> None:
+        """Verify re-registering a strategy replaces the previous entry."""
         marker_a = PostprocessOutput(filters=(), external_ports={"frost": ("A", "a")})
         marker_b = PostprocessOutput(filters=(), external_ports={"frost": ("B", "b")})
 
@@ -138,8 +150,10 @@ class RegisterOverridesTest(unittest.TestCase):
 
 
 class DimmerStrategyTest(unittest.TestCase):
+    """Verify the dimmer post-processing strategy wires the strobe generator chain."""
 
     def test_dimmer_strategy_wires_strobe_chain(self) -> None:
+        """Verify the dimmer strategy wires strobefreq/duty_cycle adapters into the strobe generator."""
         out = build_postprocess_chain("dimmer", _ctx())
         self.assertEqual(3, len(out.filters))
         adapters = [f for f in out.filters

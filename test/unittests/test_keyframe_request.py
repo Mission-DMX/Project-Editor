@@ -14,33 +14,39 @@ class KeyframeRequestTest(unittest.TestCase):
     """Basic correctness of the KeyframeRequest primitive."""
 
     def test_default_transition_is_linear(self) -> None:
+        """Verify the default transition on a KeyframeRequest is LINEAR."""
         req = KeyframeRequest(timestep_40hz=0, requested_value=0.5)
         self.assertEqual(TransferFunction.LINEAR, req.transition)
 
     def test_frozen(self) -> None:
+        """Verify KeyframeRequest instances are frozen and reject field assignment."""
         req = KeyframeRequest(timestep_40hz=0, requested_value=0.5)
         with self.assertRaises(FrozenInstanceError):
             req.timestep_40hz = 1  # type: ignore[misc]
 
     def test_slots(self) -> None:
+        """Verify unknown attributes cannot be set on KeyframeRequest."""
         req = KeyframeRequest(timestep_40hz=0, requested_value=0.5)
         # Slots + frozen rejects unknown attributes; the exact exception type depends on cpython version.
         with self.assertRaises((AttributeError, FrozenInstanceError, TypeError)):
             req.bogus = "x"  # type: ignore[attr-defined]
 
     def test_equality(self) -> None:
+        """Verify value-equal KeyframeRequests compare equal and hash equal."""
         a = KeyframeRequest(timestep_40hz=1, requested_value=1.0, transition=TransferFunction.EDGE)
         b = KeyframeRequest(timestep_40hz=1, requested_value=1.0, transition=TransferFunction.EDGE)
         self.assertEqual(a, b)
         self.assertEqual(hash(a), hash(b))
 
     def test_time_ordering(self) -> None:
+        """Verify KeyframeRequests sort by their 40Hz timestep."""
         a = KeyframeRequest(timestep_40hz=1, requested_value=0.5)
         b = KeyframeRequest(timestep_40hz=2, requested_value=0.5)
         self.assertLess(a, b)
         self.assertEqual([a, b], sorted([b, a]))
 
     def test_colour_value_allowed(self) -> None:
+        """Verify ColorHSI values are accepted as requested_value."""
         c = ColorHSI(120.0, 1.0, 0.5)
         req = KeyframeRequest(timestep_40hz=0, requested_value=c, transition=TransferFunction.SIGMOIDAL)
         self.assertIs(c, req.requested_value)
@@ -50,16 +56,19 @@ class ChannelSpecTest(unittest.TestCase):
     """Basic correctness of the ChannelSpec primitive."""
 
     def test_defaults(self) -> None:
+        """Verify ChannelSpec default_value and aliases default to empty values."""
         spec = ChannelSpec(name="MH1__pan_value", data_type=DataType.DT_DOUBLE)
         self.assertEqual("", spec.default_value)
         self.assertEqual((), spec.aliases)
 
     def test_frozen_and_slots(self) -> None:
+        """Verify ChannelSpec instances are frozen and reject field assignment."""
         spec = ChannelSpec(name="x", data_type=DataType.DT_8_BIT)
         with self.assertRaises(FrozenInstanceError):
             spec.name = "y"  # type: ignore[misc]
 
     def test_equality(self) -> None:
+        """Verify value-equal ChannelSpecs compare equal and hash equal."""
         a = ChannelSpec(name="x", data_type=DataType.DT_16_BIT, default_value="42")
         b = ChannelSpec(name="x", data_type=DataType.DT_16_BIT, default_value="42")
         self.assertEqual(a, b)

@@ -29,18 +29,22 @@ _CONSTANT = Distribution(method=DistributionMethod.CONSTANT)
 
 
 class DistributionTest(unittest.TestCase):
+    """Tests for the Distribution delay calculation across methods."""
 
     def test_constant_zero_delay(self) -> None:
+        """Verify CONSTANT method yields a zero delay regardless of parameters."""
         dist = Distribution(method=DistributionMethod.CONSTANT, phase_offset=99.0, amplitude=12.0)
         for idx in range(5):
             self.assertEqual(0.0, dist.delay_for_child(idx))
 
     def test_phase_linear_sequence(self) -> None:
+        """Verify PHASE_LINEAR produces evenly spaced delays scaled by amplitude."""
         dist = Distribution(method=DistributionMethod.PHASE_LINEAR, phase_offset=0.5, amplitude=1.0)
         delays = [dist.delay_for_child(i) for i in range(4)]
         self.assertEqual([0.0, 0.5, 1.0, 1.5], delays)
 
     def test_phase_sin_amplitude(self) -> None:
+        """Verify PHASE_SIN delays follow a sine wave scaled by amplitude."""
         dist = Distribution(method=DistributionMethod.PHASE_SIN, phase_offset=math.pi / 2, amplitude=2.0)
         delays = [dist.delay_for_child(i) for i in range(4)]
         self.assertAlmostEqual(0.0, delays[0], places=6)
@@ -49,6 +53,7 @@ class DistributionTest(unittest.TestCase):
         self.assertAlmostEqual(-2.0, delays[3], places=6)
 
     def test_phase_cos_amplitude(self) -> None:
+        """Verify PHASE_COS delays follow a cosine wave scaled by amplitude."""
         dist = Distribution(method=DistributionMethod.PHASE_COS, phase_offset=math.pi, amplitude=1.0)
         delays = [dist.delay_for_child(i) for i in range(3)]
         self.assertAlmostEqual(1.0, delays[0], places=6)
@@ -56,6 +61,7 @@ class DistributionTest(unittest.TestCase):
         self.assertAlmostEqual(1.0, delays[2], places=6)
 
     def test_phase_saw_shape(self) -> None:
+        """Verify PHASE_SAW produces the expected sawtooth delay sequence."""
         dist = Distribution(method=DistributionMethod.PHASE_SAW, phase_offset=math.pi, amplitude=1.0)
         # phase_offset=pi -> fraction increments by 0.5 per step.
         # child 0 -> fraction 0.0  -> (0.0 - 0.5)*2 = -1.0
@@ -68,11 +74,15 @@ class DistributionTest(unittest.TestCase):
 
 
 class DimmerPropertyTest(unittest.TestCase):
+    """Tests for DimmerProperty channel specs and request generation."""
 
     def test_channel_specs(self) -> None:
-        """The raw brightness channel is named ``brightness_raw`` so it cannot
+        """Verify raw brightness channel is named brightness_raw to avoid strobe collision.
+
+        The raw brightness channel is named ``brightness_raw`` so it cannot
         collide with the ``brightness`` port the strobe post-processing strategy
-        publishes (see the self-link bug fixed in ``_dimmer_strategy``)."""
+        publishes (see the self-link bug fixed in ``_dimmer_strategy``).
+        """
         specs = DimmerProperty().channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
@@ -85,6 +95,7 @@ class DimmerPropertyTest(unittest.TestCase):
         )
 
     def test_single_request_at_step_start(self) -> None:
+        """Verify one request per channel is emitted at the step start timestep."""
         prop = DimmerProperty(
             brightness=0.75, strobefreq=0.0, duty_cycle=200.0, transition=TransferFunction.LINEAR,
         )
@@ -104,12 +115,14 @@ class DimmerPropertyTest(unittest.TestCase):
         self.assertIs(TransferFunction.LINEAR, duty_req.transition)
 
     def test_default_duty_cycle_is_balanced(self) -> None:
+        """Verify the default duty cycle emits the balanced midpoint value (128)."""
         reqs = DimmerProperty().generate_requests(
             step_start_40hz=0, step_duration_40hz=40, child_index=0, distribution=_CONSTANT,
         )
         self.assertEqual(128.0, reqs["duty_cycle"][0].requested_value)
 
     def test_phase_linear_delays_children(self) -> None:
+        """Verify PHASE_LINEAR distribution offsets each child's request timestep."""
         prop = DimmerProperty(brightness=1.0)
         dist = Distribution(method=DistributionMethod.PHASE_LINEAR, phase_offset=0.5, amplitude=1.0)
         starts: list[int] = []
@@ -127,6 +140,7 @@ class CompilerGoboMultiWheelTest(unittest.TestCase):
     """Verify the compiler enumerates channels per the assignment's wheel_count."""
 
     def test_two_wheel_assignment_emits_both_channel_pairs(self) -> None:
+        """Verify a two-wheel gobo assignment produces both slot and rotation channel pairs."""
         from unittest.mock import patch
 
         from model.virtual_filters.property_cues.compiler import compile_property_model
@@ -274,7 +288,9 @@ class CompilerDefaultedChannelsTest(unittest.TestCase):
         )
 
     def test_defaulted_passthrough_capability_redirects_to_constant(self) -> None:
-        """Passthrough strategies (focus / frost / gobo / colour) that end
+        """Verify defaulted passthrough ports resolve to the emitted constant filter.
+
+        Passthrough strategies (focus / frost / gobo / colour) that end
         up referencing a defaulted cue-filter channel must have their
         exposed external port rewritten onto the constant filter the
         compiler emitted. Without the redirect, the serializer's
@@ -323,6 +339,7 @@ class CompilerColorSegmentTest(unittest.TestCase):
     """Verify the compiler threads ``color_segment_count_lookup`` all the way through."""
 
     def test_multi_segment_manual_assignment_emits_per_segment_channels(self) -> None:
+        """Verify a multi-segment color assignment emits one channel per segment index."""
         from unittest.mock import patch
 
         from model.virtual_filters.property_cues.compiler import compile_property_model
@@ -374,8 +391,11 @@ class CompilerColorSegmentTest(unittest.TestCase):
         self.assertNotIn("FX__color", virtual)
 
     def test_color_preset_replicates_across_segments(self) -> None:
-        """A single-channel colour preset applied to a 3-segment fixture
-        must produce three identical ``color_N`` keyframe streams."""
+        """Verify a single-channel colour preset replicates onto every segment.
+
+        A single-channel colour preset applied to a 3-segment fixture
+        must produce three identical ``color_N`` keyframe streams.
+        """
         from unittest.mock import patch
 
         from model.virtual_filters.property_cues.compiler import compile_property_model
@@ -454,8 +474,10 @@ class CompilerColorSegmentTest(unittest.TestCase):
 
 
 class PositionPropertyTest(unittest.TestCase):
+    """Tests for PositionProperty channel specs and request generation."""
 
     def test_channel_specs(self) -> None:
+        """Verify PositionProperty exposes pan/tilt value and curvesel channels."""
         specs = PositionProperty().channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
@@ -469,6 +491,7 @@ class PositionPropertyTest(unittest.TestCase):
         )
 
     def test_curvesel_constant_across_children(self) -> None:
+        """Verify the curvesel value is constant across children while delay still applies."""
         prop = PositionProperty(pan_value=0.5, pan_curvesel=CURVE_SIN, tilt_value=0.25)
         dist = Distribution(method=DistributionMethod.PHASE_LINEAR, phase_offset=0.25, amplitude=1.0)
         for child in range(3):
@@ -483,17 +506,21 @@ class PositionPropertyTest(unittest.TestCase):
 
 
 class ColorPropertyTest(unittest.TestCase):
+    """Tests for ColorProperty channel specs and request generation."""
 
     def test_channel_specs_single_segment(self) -> None:
+        """Verify a single-segment ColorProperty exposes a lone ``color`` channel."""
         specs = ColorProperty().channel_specs
         self.assertEqual(("color",), tuple(s.name for s in specs))
         self.assertEqual(DataType.DT_COLOR, specs[0].data_type)
 
     def test_channel_specs_multi_segment(self) -> None:
+        """Verify multi-segment ColorProperty exposes one channel per segment index."""
         specs = ColorProperty(segment_count=3).channel_specs
         self.assertEqual(("color_0", "color_1", "color_2"), tuple(s.name for s in specs))
 
     def test_discrete_value_unchanged_across_children(self) -> None:
+        """Verify the authored colour is constant across children while timesteps shift."""
         colour = ColorHSI(120.0, 1.0, 0.5)
         prop = ColorProperty(colors={0: colour}, transition=TransferFunction.EDGE)
         dist = Distribution(method=DistributionMethod.PHASE_SIN, phase_offset=math.pi / 2, amplitude=1.0)
@@ -522,6 +549,7 @@ class ColorDistributionTest(unittest.TestCase):
     """
 
     def test_empty_authored_fills_black(self) -> None:
+        """Verify an empty authored map produces a black HSI triple for every slot."""
         result = distribute_colors({}, 3)
         self.assertEqual(3, len(result))
         # ``ColorHSI`` has no ``__eq__``, so compare field-by-field to
@@ -532,17 +560,20 @@ class ColorDistributionTest(unittest.TestCase):
             self.assertEqual(0.0, c.intensity)
 
     def test_single_to_many_replicates_same_color(self) -> None:
+        """Verify a single authored colour is replicated across every segment."""
         red = ColorHSI(0.0, 1.0, 1.0)
         result = distribute_colors({0: red}, 4)
         self.assertEqual([red, red, red, red], result)
 
     def test_two_to_four_blocks_even(self) -> None:
+        """Verify two authored colours spread evenly as two blocks across four segments."""
         red = ColorHSI(0.0, 1.0, 1.0)
         blue = ColorHSI(240.0, 1.0, 1.0)
         result = distribute_colors({0: red, 1: blue}, 4)
         self.assertEqual([red, red, blue, blue], result)
 
     def test_three_to_four_floor_distribution(self) -> None:
+        """Verify three authored colours spread across four segments using the floor rule."""
         red = ColorHSI(0.0, 1.0, 1.0)
         green = ColorHSI(120.0, 1.0, 1.0)
         blue = ColorHSI(240.0, 1.0, 1.0)
@@ -551,6 +582,7 @@ class ColorDistributionTest(unittest.TestCase):
         self.assertEqual([red, red, green, blue], result)
 
     def test_more_authored_than_segments_uses_first_n(self) -> None:
+        """Verify the first N authored colours are used when K exceeds segment count."""
         red = ColorHSI(0.0, 1.0, 1.0)
         green = ColorHSI(120.0, 1.0, 1.0)
         blue = ColorHSI(240.0, 1.0, 1.0)
@@ -559,6 +591,7 @@ class ColorDistributionTest(unittest.TestCase):
         self.assertEqual([red, green], result)
 
     def test_color_property_multi_segment_requests(self) -> None:
+        """Verify ColorProperty routes authored colours through distribute_colors across requests."""
         red = ColorHSI(0.0, 1.0, 1.0)
         blue = ColorHSI(240.0, 1.0, 1.0)
         prop = ColorProperty(segment_count=4, colors={0: red, 1: blue})
@@ -573,8 +606,10 @@ class ColorDistributionTest(unittest.TestCase):
 
 
 class GoboPropertyTest(unittest.TestCase):
+    """Tests for GoboProperty channel specs and request generation."""
 
     def test_channel_specs_single_wheel(self) -> None:
+        """Verify a single-wheel GoboProperty exposes one slot/rotation channel pair."""
         specs = GoboProperty(wheel_count=1).channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
@@ -583,6 +618,7 @@ class GoboPropertyTest(unittest.TestCase):
         )
 
     def test_channel_specs_two_wheels(self) -> None:
+        """Verify a two-wheel GoboProperty exposes two slot/rotation channel pairs."""
         specs = GoboProperty(wheel_count=2).channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
@@ -596,6 +632,7 @@ class GoboPropertyTest(unittest.TestCase):
         )
 
     def test_requests_two_wheels(self) -> None:
+        """Verify request generation across two wheels emits one request per channel."""
         prop = GoboProperty(wheel_count=2, slots={0: 3, 1: 5}, rotations={0: 0.25, 1: -0.5})
         reqs = prop.generate_requests(
             step_start_40hz=10, step_duration_40hz=100, child_index=0, distribution=_CONSTANT,
@@ -608,8 +645,10 @@ class GoboPropertyTest(unittest.TestCase):
 
 
 class BeamPropertyTest(unittest.TestCase):
+    """Tests for BeamProperty channel specs and request generation."""
 
     def test_channel_specs_default_includes_all_sub_caps(self) -> None:
+        """Verify default BeamProperty exposes zoom, prism, and iris channels."""
         specs = BeamProperty().channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
@@ -629,6 +668,7 @@ class BeamPropertyTest(unittest.TestCase):
         self.assertEqual({"zoom"}, names)
 
     def test_values_round_trip(self) -> None:
+        """Verify authored BeamProperty values round-trip into request values."""
         prop = BeamProperty(zoom=200, prism_selection=3, prism_rotation=0.9, iris=42)
         reqs = prop.generate_requests(
             step_start_40hz=0, step_duration_40hz=100, child_index=0, distribution=_CONSTANT,
@@ -640,8 +680,10 @@ class BeamPropertyTest(unittest.TestCase):
 
 
 class FocusPropertyTest(unittest.TestCase):
+    """Tests for FocusProperty channel specs and request generation."""
 
     def test_focus_property_has_single_channel(self) -> None:
+        """Verify FocusProperty exposes a single ``focus`` channel and round-trips values."""
         from model.virtual_filters.property_cues.properties import FocusProperty
 
         specs = FocusProperty().channel_specs
@@ -655,13 +697,16 @@ class FocusPropertyTest(unittest.TestCase):
 
 
 class FrostPropertyTest(unittest.TestCase):
+    """Tests for FrostProperty channel specs and request generation."""
 
     def test_channel_specs(self) -> None:
+        """Verify FrostProperty exposes a single ``frost_intensity`` 8-bit channel."""
         specs = FrostProperty().channel_specs
         self.assertEqual(("frost_intensity",), tuple(s.name for s in specs))
         self.assertEqual(DataType.DT_8_BIT, specs[0].data_type)
 
     def test_request_value_type(self) -> None:
+        """Verify FrostProperty request value preserves integer type for the 8-bit channel."""
         prop = FrostProperty(frost_intensity=128)
         reqs = prop.generate_requests(
             step_start_40hz=5, step_duration_40hz=20, child_index=0, distribution=_CONSTANT,

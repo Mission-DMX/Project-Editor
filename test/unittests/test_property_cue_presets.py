@@ -37,6 +37,7 @@ class PresetLoaderTest(unittest.TestCase):
     """Loading and precedence of built-in and user presets."""
 
     def test_builtin_presets_load(self) -> None:
+        """Verify the built-in presets (Circle, sweeps, Color Change) are available in the library."""
         library = load_preset_library()
         self.assertIn("Circle", library)
         self.assertTrue(library["Circle"].is_builtin)
@@ -51,6 +52,7 @@ class PresetLoaderTest(unittest.TestCase):
         self.assertEqual("color", library["Color Change"].applies_for)
 
     def test_user_shadows_builtin(self) -> None:
+        """Verify a user preset with the same name shadows its built-in counterpart."""
         with tempfile.TemporaryDirectory() as tmp:
             user_dir = Path(tmp)
             (user_dir / "circle.json").write_text(json.dumps(_CIRCLE_USER_BLOB), encoding="utf-8")
@@ -60,6 +62,7 @@ class PresetLoaderTest(unittest.TestCase):
             self.assertEqual("User override of circle.", library["Circle"].description)
 
     def test_malformed_file_skipped(self) -> None:
+        """Verify a malformed preset file is skipped without blocking valid presets from loading."""
         with tempfile.TemporaryDirectory() as tmp:
             builtin_dir = Path(tmp)
             valid_blob = {
@@ -100,6 +103,7 @@ class PresetEvaluatorTest(unittest.TestCase):
     }
 
     def test_evaluate_circle(self) -> None:
+        """Verify evaluating the Circle preset yields the expected pan/tilt keyframe stream."""
         preset = self._circle_preset()
         requests = evaluate_preset(
             preset=preset,
@@ -126,6 +130,7 @@ class PresetEvaluatorTest(unittest.TestCase):
         self.assertAlmostEqual(0.5 + amp_tilt, float(tilt_value[4].requested_value), places=4)
 
     def test_evaluate_truncates(self) -> None:
+        """Verify evaluating truncates the keyframe stream when the step duration ends mid-pattern."""
         preset = self._circle_preset()
         # 100 ticks = 2.5 s = four full keyframes at 0, 32, 64, 96.
         requests = evaluate_preset(
@@ -140,6 +145,7 @@ class PresetEvaluatorTest(unittest.TestCase):
         self.assertEqual([0, 32, 64, 96], [req.timestep_40hz for req in pan_value])
 
     def test_evaluate_repeats(self) -> None:
+        """Verify evaluating repeats the preset keyframe stream across multiple rotations."""
         preset = self._circle_preset()
         # 1024 ticks = 25.6 s = two full rotations → 32 keyframes.
         requests = evaluate_preset(
@@ -184,6 +190,7 @@ class PresetEvaluatorTest(unittest.TestCase):
         self.assertAlmostEqual(1.0, float(tilt_value[4].requested_value), places=4)
 
     def test_color_hint_rendering(self) -> None:
+        """Verify rendering a colour hint produces a ColorHSI keyframe value."""
         preset = EffectPreset(
             name="ColorBlink",
             description="",
@@ -222,6 +229,7 @@ class PresetSchemaTest(unittest.TestCase):
     """Hand-written validator for the preset JSON schema."""
 
     def test_schema_validate_pass_fail(self) -> None:
+        """Verify the schema validator accepts well-formed presets and reports missing fields."""
         good = {
             "name": "Pulse",
             "description": "",

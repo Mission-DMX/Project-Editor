@@ -29,10 +29,12 @@ def setUpModule() -> None:  # noqa: N802 - unittest hook
 
 
 def tearDownModule() -> None:  # noqa: N802 - unittest hook
+    """Re-enable garbage collection after the module-level tests have finished."""
     gc.enable()
 
 
 def _make_scene():
+    """Return a fresh Scene bound to a BoardConfiguration for use in preview-runtime tests."""
     from model import BoardConfiguration, Scene
 
     show = BoardConfiguration()
@@ -133,8 +135,10 @@ def _make_vfilter_single_colour(scene):
 
 @unittest.skipUnless(_HAS_PYSIDE, "Preview runtime requires PySide6")
 class BuildPreviewFiltersTests(unittest.TestCase):
+    """Verify build_preview_filters emits the expected constant/postprocess filter graph."""
 
     def test_build_preview_filters_creates_constants(self) -> None:
+        """Verify preview build emits PREVIEW_CONST filters for every raw canonical channel."""
         from model.filter import FilterTypeEnumeration
         from model.virtual_filters.property_cues.preview_runtime import (
             build_preview_filters,
@@ -314,8 +318,10 @@ class BuildPreviewFiltersTests(unittest.TestCase):
 
 @unittest.skipUnless(_HAS_PYSIDE, "Preview runtime requires PySide6")
 class PreviewThreadLifecycleTests(unittest.TestCase):
+    """Verify the preview thread starts and shuts down cleanly."""
 
     def test_thread_shutdown_clean(self) -> None:
+        """Verify requesting interruption causes the preview thread to exit within the timeout."""
         from model.virtual_filters.property_cues.preview_runtime import (
             PropertyCuesPreviewThread,
             build_preview_filters,
@@ -336,8 +342,10 @@ class PreviewThreadLifecycleTests(unittest.TestCase):
 
 @unittest.skipUnless(_HAS_PYSIDE, "Preview runtime requires PySide6")
 class PreviewThreadEmitTests(unittest.TestCase):
+    """Verify the preview thread emits per-tick GUI updates in the expected format."""
 
     def test_tick_sends_updates(self) -> None:
+        """Verify running the preview thread emits GUI updates into the preview constant filters."""
         from model.virtual_filters.property_cues import preview_runtime
         from model.virtual_filters.property_cues.preview_runtime import (
             PropertyCuesPreviewThread,
@@ -379,6 +387,7 @@ class PreviewThreadEmitTests(unittest.TestCase):
             self.assertEqual(scene.scene_id, call[0])
 
     def test_color_channel_format(self) -> None:
+        """Verify colour-channel preview updates are sent as 'hue,sat,int' payloads."""
         from model.color_hsi import ColorHSI
         from model.virtual_filters.property_cues import preview_runtime
         from model.virtual_filters.property_cues.preview_runtime import (

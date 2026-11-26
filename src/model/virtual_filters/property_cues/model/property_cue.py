@@ -13,12 +13,15 @@ logger = getLogger(__name__)
 
 @dataclass(slots=True)
 class PropertyCue:
+    """Named cue: ordered steps plus end-action and restart-on-play flags."""
+
     name: str = "Cue 1"
     steps: list[PropertyStep] = field(default_factory=list)
     end_action: EndAction = EndAction.HOLD
     restart_on_play: bool = False
 
     def to_json(self) -> dict:
+        """Serialize this cue to a JSON-compatible dict."""
         return {
             "name": self.name,
             "steps": [step.to_json() for step in self.steps],
@@ -28,6 +31,7 @@ class PropertyCue:
 
     @classmethod
     def from_json(cls, blob: dict) -> PropertyCue:
+        """Build a ``PropertyCue`` from its JSON-compatible dict form."""
         steps_blob = blob.get("steps", []) or []
         steps = [PropertyStep.from_json(step_blob) for step_blob in steps_blob]
         try:

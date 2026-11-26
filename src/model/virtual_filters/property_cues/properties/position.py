@@ -40,6 +40,7 @@ class PositionProperty(Property):
 
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
+        """Return the pan/tilt value and curve-selector channel specs."""
         return (
             ChannelSpec(name=_PAN_VALUE, data_type=DataType.DT_DOUBLE),
             ChannelSpec(name=_PAN_CURVESEL, data_type=DataType.DT_8_BIT),
@@ -54,6 +55,7 @@ class PositionProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
+        """Emit keyframe requests for the pan/tilt values and curve selectors."""
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         return {

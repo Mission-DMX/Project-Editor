@@ -51,7 +51,10 @@ class _WheelBlock:
 
 
 class GoboEditor(PropertyEditorBase):
+    """Edit gobo wheel slot and rotation values per fixture for a step."""
+
     def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
+        """Initialize the gobo editor bound to the given cue filter model."""
         super().__init__(model, "gobo", parent)
         self._fixtures: list[UsedFixture] = []
 

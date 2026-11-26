@@ -26,10 +26,13 @@ __all__ = [
 
 @dataclass(slots=True)
 class PropertyCueGeneralSettings:
+    """General per-filter settings (persistence flag, default cue index)."""
+
     persistence: bool = False
     default_cue_index: int = -1
 
     def to_json(self) -> dict:
+        """Serialize these settings to a JSON-compatible dict."""
         return {
             "persistence": self.persistence,
             "default_cue_index": self.default_cue_index,
@@ -37,6 +40,7 @@ class PropertyCueGeneralSettings:
 
     @classmethod
     def from_json(cls, blob: dict) -> PropertyCueGeneralSettings:
+        """Build ``PropertyCueGeneralSettings`` from its JSON-compatible dict form."""
         return cls(
             persistence=bool(blob.get("persistence", False)),
             default_cue_index=int(blob.get("default_cue_index", -1)),
@@ -71,11 +75,14 @@ def _closest_shared_ancestor_distance(
 
 @dataclass(slots=True)
 class PropertyCueFilterModel:
+    """Top-level property-cue filter model: selection, general settings, and ordered cues."""
+
     fixture_selection: FixtureSelection = field(default_factory=FixtureSelection)
     general: PropertyCueGeneralSettings = field(default_factory=PropertyCueGeneralSettings)
     cues: list[PropertyCue] = field(default_factory=list)
 
     def to_json_str(self) -> str:
+        """Serialize this model to a JSON string suitable for ``filter_configurations``."""
         blob = {
             "version": CURRENT_SCHEMA_VERSION,
             "fixture_selection": self.fixture_selection.to_json(),
@@ -110,6 +117,7 @@ class PropertyCueFilterModel:
 
     @classmethod
     def from_json_str(cls, blob_str: str) -> PropertyCueFilterModel:
+        """Create a fresh model instance populated from ``blob_str``."""
         instance = cls()
         instance.load_from_json_str(blob_str)
         return instance

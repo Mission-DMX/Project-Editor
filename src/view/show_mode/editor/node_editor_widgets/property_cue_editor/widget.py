@@ -79,10 +79,12 @@ class PropertyCueEditor(PreviewEditWidget):
 
     @property
     def step_tree_container(self) -> QWidget:
+        """Return the placeholder widget that hosts the step/fixture tree."""
         return self._step_tree_placeholder
 
     @property
     def property_pane_container(self) -> QWidget:
+        """Return the placeholder widget that hosts the property pane."""
         return self._property_pane_placeholder
 
     def _end_action_changed(self, text: str) -> None:

@@ -57,6 +57,7 @@ class PropertyBasedCueFilter(PreviewFilter):
 
     def __init__(self, scene: Scene, filter_id: str,
                  pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
+        """Initialise the vfilter with its scene, id and optional canvas position."""
         super().__init__(
             scene, filter_id,
             FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES,
@@ -68,6 +69,7 @@ class PropertyBasedCueFilter(PreviewFilter):
 
     @property
     def property_model(self) -> PropertyCueFilterModel:
+        """Return the underlying property-cue model backing this vfilter."""
         return self._property_model
 
     @override

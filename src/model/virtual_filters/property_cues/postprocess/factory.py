@@ -200,8 +200,9 @@ _DEFAULT_SLOWEST_PERIOD_MS = "500.0"
 
 
 def _try_fold_dimmer(ctx: CapabilityContext, base_id: str) -> PostprocessOutput | None:
-    """If every raw dimmer input is a known constant and the strobe is OFF,
-    emit a single float constant as the ``brightness`` port.
+    """If every raw dimmer input is a known constant and the strobe is OFF, emit a single float constant.
+
+    The emitted constant is written to the ``brightness`` port.
 
     Returns ``None`` when the fold isn't safe; the caller then builds the
     full freq/duty/strobe chain. The strobe generator with

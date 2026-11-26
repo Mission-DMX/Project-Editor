@@ -10,11 +10,15 @@ logger = getLogger(__name__)
 
 
 class SelectionEntryKind(Enum):
+    """Kind discriminator for a fixture-selection entry."""
+
     FIXTURE = "fixture"
     GROUP = "group"
 
 
 class EnabledCapability(Enum):
+    """Fixture capability toggles that gate which property editors are shown."""
+
     DIMMER = "dimmer"
     POSITION = "position"
     COLOR = "color"
@@ -26,16 +30,21 @@ class EnabledCapability(Enum):
 
 @dataclass(slots=True, frozen=True)
 class FixtureSelectionEntry:
+    """Single selected fixture or group, identified by kind and id."""
+
     kind: SelectionEntryKind
     id: str
 
 
 @dataclass(slots=True)
 class FixtureSelection:
+    """Ordered selection of fixtures/groups together with their enabled capabilities."""
+
     entries: list[FixtureSelectionEntry] = field(default_factory=list)
     enabled_capabilities: set[EnabledCapability] = field(default_factory=set)
 
     def to_json(self) -> dict:
+        """Serialize this selection to a JSON-compatible dict."""
         return {
             "entries": [
                 {"kind": entry.kind.value, "id": entry.id}
@@ -46,6 +55,7 @@ class FixtureSelection:
 
     @classmethod
     def from_json(cls, blob: dict) -> FixtureSelection:
+        """Build a ``FixtureSelection`` from its JSON-compatible dict form."""
         entries_blob = blob.get("entries", [])
         entries: list[FixtureSelectionEntry] = []
         for entry_blob in entries_blob:

@@ -28,8 +28,10 @@ def _value(frame) -> float:
 
 
 class KeyframeSolverTest(unittest.TestCase):
+    """Tests for the KeyframeSolver conflict resolution and interpolation."""
 
     def test_mid_segment_edit_from_sibling(self) -> None:
+        """Verify a sibling request can edit a value mid-segment between two frames."""
         req_x_a = KeyframeRequest(timestep_40hz=0, requested_value=0.0, transition=TransferFunction.LINEAR)
         req_x_b = KeyframeRequest(timestep_40hz=100, requested_value=1.0, transition=TransferFunction.LINEAR)
         req_y_mid = KeyframeRequest(timestep_40hz=50, requested_value=0.5, transition=TransferFunction.LINEAR)
@@ -51,6 +53,7 @@ class KeyframeSolverTest(unittest.TestCase):
         self.assertAlmostEqual(0.5, _value(mid_frame), places=5)
 
     def test_specialisation_smaller_group_wins(self) -> None:
+        """Verify the more specialised (smaller channel set) group wins conflict resolution."""
         contender_specific = RequestGroup(
             origin_label="specific",
             tree_depth=1,
@@ -77,6 +80,7 @@ class KeyframeSolverTest(unittest.TestCase):
         self.assertAlmostEqual(8.0, _value(solved["Y"].frames[0]))
 
     def test_depth_tiebreak(self) -> None:
+        """Verify the deeper tree_depth wins when channel-set sizes tie."""
         shallow = RequestGroup(
             origin_label="shallow",
             tree_depth=1,
@@ -97,6 +101,7 @@ class KeyframeSolverTest(unittest.TestCase):
         self.assertAlmostEqual(9.0, _value(solved["X"].frames[0]))
 
     def test_incompatible_transition_does_not_crash(self) -> None:
+        """Verify the solver tolerates mixed transition kinds within the same channel."""
         group = RequestGroup(
             origin_label="mix",
             tree_depth=0,
@@ -119,6 +124,7 @@ class KeyframeSolverTest(unittest.TestCase):
         self.assertIn(40, slots)
 
     def test_sub_slot_collapse(self) -> None:
+        """Verify requests sharing a timestep collapse to a single frame per channel."""
         group = RequestGroup(
             origin_label="dense",
             tree_depth=0,
@@ -146,6 +152,7 @@ class KeyframeSolverTest(unittest.TestCase):
             self.assertEqual(1, x_slots.count(slot))
 
     def test_tie_group_index_fallback(self) -> None:
+        """Verify earlier group index wins when depth and channel-set size all tie."""
         first = RequestGroup(
             origin_label="first",
             tree_depth=2,
@@ -164,6 +171,7 @@ class KeyframeSolverTest(unittest.TestCase):
 
 
 class ChannelConsolidatorTest(unittest.TestCase):
+    """Tests for the channel consolidator that collapses identical frame streams."""
 
     def test_identical_channels_collapse_to_alphabet_earliest(self) -> None:
         """Same local name on different prefixes consolidates on identical streams.
@@ -243,6 +251,7 @@ class ChannelConsolidatorTest(unittest.TestCase):
         self.assertEqual("MH1__duty_cycle", mapping.canonical("MH1__duty_cycle"))
 
     def test_different_postprocess_keeps_channels_separate(self) -> None:
+        """Verify channels with differing post-process signatures do not consolidate."""
         per_cue_frames = {
             "cue_1": {
                 "MH1__brightness": [],

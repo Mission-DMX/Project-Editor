@@ -38,6 +38,7 @@ class GoboProperty(Property):
 
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
+        """Return a slot and rotation channel spec for each gobo wheel."""
         specs: list[ChannelSpec] = []
         for i in range(self.wheel_count):
             specs.append(ChannelSpec(name=_slot_channel(i), data_type=DataType.DT_8_BIT))
@@ -51,6 +52,7 @@ class GoboProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
+        """Emit slot and rotation keyframe requests for each gobo wheel."""
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         out: dict[str, list[KeyframeRequest]] = {}

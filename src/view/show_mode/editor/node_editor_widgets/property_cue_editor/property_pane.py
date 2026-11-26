@@ -54,6 +54,7 @@ class PropertyPane(QWidget):
         fixture_lookup: Callable[[str], list[UsedFixture]] | None = None,
         parent: QWidget | None = None,
     ) -> None:
+        """Initialize the property pane with its model and fixture lookup."""
         super().__init__(parent)
         self._model = model
         self._fixture_lookup = fixture_lookup or (lambda _np: [])
@@ -93,6 +94,7 @@ class PropertyPane(QWidget):
         self._apply_capability_filter()
 
     def set_current_cue(self, cue_index: int) -> None:
+        """Record which cue index subsequent step edits apply to."""
         self._cue_index = cue_index
 
     def recommended_minimum_height(self) -> int:
@@ -120,6 +122,7 @@ class PropertyPane(QWidget):
         self._apply_capability_filter()
 
     def show_editor(self, step_index: int, node_path: str) -> None:
+        """Switch the pane to display editors for the given step and fixture node."""
         self._step_index = step_index
         self._node_path = node_path
         if self._cue_index < 0 or step_index < 0:

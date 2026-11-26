@@ -44,6 +44,7 @@ class DimmerProperty(Property):
 
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
+        """Return the brightness, strobe-frequency and duty-cycle channel specs."""
         return (
             ChannelSpec(name=_BRIGHTNESS_RAW, data_type=DataType.DT_DOUBLE),
             ChannelSpec(name=_STROBEFREQ, data_type=DataType.DT_DOUBLE),
@@ -57,6 +58,7 @@ class DimmerProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
+        """Emit keyframe requests for the brightness, strobe and duty-cycle channels."""
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         return {

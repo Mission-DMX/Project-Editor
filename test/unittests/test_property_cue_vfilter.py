@@ -39,10 +39,12 @@ def setUpModule() -> None:  # noqa: N802 — unittest hook naming
 
 
 def tearDownModule() -> None:  # noqa: N802 — unittest hook naming
+    """Re-enable the garbage collector after the module finishes."""
     gc.enable()
 
 
 def _make_scene():
+    """Return a fresh Scene wired into a BoardConfiguration for use in tests."""
     from model import BoardConfiguration, Scene
 
     show = BoardConfiguration()
@@ -63,8 +65,10 @@ def _manual_dimmer(brightness: float) -> PropertyAssignments:
 
 @unittest.skipUnless(_HAS_PYSIDE, "Scene constructor requires PySide6")
 class PropertyBasedCueVFilterTests(unittest.TestCase):
+    """Tests for the PropertyBasedCueFilter vfilter shell."""
 
     def test_default_empty_io(self) -> None:
+        """Verify a freshly constructed filter has the expected default input types and empty outputs."""
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_default")
         self.assertEqual(DataType.DT_DOUBLE, f.in_data_types["time"])
@@ -74,9 +78,12 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertIn("cues-prop-data", f.filter_configurations)
 
     def test_rebuild_io_populates_outputs_from_model(self) -> None:
-        """After the model carries a configured fixture + assignment, the
+        """Verify rebuilt outputs reflect compiled channels from the model.
+
+        After the model carries a configured fixture + assignment, the
         vfilter's ``out_data_types`` must reflect the compiled channels so the
-        pyqtgraph node can grow terminals for them."""
+        pyqtgraph node can grow terminals for them.
+        """
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_outputs")
         f.property_model.fixture_selection = FixtureSelection(
@@ -92,8 +99,11 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertIn("MH1__brightness", f.out_data_types)
 
     def test_output_names_use_fixture_stage_name_when_board_knows_it(self) -> None:
-        """When a fixture's UUID resolves to a stage name on the board, output
-        channels should carry that readable name instead of the raw UUID."""
+        """Verify output channel names use the fixture's stage name when the board knows it.
+
+        When a fixture's UUID resolves to a stage name on the board, output
+        channels should carry that readable name instead of the raw UUID.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import CapabilityType
         scene = _make_scene()
@@ -133,8 +143,11 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_synthesized_pan_tilt_outputs_are_16bit(self) -> None:
-        """``pan`` and ``tilt`` on the node come from the 16-bit range adapter
-        in the post-processing chain -- not from the raw ``*_value`` float."""
+        """Verify synthesized pan/tilt outputs carry the 16-bit data type.
+
+        ``pan`` and ``tilt`` on the node come from the 16-bit range adapter
+        in the post-processing chain -- not from the raw ``*_value`` float.
+        """
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_pantype")
         f.property_model.fixture_selection = FixtureSelection(
@@ -146,10 +159,13 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertEqual(DataType.DT_16_BIT, f.out_data_types["MH1__tilt"])
 
     def test_enabled_capability_exposes_channels_even_without_assignment(self) -> None:
-        """Enabling POSITION on a fixture must create pan/tilt output channels
+        """Verify enabling a capability exposes channels even without a user assignment.
+
+        Enabling POSITION on a fixture must create pan/tilt output channels
         even when the user hasn't yet dialed in a value. The internal raw
         channels (pan_value/pan_curvesel/strobefreq/...) stay hidden -- they
-        exist to drive post-processing filters only."""
+        exist to drive post-processing filters only.
+        """
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_defaults")
         f.property_model.fixture_selection = FixtureSelection(
@@ -168,8 +184,11 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             self.assertNotIn(internal, f.out_data_types, f"{internal} should be hidden")
 
     def test_capability_lookup_restricts_to_supported_capabilities(self) -> None:
-        """A fixture without a gobo wheel must not expose gobo channels even
-        when the user enabled GOBO on the global selection (wash fixtures)."""
+        """Verify capability lookup restricts channels to those the fixture physically supports.
+
+        A fixture without a gobo wheel must not expose gobo channels even
+        when the user enabled GOBO on the global selection (wash fixtures).
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import WheelSlotType
         scene = _make_scene()
@@ -197,8 +216,11 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_gobo_wheel_count_lookup_feeds_multiple_wheel_pairs(self) -> None:
-        """A Hero-Spot-style fixture with two gobo wheels must expose channels
-        for both wheels, not just wheel 0."""
+        """Verify a fixture with two gobo wheels exposes channels for both wheel pairs.
+
+        A Hero-Spot-style fixture with two gobo wheels must expose channels
+        for both wheels, not just wheel 0.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import WheelSlotType
         scene = _make_scene()
@@ -229,10 +251,13 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_out_data_types_ordered_by_fixture_then_property(self) -> None:
-        """Output terminals must be grouped alphabetically by fixture, then by
+        """Verify output terminals are ordered by fixture, then property group, then channel.
+
+        Output terminals must be grouped alphabetically by fixture, then by
         property group (dimmer, position, colour, gobo, beam, focus, frost),
         then within property by the natural channel order so a human can scan
-        them top-to-bottom."""
+        them top-to-bottom.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
         scene = _make_scene()
@@ -332,11 +357,14 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_mixed_spot_and_wash_scenario_isolates_per_fixture_channels(self) -> None:
-        """A Hero Spot 230 and a Hero Wash 640FX enabled with every capability must
+        """Verify a mixed spot+wash scenario emits only each fixture's supported channels.
+
+        A Hero Spot 230 and a Hero Wash 640FX enabled with every capability must
         produce only the channels each fixture physically supports:
         - Both get dimmer/position/colour and the shared BEAM zoom channel.
         - Only the spot gets focus and gobo wheels.
-        - Neither gets iris (neither physically has one)."""
+        - Neither gets iris (neither physically has one).
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
         scene = _make_scene()
@@ -440,14 +468,17 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_step_level_gobo_skips_fixtures_without_gobo_wheels(self) -> None:
-        """A step-level gobo assignment (``node_path=""``) must only create
+        """Verify step-level gobo assignments only emit channels on gobo-capable fixtures.
+
+        A step-level gobo assignment (``node_path=""``) must only create
         gobo channels on fixtures that physically have gobo wheels.
 
         Regression test for a bug where a Hero Spot + Hero Wash setup with a
         step-level gobo assignment (wheel_count=2 dialed in on the spot)
         would also produce ``goboslot_0 / goborotation_0 / goboslot_1 /
         goborotation_1`` on the wash because ``_collect_cue`` did not re-apply
-        the per-fixture capability filter."""
+        the per-fixture capability filter.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
         scene = _make_scene()
@@ -571,8 +602,11 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_multi_segment_color_fixture_emits_color_n_channels(self) -> None:
-        """A 3-segment RGB fixture must expose ``color_0 .. color_2`` and
-        not the bare ``color`` name."""
+        """Verify a multi-segment RGB fixture exposes color_N channels instead of bare color.
+
+        A 3-segment RGB fixture must expose ``color_0 .. color_2`` and
+        not the bare ``color`` name.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import CapabilityType
         scene = _make_scene()
@@ -620,9 +654,12 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_step_level_color_skips_fixtures_without_color(self) -> None:
-        """A step-level (``node_path=""``) colour assignment with a mixed
+        """Verify step-level colour assignments only emit channels on colour-capable fixtures.
+
+        A step-level (``node_path=""``) colour assignment with a mixed
         selection must only emit ``color*`` channels on colour-capable
-        fixtures. Regression analogue of the step-level gobo fix."""
+        fixtures. Regression analogue of the step-level gobo fix.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.color_hsi import ColorHSI
         from model.ofl.ofl_fixture import CapabilityType
@@ -689,8 +726,11 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_duplicate_stage_names_get_deterministic_uuid_suffix(self) -> None:
-        """Two fixtures with the same stage name must produce distinct output
-        names via a short, deterministic UUID tail suffix."""
+        """Verify duplicate stage names are disambiguated via a deterministic UUID suffix.
+
+        Two fixtures with the same stage name must produce distinct output
+        names via a short, deterministic UUID tail suffix.
+        """
         from unittest.mock import MagicMock, PropertyMock
         from model.ofl.ofl_fixture import CapabilityType
         scene = _make_scene()
@@ -735,6 +775,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_roundtrip_configuration(self) -> None:
+        """Verify serialising and deserialising a filter preserves cues and assignments."""
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_rt")
         f.property_model.fixture_selection = FixtureSelection(
@@ -777,6 +818,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertEqual("C1", f.property_model.cues[0].name)
 
     def test_resolve_passthrough(self) -> None:
+        """Verify an output port resolves through the strobe generator for a dimmer passthrough."""
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_pt")
         f.property_model.fixture_selection = FixtureSelection(
@@ -797,6 +839,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         )
 
     def test_resolve_consolidated(self) -> None:
+        """Verify consolidated sibling fixtures share a single canonical strobe output."""
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_cons")
         f.property_model.fixture_selection = FixtureSelection(
@@ -841,6 +884,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertEqual(1, strobe_count)
 
     def test_preview_mode_builds_constant_mapping(self) -> None:
+        """Verify preview-mode instantiation builds filters and populates the channel mapping."""
         # WP12 replaced the WP9 stub: preview instantiation now delegates to
         # :func:`build_preview_filters`, so the vfilter must expose a channel
         # mapping instead of raising ``NotImplementedError``.
@@ -861,6 +905,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertNotEqual({}, f._channel_mapping)
 
     def test_factory_registration(self) -> None:
+        """Verify the vfilter factory constructs a PropertyBasedCueFilter instance."""
         from model.virtual_filters.vfilter_factory import (
             _construct_virtual_filter_instance_legacy,
         )
@@ -950,7 +995,9 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         )
 
     def test_native_cue_filter_inherits_vfilter_input_wiring(self) -> None:
-        """The native cue filter must carry the vfilter's ``time`` /
+        """Verify the native cue filter inherits time wiring and omits editor-only blobs.
+
+        The native cue filter must carry the vfilter's ``time`` /
         ``time_scale`` channel_links, gui_update_keys and in_data_types,
         or fish rejects configuration with
         'channel mapping does not contain channel time of type double'.
@@ -991,7 +1038,9 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertNotIn("cues-prop-data", native.filter_configurations)
 
     def test_compiler_rejects_strategy_that_shadows_raw_channel(self) -> None:
-        """Direct check on the compile-time invariant that catches the class
+        """Verify the compiler refuses a strategy whose external port shadows a raw channel.
+
+        Direct check on the compile-time invariant that catches the class
         of bug.
 
         If a post-processing strategy publishes an external port with the

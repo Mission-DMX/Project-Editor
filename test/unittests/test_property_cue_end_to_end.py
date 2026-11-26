@@ -22,6 +22,7 @@ _qapp = None
 
 
 def setUpModule() -> None:  # noqa: N802 - unittest hook
+    """Create a shared QApplication and disable the GC for the duration of the tests."""
     global _qapp
     if not _HAS_PYSIDE:
         return
@@ -31,10 +32,12 @@ def setUpModule() -> None:  # noqa: N802 - unittest hook
 
 
 def tearDownModule() -> None:  # noqa: N802 - unittest hook
+    """Re-enable garbage collection after the module-level tests have finished."""
     gc.enable()
 
 
 def _make_scene():
+    """Return a BoardConfiguration and its freshly added Scene for e2e property-cue tests."""
     from model import BoardConfiguration, Scene
     show = BoardConfiguration()
     scene = Scene(0, "Test property-cue e2e scene", show)
@@ -144,12 +147,15 @@ def _build_populated_filter(scene):
 
 @unittest.skipUnless(_HAS_PYSIDE, "Property cue vfilter requires PySide6")
 class PropertyCueEndToEndTests(unittest.TestCase):
+    """End-to-end integration tests covering the property-based cue pipeline."""
 
     def setUp(self) -> None:
+        """Build a scene and a populated property-based cue filter for each test."""
         self.show, self.scene = _make_scene()
         self.vfilter = _build_populated_filter(self.scene)
 
     def test_full_pipeline_dimmer_position_preset(self) -> None:
+        """Verify compiling produces native channels, post-process filters, and strobe outputs."""
         from model.filter import FilterTypeEnumeration
 
         res = self.vfilter._ensure_compiled()
@@ -223,6 +229,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         )
 
     def test_serialize_deserialize_roundtrip(self) -> None:
+        """Verify serializing and deserializing the vfilter preserves all cues and assignments."""
         from model.virtual_filters.property_cues.model import (
             ManualPropertyAssignment,
             PresetPropertyAssignment,
@@ -261,6 +268,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                             self.assertEqual(orig.hint_values, rt.hint_values)
 
     def test_consolidation(self) -> None:
+        """Verify identical per-fixture dimmer timelines consolidate onto a single strobe generator."""
         from model.filter import FilterTypeEnumeration
         from model.virtual_filters.property_cues.model import (
             EnabledCapability,
@@ -303,6 +311,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                          "consolidated brightness should drive a single strobe generator")
 
     def test_preview_thread_tick_for_cue(self) -> None:
+        """Verify the preview thread ticks and routes updates into the preview constant filters."""
         from model.virtual_filters.property_cues import preview_runtime
         from model.virtual_filters.property_cues.preview_runtime import (
             PropertyCuesPreviewThread,
@@ -342,6 +351,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         )
 
     def test_filter_settings_route_to_editor(self) -> None:
+        """Verify the filter-settings lookup returns the PropertyCueEditor for the vfilter type."""
         from model.filter import FilterTypeEnumeration
         from view.show_mode.editor.filter_settings_item import check_if_filter_has_special_widget
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
@@ -355,6 +365,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         self.assertIsInstance(widget, PropertyCueEditor)
 
     def test_circle_preset_in_library(self) -> None:
+        """Verify the Circle preset ships in the preset library and the vfilter recompiles against it."""
         from model.virtual_filters.property_cues.presets import load_preset_library
 
         library = load_preset_library()

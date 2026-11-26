@@ -15,6 +15,7 @@ _qapp = None
 
 
 def setUpModule() -> None:  # noqa: N802 - unittest hook naming
+    """Spin up a shared QApplication and disable GC for the preset-dialog tests."""
     global _qapp
     if not _HAS_PYSIDE:
         return
@@ -24,18 +25,22 @@ def setUpModule() -> None:  # noqa: N802 - unittest hook naming
 
 
 def tearDownModule() -> None:  # noqa: N802 - unittest hook naming
+    """Re-enable Python's garbage collector after the preset-dialog tests."""
     gc.enable()
 
 
 @unittest.skipUnless(_HAS_PYSIDE, "PresetEditorDialog requires PySide6")
 class PresetEditorDialogTests(unittest.TestCase):
+    """Verify PresetEditorDialog save flow, data loss guards and preset listing."""
 
     def _tmpdir(self) -> Path:
+        """Create a scoped temporary directory and schedule its cleanup."""
         tmp = tempfile.mkdtemp(prefix="preset_test_")
         self.addCleanup(lambda: _rmtree(Path(tmp)))
         return Path(tmp)
 
     def test_round_trip(self) -> None:
+        """Verify saving a new preset writes JSON and round-trips through the library loader."""
         from model.virtual_filters.property_cues.presets import PresetHintType, load_preset_library
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
@@ -68,6 +73,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertEqual("Test", dialog.result_preset().name)
 
     def test_builtin_opened_saves_to_user(self) -> None:
+        """Verify editing a built-in preset writes a copy to the user dir and leaves the shipped file intact."""
         from model.virtual_filters.property_cues.presets import (
             EffectPreset,
             PresetHintSpec,
@@ -104,6 +110,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertEqual(shipped_bytes, builtin_path.read_bytes(), "built-in preset must not be modified")
 
     def test_validation_failure_shows_msgbox(self) -> None:
+        """Verify an invalid preset name shows a warning QMessageBox and writes no file."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
         )
@@ -124,6 +131,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertEqual(QMessageBox.Icon.Warning, dialog._msgbox.icon())
 
     def test_cancel_returns_none(self) -> None:
+        """Verify rejecting the dialog yields a None result preset."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
         )
@@ -134,6 +142,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertIsNone(dialog.result_preset())
 
     def test_dialog_lists_applicable_properties(self) -> None:
+        """Verify the applies-to combo lists the expected property targets."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
         )
@@ -145,6 +154,7 @@ class PresetEditorDialogTests(unittest.TestCase):
             self.assertIn(expected, items)
 
     def test_keyframe_entry_round_trips(self) -> None:
+        """Verify a keyframe entry with channel expressions round-trips through save and load."""
         from model.virtual_filters.property_cues.presets import load_preset_library
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,

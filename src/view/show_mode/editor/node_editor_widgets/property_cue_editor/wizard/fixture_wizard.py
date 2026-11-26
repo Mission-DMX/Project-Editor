@@ -145,8 +145,10 @@ class _FixturePickerPage(QWizardPage):
         return entries
 
     def selected_fixtures(self) -> list[UsedFixture]:
-        """Return the UsedFixture objects for the current fixture selection,
-        including fixtures reached transitively through selected groups."""
+        """Return the UsedFixture objects for the current fixture selection.
+
+        Includes fixtures reached transitively through selected groups.
+        """
         return resolve_fixtures_from_entries(self._board, self.selected_entries())
 
 
@@ -216,6 +218,7 @@ class FixtureSelectionWizard(QWizard):
         initial: FixtureSelection | None = None,
         parent: QWidget | None = None,
     ) -> None:
+        """Initialize the wizard against the given board and optional initial selection."""
         super().__init__(parent)
         self.setWindowTitle("Configure Fixtures")
         self.setMinimumSize(520, 420)

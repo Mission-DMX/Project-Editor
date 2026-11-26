@@ -74,6 +74,8 @@ _PROPERTY_CLASS: dict[str, type[Property]] = {
 _CAPABILITY_FROM_LOCAL = _capability_wiring.RAW_TO_CAPABILITY
 @dataclass(slots=True)
 class CompileResult:
+    """Outcome of compiling a property-cue vfilter into a native cue model and postprocess filters."""
+
     native_model: CueFilterModel
     postprocess_filters: tuple[Filter, ...]
     consolidation: ConsolidationMap
@@ -390,10 +392,11 @@ def _collect_constant_inputs(
     consolidation: ConsolidationMap,
     ch_capability: dict[str, str],
 ) -> dict[str, str]:
-    """Return ``{local_name: default_value_str}`` for every raw channel in this
-    (prefix, capability) group whose canonical is defaulted. Empty dict if any
-    raw channel in the group is live -- strategies only fold when **every**
-    input is static.
+    """Return ``{local_name: default_value_str}`` for raw channels in a defaulted canonical group.
+
+    Covers every raw channel in this ``(prefix, capability)`` group whose canonical
+    is defaulted. Empty dict if any raw channel in the group is live -- strategies
+    only fold when **every** input is static.
     """
     out: dict[str, str] = {}
     for spec_name, spec in all_specs.items():

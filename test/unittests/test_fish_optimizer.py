@@ -40,6 +40,7 @@ def _make_universe_filter(
 
 
 class UniverseOutputUnwiredFallbackTest(unittest.TestCase):
+    """Verify universe-output fallback wiring for unwired configuration channels."""
 
     def test_unwired_channel_defaults_to_zero_constant(self) -> None:
         """An unwired config entry must land on ``const8bitval0:value``."""

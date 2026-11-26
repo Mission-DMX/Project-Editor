@@ -59,6 +59,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         return fixture
 
     def test_capability_discovery_pan_tilt_maps_to_position(self) -> None:
+        """Verify PAN+TILT capability channels map to the position capability."""
         from model.ofl.ofl_fixture import CapabilityType
         from model.ofl.capability_discovery import discover_capabilities
 
@@ -68,6 +69,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         self.assertEqual(discover_capabilities([fixture]), {"position"})
 
     def test_capability_discovery_colour_only(self) -> None:
+        """Verify RGB color-intensity channels map to the color capability."""
         from model.ofl.ofl_fixture import CapabilityType
         from model.ofl.capability_discovery import discover_capabilities
 
@@ -102,6 +104,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         self.assertEqual(discover_capabilities([fixture_without_wheel]), set())
 
     def test_gobo_wheels_of_returns_only_gobo_wheels(self) -> None:
+        """Verify ``gobo_wheels_of`` filters out non-gobo wheels."""
         from model.ofl.ofl_fixture import WheelSlotType
         from model.ofl.capability_discovery import gobo_wheels_of
 
@@ -117,6 +120,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         self.assertEqual([n for n, _ in wheels], ["Gobo Wheel"])
 
     def test_capability_discovery_unknown_type_skipped(self) -> None:
+        """Verify unknown capability types (e.g. FOG) are skipped in discovery."""
         from model.ofl.ofl_fixture import CapabilityType
         from model.ofl.capability_discovery import discover_capabilities
 
@@ -131,6 +135,7 @@ class WizardHeadlessTests(unittest.TestCase):
     """Round-trip and data-loss checks that drive the wizard without exec()."""
 
     def setUp(self) -> None:
+        """Ensure a QApplication exists before each wizard test."""
         _ensure_qapp()
 
     def _make_board(self, fixtures):
@@ -160,6 +165,7 @@ class WizardHeadlessTests(unittest.TestCase):
         return fixture
 
     def test_wizard_round_trips_selection(self) -> None:
+        """Verify the wizard preserves the initial fixture selection when accepted unchanged."""
         from model.virtual_filters.property_cues.model.fixture_selection import (
             EnabledCapability,
             FixtureSelection,
@@ -199,6 +205,7 @@ class WizardHeadlessTests(unittest.TestCase):
         self.assertEqual(result.enabled_capabilities, initial.enabled_capabilities)
 
     def test_wizard_warns_on_data_loss(self) -> None:
+        """Verify the wizard shows a non-blocking QMessageBox when a selection change loses data."""
         from PySide6.QtWidgets import QMessageBox
 
         from model.virtual_filters.property_cues.model.fixture_selection import (

@@ -42,6 +42,7 @@ class BeamProperty(Property):
 
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
+        """Return the channel specs for the enabled beam sub-channels."""
         specs: list[ChannelSpec] = []
         if self.include_zoom:
             specs.append(ChannelSpec(name=_ZOOM, data_type=DataType.DT_8_BIT))
@@ -59,6 +60,7 @@ class BeamProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
+        """Emit keyframe requests for each enabled beam sub-channel."""
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         requests: dict[str, list[KeyframeRequest]] = {}

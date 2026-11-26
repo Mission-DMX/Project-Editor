@@ -25,13 +25,17 @@ logger = getLogger(__name__)
 
 
 class PropertyCueModelRoundTripTest(unittest.TestCase):
+    """Verify JSON serialisation round-trips for the PropertyCueFilterModel."""
+
     def test_default_roundtrip(self) -> None:
+        """Verify an empty default model survives a JSON round trip unchanged."""
         model = PropertyCueFilterModel()
         blob = model.to_json_str()
         loaded = PropertyCueFilterModel.from_json_str(blob)
         self.assertEqual(model, loaded)
 
     def test_populated_roundtrip(self) -> None:
+        """Verify a fully populated model preserves every field through JSON round trip."""
         fixture_entry = FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")
         selection = FixtureSelection(
             entries=[fixture_entry],
@@ -115,28 +119,35 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
         self.assertEqual("Loaded", model.cues[0].name)
 
     def test_load_from_json_str_empty_resets_contents(self) -> None:
+        """Verify loading an empty JSON string clears pre-existing cues on the model."""
         model = PropertyCueFilterModel()
         model.cues.append(PropertyCue(name="To be dropped"))
         model.load_from_json_str("")
         self.assertEqual([], model.cues)
 
     def test_version_rejects(self) -> None:
+        """Verify deserialising an unsupported schema version raises ValueError."""
         with self.assertRaises(ValueError):
             PropertyCueFilterModel.from_json_str('{"version": 99, "fixture_selection": {}, "cues": []}')
 
     def test_empty_string_loads_default(self) -> None:
+        """Verify deserialising an empty string yields the default model."""
         loaded = PropertyCueFilterModel.from_json_str("")
         default = PropertyCueFilterModel()
         self.assertEqual(default, loaded)
 
     def test_compile_not_implemented(self) -> None:
+        """Verify the legacy compile_to_native_cue_filter helper raises NotImplementedError."""
         model = PropertyCueFilterModel()
         with self.assertRaises(NotImplementedError):
             model.compile_to_native_cue_filter()
 
 
 class FixtureSelectionDiffTest(unittest.TestCase):
+    """Verify FixtureSelection.diff returns added and removed entries correctly."""
+
     def test_fixture_selection_diff(self) -> None:
+        """Verify diff computes added and removed entries between two selections."""
         entry_a = FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="A")
         entry_b = FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="B")
         entry_c = FixtureSelectionEntry(kind=SelectionEntryKind.GROUP, id="MovingHeads")
@@ -148,6 +159,8 @@ class FixtureSelectionDiffTest(unittest.TestCase):
 
 
 class CopyFromNeighbourTest(unittest.TestCase):
+    """Verify copy_fixture_from_neighbour clones assignments from the right neighbour fixture."""
+
     def _build_model_with_fixture(self, fixture_path: str, values: dict | None = None) -> PropertyCueFilterModel:
         model = PropertyCueFilterModel()
         manual = ManualPropertyAssignment(values=values if values is not None else {"brightness": 0.9})
@@ -160,6 +173,7 @@ class CopyFromNeighbourTest(unittest.TestCase):
         return model
 
     def test_copy_from_neighbour_same_group(self) -> None:
+        """Verify copying from a neighbour in the same group clones its assignments deeply."""
         model = self._build_model_with_fixture("group:MovingHeads/fixture:MH1")
         memberships = {
             "MH1": ["MovingHeads"],
@@ -177,6 +191,7 @@ class CopyFromNeighbourTest(unittest.TestCase):
         self.assertEqual(0.9, copied.values["brightness"])
 
     def test_copy_from_neighbour_falls_back_to_first(self) -> None:
+        """Verify copying falls back to the first existing fixture when no neighbour shares a group."""
         model = self._build_model_with_fixture("fixture:A")
         memberships = {
             "A": [],
@@ -190,6 +205,7 @@ class CopyFromNeighbourTest(unittest.TestCase):
         self.assertEqual({"brightness": 0.9}, copied.values)
 
     def test_copy_from_neighbour_no_fixtures(self) -> None:
+        """Verify copying is a no-op when there are no existing fixture assignments to clone from."""
         model = PropertyCueFilterModel()
         step = PropertyStep(name="empty", assignments={})
         model.cues.append(PropertyCue(name="cue", steps=[step]))

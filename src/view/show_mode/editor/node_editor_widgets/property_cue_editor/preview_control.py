@@ -43,6 +43,7 @@ class PreviewController(QObject):
         vfilter: PropertyBasedCueFilter,
         parent: QObject | None = None,
     ) -> None:
+        """Initialize the preview controller for the given virtual filter."""
         super().__init__(parent)
         self._vfilter = vfilter
         self._thread: PropertyCuesPreviewThread | None = None

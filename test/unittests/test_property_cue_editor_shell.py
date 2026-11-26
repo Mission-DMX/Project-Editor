@@ -26,10 +26,12 @@ def setUpModule() -> None:  # noqa: N802 - unittest hook naming
 
 
 def tearDownModule() -> None:  # noqa: N802 - unittest hook naming
+    """Re-enable garbage collection after the module-level tests have finished."""
     gc.enable()
 
 
 def _make_scene():
+    """Return a fresh Scene bound to a BoardConfiguration for use in editor tests."""
     from model import BoardConfiguration, Scene
     show = BoardConfiguration()
     scene = Scene(0, "Test property-cue editor scene", show)
@@ -39,13 +41,16 @@ def _make_scene():
 
 @unittest.skipUnless(_HAS_PYSIDE, "Scene constructor requires PySide6")
 class PropertyCueEditorShellTests(unittest.TestCase):
+    """Verify behavior of the property-based cue editor shell widget."""
 
     def _make_filter(self):
+        """Return a new PropertyBasedCueFilter attached to a fresh scene."""
         from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
         scene = _make_scene()
         return PropertyBasedCueFilter(scene, "pcf_shell")
 
     def test_get_widget_returns_qwidget(self) -> None:
+        """Verify the editor's get_widget returns a QWidget instance."""
         from PySide6.QtWidgets import QWidget
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -57,6 +62,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertIsInstance(widget, QWidget)
 
     def test_cue_table_starts_empty(self) -> None:
+        """Verify the cue table has no rows for a freshly constructed editor."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
         )
@@ -66,6 +72,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual(0, editor._cue_table.rowCount())
 
     def test_refresh_cue_table_adds_row(self) -> None:
+        """Verify refreshing the cue table adds a row reflecting a newly added cue."""
         from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -86,6 +93,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual("1", editor._cue_table.item(0, 2).text())
 
     def test_launch_wizard_with_empty_board_does_not_crash(self) -> None:
+        """Verify launching the fixture-selection wizard with no fixtures does not crash."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
         )
@@ -113,6 +121,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertIs(original_selection, f.property_model.fixture_selection)
 
     def test_configuration_roundtrip(self) -> None:
+        """Verify saving and loading the editor configuration preserves cue data."""
         from model.virtual_filters.property_cues.model import PropertyCue
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -133,6 +142,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual("Beta", editor2._cue_table.item(0, 1).text())
 
     def test_add_cue_button_appends_cue_with_default_step(self) -> None:
+        """Verify adding a cue creates a default step and selects the new row."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
         )
@@ -149,6 +159,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual(0, editor._cue_table.currentRow())
 
     def test_cue_settings_disabled_without_selection(self) -> None:
+        """Verify per-cue widgets are disabled when no cue is selected and enabled once one exists."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
         )
@@ -165,6 +176,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertTrue(editor._add_step_button.isEnabled())
 
     def test_end_action_combo_binds_to_selected_cue(self) -> None:
+        """Verify the end-action combo updates only the currently selected cue's end action."""
         from model.filter_data.cues.cue import EndAction
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -183,6 +195,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual("HOLD", editor._end_action_combo.currentText())
 
     def test_cue_selection_updates_step_tree(self) -> None:
+        """Verify selecting a different cue row refreshes the step tree's current cue index."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
         )
@@ -197,6 +210,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual(0, editor._step_tree._current_cue_index)
 
     def test_splitter_is_vertical_and_property_pane_has_min_height(self) -> None:
+        """Verify the editor's splitter is vertical and the property pane has a sensible minimum height."""
         from PySide6.QtCore import Qt
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -212,9 +226,12 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertGreaterEqual(editor._property_pane.minimumHeight(), 100)
 
     def test_parent_closed_triggers_node_terminal_sync(self) -> None:
-        """The super chain calls ``update_node_after_settings_changed`` on the
+        """Verify parent_closed propagates to update_node_after_settings_changed on the node.
+
+        The super chain calls ``update_node_after_settings_changed`` on the
         node, which in turn runs ``_rebuild_io`` and syncs pyqtgraph terminals
-        with the vfilter's refreshed ``out_data_types``."""
+        with the vfilter's refreshed ``out_data_types``.
+        """
         from unittest.mock import MagicMock
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -229,8 +246,10 @@ class PropertyCueEditorShellTests(unittest.TestCase):
 
 @unittest.skipUnless(_HAS_PYSIDE, "FilterTypeEnumeration import is cheap but keep guard parity")
 class PropertyBasedCuesNodeRegistrationTests(unittest.TestCase):
+    """Verify the PropertyBasedCuesNode is registered against the right filter type."""
 
     def test_type_to_node_mapping(self) -> None:
+        """Verify the VFILTER_PROPERTY_BASED_CUES filter type maps to PropertyBasedCuesNode."""
         from model.filter import FilterTypeEnumeration
         from view.show_mode.editor.nodes.impl.effects import PropertyBasedCuesNode
         from view.show_mode.editor.nodes.type_to_node_dict import type_to_node

@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 
 
 class BeamEditor(PropertyEditorBase):
+    """Edit beam-shaping values (zoom, prism, iris) for a step."""
+
     def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
+        """Initialize the beam editor bound to the given cue filter model."""
         super().__init__(model, "beam", parent)
 
     def _install_manual_widgets(self, layout: QVBoxLayout) -> None:

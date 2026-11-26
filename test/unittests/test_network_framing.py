@@ -31,74 +31,96 @@ def _frame(msg_type: int, body: bytes) -> bytes:
 
 
 class ReadVarintTest(unittest.TestCase):
+    """Verify ``_read_varint`` decodes framing varints correctly."""
 
     def test_single_byte_varint(self) -> None:
+        """Verify a single-byte varint decodes to its value and consumes one byte."""
         self.assertEqual((14, 1), _read_varint(b"\x0e", 0))
 
     def test_two_byte_varint(self) -> None:
-        """Type values >= 128 need two bytes; the previous reader looked at
-        only the first byte and silently decoded to 0 or an EOFError."""
+        """Verify multi-byte varints (values >= 128) decode across two bytes.
+
+        Type values >= 128 need two bytes; the previous reader looked at
+        only the first byte and silently decoded to 0 or an EOFError.
+        """
         self.assertEqual((200, 2), _read_varint(varint.encode(200), 0))
         self.assertEqual((300, 2), _read_varint(varint.encode(300), 0))
 
     def test_zero_value_still_takes_one_byte(self) -> None:
+        """Verify a zero varint still reports consuming one byte."""
         self.assertEqual((0, 1), _read_varint(b"\x00", 0))
 
     def test_incomplete_raises_sentinel(self) -> None:
-        """A split varint must NOT raise ``EOFError`` or decode garbage; it
+        """Verify an incomplete varint raises the sentinel instead of EOFError.
+
+        A split varint must NOT raise ``EOFError`` or decode garbage; it
         must signal "need more bytes" so the reader can wait for the next
-        chunk without disconnecting the socket."""
+        chunk without disconnecting the socket.
+        """
         with self.assertRaises(_VarintIncompleteError):
             _read_varint(b"\xc8", 0)  # high bit set; waiting for continuation
         with self.assertRaises(_VarintIncompleteError):
             _read_varint(b"", 0)
 
     def test_offset_respected(self) -> None:
+        """Verify ``_read_varint`` honours the supplied starting offset."""
         buf = b"\xff\x0e\x05"
         self.assertEqual((14, 1), _read_varint(buf, 1))
         self.assertEqual((5, 1), _read_varint(buf, 2))
 
     def test_overflow_rejected(self) -> None:
-        """A varint longer than 10 bytes indicates real stream corruption;
-        the previous parser would have spin-looped or run off the buffer."""
+        """Verify an overlong varint raises ValueError instead of spin-looping.
+
+        A varint longer than 10 bytes indicates real stream corruption;
+        the previous parser would have spin-looped or run off the buffer.
+        """
         with self.assertRaises(ValueError):
             _read_varint(b"\xff" * 11, 0)
 
 
 class TryParseOneMessageTest(unittest.TestCase):
+    """Verify ``NetworkManager._try_parse_one_message`` framing behaviour."""
 
     def test_single_complete_message(self) -> None:
+        """Verify a single complete frame parses to its (type, body, length) tuple."""
         frame = _frame(14, b"HELLO")
         got = NetworkManager._try_parse_one_message(frame)
         self.assertEqual((14, b"HELLO", len(frame)), got)
 
     def test_zero_length_body(self) -> None:
-        """Previously the ``log2(msg_len+1)/7`` offset computation collapsed
+        """Verify a zero-length body is parsed with the correct consumed length.
+
+        Previously the ``log2(msg_len+1)/7`` offset computation collapsed
         to 0 for zero-length payloads, swallowing the next message's first
-        byte and desyncing every message that followed."""
+        byte and desyncing every message that followed.
+        """
         frame = _frame(7, b"")
         got = NetworkManager._try_parse_one_message(frame)
         self.assertEqual((7, b"", len(frame)), got)
 
     def test_multi_byte_type_varint(self) -> None:
+        """Verify frames with multi-byte type varints parse correctly."""
         frame = _frame(300, b"\x01\x02\x03")
         got = NetworkManager._try_parse_one_message(frame)
         self.assertEqual((300, b"\x01\x02\x03", len(frame)), got)
 
     def test_split_header_returns_none(self) -> None:
-        """Only the type byte has arrived; must wait for the length varint."""
+        """Verify a buffer holding only part of the header returns None."""
         self.assertIsNone(NetworkManager._try_parse_one_message(varint.encode(14)))
 
     def test_split_body_returns_none(self) -> None:
-        """Header complete, body not yet fully arrived."""
+        """Verify a buffer with a complete header but incomplete body returns None."""
         frame = _frame(14, b"ABCDE")
         half = frame[: len(frame) - 2]
         self.assertIsNone(NetworkManager._try_parse_one_message(half))
 
     def test_multi_message_only_first_consumed(self) -> None:
-        """When two messages are concatenated in one socket chunk, parse
+        """Verify concatenated frames yield only the first message per parse call.
+
+        When two messages are concatenated in one socket chunk, parse
         returns only the first. The caller re-enters the loop with the
-        tail bytes and extracts the second message on the next pass."""
+        tail bytes and extracts the second message on the next pass.
+        """
         a = _frame(14, b"ABC")
         b = _frame(7, b"XY")
         got = NetworkManager._try_parse_one_message(a + b)
@@ -109,6 +131,7 @@ class TryParseOneMessageTest(unittest.TestCase):
         self.assertEqual((7, b"XY", len(b)), got2)
 
     def test_empty_buffer_returns_none(self) -> None:
+        """Verify an empty buffer returns None instead of raising."""
         self.assertIsNone(NetworkManager._try_parse_one_message(b""))
 
 

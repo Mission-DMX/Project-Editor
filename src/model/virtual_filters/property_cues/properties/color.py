@@ -68,6 +68,7 @@ class ColorProperty(Property):
 
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
+        """Return one colour channel spec per LED/pixel segment."""
         count = max(1, int(self.segment_count))
         return tuple(
             ChannelSpec(name=color_channel_name(i, count), data_type=DataType.DT_COLOR)
@@ -81,6 +82,7 @@ class ColorProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
+        """Emit colour keyframe requests distributed across each segment."""
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         count = max(1, int(self.segment_count))

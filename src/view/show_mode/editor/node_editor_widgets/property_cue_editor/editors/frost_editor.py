@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 
 
 class FrostEditor(PropertyEditorBase):
+    """Edit the frost diffusion property slot for a step."""
+
     def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
+        """Initialize the frost editor bound to the given cue filter model."""
         super().__init__(model, "frost", parent)
 
     def _install_manual_widgets(self, layout: QVBoxLayout) -> None:

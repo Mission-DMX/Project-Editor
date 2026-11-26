@@ -28,6 +28,7 @@ def setUpModule() -> None:  # noqa: N802
 
 
 def tearDownModule() -> None:  # noqa: N802
+    """Re-enable the garbage collector after the module finishes."""
     gc.enable()
 
 
@@ -62,8 +63,10 @@ def _make_model(fixture_ids: list[str], cue_specs: list[list[tuple[str, int, int
 
 @unittest.skipUnless(_HAS_PYSIDE, "PySide6 required")
 class StepFixtureTreeTests(unittest.TestCase):
+    """Tests for the StepFixtureTree widget's model-driven rebuild and selection."""
 
     def test_tree_rebuilds_from_model(self) -> None:
+        """Verify the tree rebuilds its top-level items when switching cues."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
         )
@@ -82,6 +85,7 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertEqual(3, tree.topLevelItemCount())
 
     def test_selection_signal(self) -> None:
+        """Verify selection_changed emits step index and node path on item clicks."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
         )
@@ -97,6 +101,7 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertEqual([(0, "fixture:F1"), (0, "")], emissions)
 
     def test_fixture_name_resolver(self) -> None:
+        """Verify the name_resolver callback is used when rendering fixture rows."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
         )
@@ -108,6 +113,7 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertEqual("Mover 1", child.text(0))
 
     def test_summary_columns_display_assignment_values(self) -> None:
+        """Verify the summary columns render the assigned property values."""
         from model.virtual_filters.property_cues.distribution import Distribution
         from model.virtual_filters.property_cues.model.property_step import (
             ManualPropertyAssignment,
@@ -136,8 +142,10 @@ class StepFixtureTreeTests(unittest.TestCase):
 
 @unittest.skipUnless(_HAS_PYSIDE, "PySide6 required")
 class PropertyPaneTests(unittest.TestCase):
+    """Tests for the PropertyPane widget's editors and persistence."""
 
     def _make_pane(self, enabled_capabilities: set | None = None):
+        """Return a built model and PropertyPane configured with given capabilities."""
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.property_pane import (
             PropertyPane,
@@ -151,12 +159,14 @@ class PropertyPaneTests(unittest.TestCase):
         return model, pane
 
     def test_property_pane_shows_all_tabs(self) -> None:
+        """Verify all property tabs are shown when all capabilities are enabled."""
         _, pane = self._make_pane()
         pane.show_editor(0, "fixture:F1")
         self.assertEqual(7, pane._tabs.count())
         self.assertFalse(pane._placeholder.isVisibleTo(pane))
 
     def test_capability_filter_disables_unavailable_tabs(self) -> None:
+        """Verify tabs for disabled capabilities are hidden from the user."""
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
         _, pane = self._make_pane(enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.COLOR})
         self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["dimmer"]))
@@ -284,8 +294,11 @@ class PropertyPaneTests(unittest.TestCase):
         self.assertEqual("0.60", current.text(2))
 
     def test_gobo_editor_restores_slots_after_json_roundtrip(self) -> None:
-        """A JSON-roundtripped assignment turns int keys into strings; the editor
-        must still restore the user's slot selection."""
+        """Verify the gobo editor restores slot selections after a JSON string-key roundtrip.
+
+        A JSON-roundtripped assignment turns int keys into strings; the editor
+        must still restore the user's slot selection.
+        """
         from unittest.mock import MagicMock
         from model.ofl.ofl_fixture import WheelSlotType
         from model.virtual_filters.property_cues.model.property_step import (
@@ -360,6 +373,7 @@ class PropertyPaneTests(unittest.TestCase):
         self.assertEqual({0: 0.5, 1: -0.25}, assignment.values["rotations"])
 
     def test_apply_dimmer_writes_model(self) -> None:
+        """Verify applying the dimmer editor writes a ManualPropertyAssignment to the model."""
         from model.virtual_filters.property_cues.model.property_step import ManualPropertyAssignment
         model, pane = self._make_pane()
         pane.show_editor(0, "fixture:F1")
@@ -372,6 +386,7 @@ class PropertyPaneTests(unittest.TestCase):
         self.assertEqual(0.75, assignment.values["brightness"])
 
     def test_apply_preset_writes_model(self) -> None:
+        """Verify applying a preset writes a PresetPropertyAssignment to the model."""
         from model.virtual_filters.property_cues.model.property_step import PresetPropertyAssignment
         from model.virtual_filters.property_cues.presets.loader import load_preset_library
         with tempfile.TemporaryDirectory() as tmp:
@@ -449,6 +464,7 @@ class PropertyPaneTests(unittest.TestCase):
             )
 
     def test_distribution_controls_write(self) -> None:
+        """Verify distribution controls persist into the assignment on apply."""
         from model.virtual_filters.property_cues.distribution import DistributionMethod
         model, pane = self._make_pane()
         pane.show_editor(0, "fixture:F1")
@@ -466,6 +482,7 @@ class PropertyPaneTests(unittest.TestCase):
         self.assertAlmostEqual(0.3, assignment.distribution.phase_offset, places=5)
 
     def test_step_editor_edits_timing_in_seconds(self) -> None:
+        """Verify duration and fade-in values entered in seconds persist as 40Hz ticks."""
         model, pane = self._make_pane()
         pane.show_editor(0, "")
         self.assertIs(pane._step_editor, pane._top_stack.currentWidget())
@@ -503,6 +520,7 @@ class PropertyPaneTests(unittest.TestCase):
         self.assertEqual("Entry", model.cues[0].steps[0].name)
 
     def test_step_level_dimmer_writes_assignment(self) -> None:
+        """Verify applying the dimmer editor at the step level writes to the empty node path."""
         from model.virtual_filters.property_cues.model.property_step import ManualPropertyAssignment
         model, pane = self._make_pane()
         pane.show_editor(0, "")  # select the step row
@@ -516,8 +534,10 @@ class PropertyPaneTests(unittest.TestCase):
 
 @unittest.skipUnless(_HAS_PYSIDE, "PySide6 required")
 class PropertyCueEditorIntegrationTests(unittest.TestCase):
+    """Integration tests for the PropertyCueEditor top-level widget."""
 
     def _make_editor(self):
+        """Return a fresh filter and PropertyCueEditor instance for integration tests."""
         from model import BoardConfiguration, Scene
         from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
@@ -531,6 +551,7 @@ class PropertyCueEditorIntegrationTests(unittest.TestCase):
         return f, editor
 
     def test_splitter_hosts_live_panes(self) -> None:
+        """Verify the editor's splitter hosts the live step tree and property pane widgets."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.property_pane import (
             PropertyPane,
         )

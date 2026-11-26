@@ -63,9 +63,10 @@ def consolidate(
     channel_specs: dict[str, ChannelSpec],
     postprocess_signatures: dict[str, str],
 ) -> ConsolidationMap:
-    """Collapse channels whose frames are byte-for-byte identical across ALL cues AND
-    whose post-processing signatures match. Pick the alphabetically-earliest channel
-    name as the canonical survivor in each equivalence class.
+    """Collapse channels whose frames match across all cues and share postprocess signatures.
+
+    Pick the alphabetically-earliest channel name as the canonical survivor in each
+    equivalence class.
 
     Only channels sharing the **same local port name** (the segment after
     ``__``) are candidates for consolidation -- the fingerprint includes the

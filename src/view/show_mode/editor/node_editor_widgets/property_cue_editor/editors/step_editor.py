@@ -35,6 +35,7 @@ class StepEditor(QWidget):
     applied = Signal()
 
     def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
+        """Initialize the step editor bound to the given cue filter model."""
         super().__init__(parent)
         self._model = model
         self._cue_index = 0
@@ -64,6 +65,7 @@ class StepEditor(QWidget):
         self._fade_in.valueChanged.connect(self._persist)
 
     def load(self, cue_index: int, step_index: int) -> None:
+        """Populate the widgets from the given cue/step in the model."""
         self._cue_index = cue_index
         self._step_index = step_index
         # Disable the auto-apply slot while we seed the widgets from the model

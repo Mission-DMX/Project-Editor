@@ -17,6 +17,7 @@ _qapp = None
 
 
 def setUpModule() -> None:  # noqa: N802 - unittest hook
+    """Create a shared QApplication so widgets can be instantiated in tests."""
     global _qapp
     if not _HAS_PYSIDE:
         return
@@ -47,6 +48,7 @@ class WheelSlotImageTests(unittest.TestCase):
     """``image_bytes`` is Qt-free; ``pixmap`` is only tested when PySide6 is present."""
 
     def test_image_bytes_decodes_base64_payload(self) -> None:
+        """Verify image_bytes decodes the base64-encoded resource payload."""
         from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
 
         payload = b"a-real-png-payload-doesnt-matter-for-decoding"
@@ -65,6 +67,7 @@ class WheelSlotImageTests(unittest.TestCase):
         self.assertEqual("image/png", slot.image_mime_type)
 
     def test_image_bytes_returns_none_without_resource(self) -> None:
+        """Verify image_bytes returns None for a slot that carries no resource dict."""
         from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
 
         slot = WheelSlot(type=WheelSlotType.OPEN, name="Open")
@@ -72,6 +75,7 @@ class WheelSlotImageTests(unittest.TestCase):
         self.assertIsNone(slot.image_mime_type)
 
     def test_image_bytes_returns_none_on_malformed_base64(self) -> None:
+        """Verify image_bytes returns None when the base64 payload fails to decode."""
         from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
 
         slot = WheelSlot(
@@ -83,6 +87,7 @@ class WheelSlotImageTests(unittest.TestCase):
 
     @unittest.skipUnless(_HAS_PYSIDE, "PySide6 required for pixmap decoding")
     def test_pixmap_roundtrips_a_valid_png(self) -> None:
+        """Verify pixmap decodes a valid 1x1 PNG payload into a QPixmap."""
         from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
 
         slot = WheelSlot(
@@ -103,6 +108,7 @@ class WheelSlotImageTests(unittest.TestCase):
 
     @unittest.skipUnless(_HAS_PYSIDE, "PySide6 required for pixmap decoding")
     def test_pixmap_returns_none_on_undecodable_payload(self) -> None:
+        """Verify pixmap returns None when the base64 payload isn't a valid image."""
         from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
 
         slot = WheelSlot(

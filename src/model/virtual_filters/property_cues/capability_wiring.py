@@ -54,6 +54,7 @@ class ExposedOutput:
     data_type_attr: str  # name of attribute on model.filter.DataType
 
     def data_type(self) -> DataType:
+        """Resolve the referenced ``model.filter.DataType`` member."""
         from model.filter import DataType
 
         return getattr(DataType, self.data_type_attr)

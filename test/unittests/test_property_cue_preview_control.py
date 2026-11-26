@@ -33,10 +33,12 @@ def _ensure_qapp():
 
 
 def setUpModule() -> None:  # noqa: N802 — unittest hook
+    """Ensure a QApplication exists before tests in this module run."""
     _ensure_qapp()
 
 
 def _make_scene_and_vfilter():
+    """Return a scene paired with a PropertyBasedCueFilter preconfigured for preview tests."""
     from model import BoardConfiguration, Scene
     from model.virtual_filters.property_cues.model import (
         EnabledCapability,
@@ -74,8 +76,10 @@ def _make_scene_and_vfilter():
 
 @unittest.skipUnless(_HAS_PYSIDE, "Property cue editor requires PySide6")
 class PreviewControllerStopTest(unittest.TestCase):
+    """Verify PreviewController.stop resets preview flags on the vfilter."""
 
     def test_stop_resets_in_preview_mode(self) -> None:
+        """Verify stopping preview resets in_preview_mode and clears the channel mapping."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
             PreviewController,
         )

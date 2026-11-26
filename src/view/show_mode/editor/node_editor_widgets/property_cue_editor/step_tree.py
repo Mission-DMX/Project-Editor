@@ -118,10 +118,12 @@ class StepFixtureTree(QTreeWidget):
         self.itemClicked.connect(self._on_item_clicked)
 
     def set_name_resolver(self, resolver: Callable[[str, str], str] | None) -> None:
+        """Install a resolver that maps (kind, raw id) pairs to display names."""
         self._name_resolver = resolver or (lambda _kind, raw_id: raw_id)
         self._rebuild()
 
     def set_current_cue(self, cue_index: int) -> None:
+        """Switch the tree to show steps of the given cue index."""
         self._current_cue_index = cue_index
         self._rebuild()
 
