@@ -14,6 +14,7 @@ from model.filters.factory import construct_filter_instance
 from model.virtual_filters.property_cues import capability_wiring as _capability_wiring
 from model.virtual_filters.property_cues._default_specs import default_specs_for_fixtures
 from model.virtual_filters.property_cues._native_builder import build_native
+from model.virtual_filters.property_cues._property_registry import property_class_map
 from model.virtual_filters.property_cues.channel_consolidator import consolidate
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
 from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
@@ -30,13 +31,6 @@ from model.virtual_filters.property_cues.postprocess import (
 )
 from model.virtual_filters.property_cues.presets import evaluate_preset, load_preset_library
 from model.virtual_filters.property_cues.properties import (
-    BeamProperty,
-    ColorProperty,
-    DimmerProperty,
-    FocusProperty,
-    FrostProperty,
-    GoboProperty,
-    PositionProperty,
     Property,
     color_channel_name,
 )
@@ -65,12 +59,11 @@ BeamSubCapabilityLookup = Callable[[str], set[str]]
 # Return the number of independent HSI colour segments on the fixture (0 if none).
 ColorSegmentCountLookup = Callable[[str], int]
 
-_PROPERTY_CLASS: dict[str, type[Property]] = {
-    "dimmer": DimmerProperty, "position": PositionProperty,
-    "color": ColorProperty,
-    "beam": BeamProperty, "gobo": GoboProperty,
-    "focus": FocusProperty, "frost": FrostProperty,
-}
+# S1: the property-id -> Property-subclass mapping lives in _property_registry.py
+# as the single source of truth. Expose it under the historic name here so
+# existing readers (``_default_specs.default_specs_for_fixtures`` does a local
+# import for ``_PROPERTY_CLASS``) keep working.
+_PROPERTY_CLASS: dict[str, type[Property]] = property_class_map()
 _CAPABILITY_FROM_LOCAL = _capability_wiring.RAW_TO_CAPABILITY
 @dataclass(slots=True)
 class CompileResult:
@@ -171,6 +164,10 @@ def _spec_table_for(
     return {f"{prefix}__{s.name}": ChannelSpec(
         name=f"{prefix}__{s.name}", data_type=s.data_type,
         default_value=s.default_value, discrete=s.discrete,
+        capability=property_id,
+        # S5: raw channels listed in ``INTERNAL_LOCAL_NAMES`` only exist to
+        # drive post-processing filters; the vfilter hides them on the node.
+        exposed_locally=s.name not in _capability_wiring.INTERNAL_LOCAL_NAMES,
     ) for s in prop.channel_specs}
 
 
@@ -236,7 +233,6 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                  gobo_wheel_count_lookup: GoboWheelCountLookup | None,
                  beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None,
                  color_segment_count_lookup: ColorSegmentCountLookup | None,
-                 all_specs: dict[str, ChannelSpec],
                  enabled_property_ids: set[str] | None = None,
                  ) -> tuple[list[RequestGroup], dict[str, ChannelSpec]]:
     from model.virtual_filters.property_cues._default_specs import property_kwargs_for_fixture
@@ -283,7 +279,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                     # insertion order so authored intent is predictable).
                     if existing is None or depth > existing[0]:
                         candidates[key] = (depth, node_path, assignment, ci)
-        for (child, pid), (depth, node_path, assignment, ci) in candidates.items():
+        for (child, pid), (_depth, node_path, assignment, ci) in candidates.items():
             if not _child_supports_property(child[0], pid, capability_lookup):
                 continue
             prefix = _prefix(child[0], child[1], name_resolver)
@@ -311,17 +307,13 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                 continue
             # A preset may emit channels for properties *other* than its
             # ``applies_for`` (``pan_sweep`` writes the dimmer on top of
-            # pan, for instance). Accept those extras as long as the
-            # fixture actually has specs for them -- otherwise they stay
-            # out of ``channel_names`` and the solver drops them, which
-            # is how an unsupported dimmer ask on a gobo-only fixture
-            # goes away silently.
-            claimed = set(local_specs.keys())
-            claimed.update(name for name in prefixed if name in all_specs)
+            # pan, for instance). Requests for channels without an
+            # ``all_specs`` entry are silently dropped later when the
+            # solver's spec lookup misses, which is how an unsupported
+            # dimmer ask on a gobo-only fixture goes away without a stack
+            # trace.
             groups.append(RequestGroup(
                 origin_label=f"c{cue_index}.s{si}.{pid}.{node_path}",
-                tree_depth=depth,
-                channel_names=frozenset(claimed),
                 requests=prefixed,
             ))
             for ch_name, reqs in prefixed.items():
@@ -348,8 +340,6 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
         if closing_requests:
             groups.append(RequestGroup(
                 origin_label=f"c{cue_index}.closing",
-                tree_depth=0,
-                channel_names=frozenset(closing_requests.keys()),
                 requests=closing_requests,
             ))
     return groups, specs
@@ -632,7 +622,6 @@ def compile_property_model(
             cue_index, cue, children, preset_library, name_fn,
             capability_lookup, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
             color_segment_count_lookup,
-            all_specs,
             enabled_property_ids=enabled_pids,
         )
         all_specs.update(specs)

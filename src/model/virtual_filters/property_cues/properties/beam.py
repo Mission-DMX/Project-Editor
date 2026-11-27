@@ -10,16 +10,11 @@ without a focus can skip it entirely.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from model.filter import DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
-from model.virtual_filters.property_cues.properties.base import Property, child_start_timestep
-
-if TYPE_CHECKING:
-    from model.virtual_filters.property_cues.distribution import Distribution
+from model.virtual_filters.property_cues.properties.base import Property
 
 _ZOOM = "zoom"
 _PRISM_SELECTION = "prism_selection"
@@ -29,7 +24,12 @@ _IRIS = "iris"
 
 @dataclass(slots=True)
 class BeamProperty(Property):
-    """Opt-in zoom / iris / prism channels; omits a channel when its flag is False."""
+    """Opt-in zoom / iris / prism channels; omits a channel when its flag is False.
+
+    ``prism_selection`` is marked discrete on its :class:`ChannelSpec` so the
+    base :meth:`Property.generate_requests` emits it with
+    :attr:`TransferFunction.EDGE` (L26).
+    """
 
     zoom: int = 0
     prism_selection: int = 0
@@ -54,38 +54,14 @@ class BeamProperty(Property):
             specs.append(ChannelSpec(name=_IRIS, data_type=DataType.DT_8_BIT))
         return tuple(specs)
 
-    def generate_requests(
-        self,
-        step_start_40hz: int,
-        step_duration_40hz: int,
-        child_index: int,
-        distribution: Distribution,
-    ) -> dict[str, list[KeyframeRequest]]:
-        """Emit keyframe requests for each enabled beam sub-channel.
-
-        ``prism_selection`` is a discrete channel index and always uses
-        ``TransferFunction.EDGE`` so a selection change does not walk
-        through intermediate prism indices (L26). Zoom, iris and prism
-        rotation are continuous.
-        """
-        del step_duration_40hz
-        start = child_start_timestep(step_start_40hz, distribution, child_index)
-        requests: dict[str, list[KeyframeRequest]] = {}
+    def channel_values(self) -> dict[str, float | int]:
+        """Return the authored value for each enabled beam sub-channel."""
+        out: dict[str, float | int] = {}
         if self.include_zoom:
-            requests[_ZOOM] = [KeyframeRequest(
-                timestep_40hz=start, requested_value=int(self.zoom), transition=self.transition,
-            )]
+            out[_ZOOM] = int(self.zoom)
         if self.include_prism:
-            requests[_PRISM_SELECTION] = [KeyframeRequest(
-                timestep_40hz=start, requested_value=int(self.prism_selection),
-                transition=TransferFunction.EDGE,
-            )]
-            requests[_PRISM_ROTATION] = [KeyframeRequest(
-                timestep_40hz=start, requested_value=float(self.prism_rotation),
-                transition=self.transition,
-            )]
+            out[_PRISM_SELECTION] = int(self.prism_selection)
+            out[_PRISM_ROTATION] = float(self.prism_rotation)
         if self.include_iris:
-            requests[_IRIS] = [KeyframeRequest(
-                timestep_40hz=start, requested_value=int(self.iris), transition=self.transition,
-            )]
-        return requests
+            out[_IRIS] = int(self.iris)
+        return out

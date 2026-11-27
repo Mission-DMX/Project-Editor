@@ -11,16 +11,11 @@ type; the strobe strategy reads from ``…__brightness_raw`` and publishes on
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from model.filter import DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
-from model.virtual_filters.property_cues.properties.base import Property, child_start_timestep
-
-if TYPE_CHECKING:
-    from model.virtual_filters.property_cues.distribution import Distribution
+from model.virtual_filters.property_cues.properties.base import Property
 
 _BRIGHTNESS_RAW = "brightness_raw"
 _STROBEFREQ = "strobefreq"
@@ -51,36 +46,10 @@ class DimmerProperty(Property):
             ChannelSpec(name=_DUTY_CYCLE, data_type=DataType.DT_DOUBLE, default_value="128"),
         )
 
-    def generate_requests(
-        self,
-        step_start_40hz: int,
-        step_duration_40hz: int,
-        child_index: int,
-        distribution: Distribution,
-    ) -> dict[str, list[KeyframeRequest]]:
-        """Emit keyframe requests for the brightness, strobe and duty-cycle channels."""
-        del step_duration_40hz
-        start = child_start_timestep(step_start_40hz, distribution, child_index)
+    def channel_values(self) -> dict[str, float]:
+        """Return the authored brightness/strobe/duty values keyed by channel name."""
         return {
-            _BRIGHTNESS_RAW: [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=float(self.brightness),
-                    transition=self.transition,
-                ),
-            ],
-            _STROBEFREQ: [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=float(self.strobefreq),
-                    transition=self.transition,
-                ),
-            ],
-            _DUTY_CYCLE: [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=float(self.duty_cycle),
-                    transition=self.transition,
-                ),
-            ],
+            _BRIGHTNESS_RAW: float(self.brightness),
+            _STROBEFREQ: float(self.strobefreq),
+            _DUTY_CYCLE: float(self.duty_cycle),
         }

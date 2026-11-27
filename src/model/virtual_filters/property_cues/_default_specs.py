@@ -84,6 +84,7 @@ def default_specs_for_fixtures(
     # cycle: ``compiler.py`` owns ``_PROPERTY_CLASS`` (the single source of
     # truth) and imports ``default_specs_for_fixtures`` from here at module
     # scope, so importing back is only safe at call time.
+    from model.virtual_filters.property_cues.capability_wiring import INTERNAL_LOCAL_NAMES
     from model.virtual_filters.property_cues.compiler import _PROPERTY_CLASS
     specs: dict[str, ChannelSpec] = {}
     enabled = {cap.value for cap in selection.enabled_capabilities}
@@ -108,5 +109,7 @@ def default_specs_for_fixtures(
                 specs.setdefault(channel_name, ChannelSpec(
                     name=channel_name, data_type=s.data_type,
                     default_value=s.default_value, discrete=s.discrete,
+                    capability=property_id,
+                    exposed_locally=s.name not in INTERNAL_LOCAL_NAMES,
                 ))
     return specs

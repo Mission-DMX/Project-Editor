@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
 
+from model.virtual_filters.property_cues._property_registry import properties_in_order
 from model.virtual_filters.property_cues.model.fixture_selection import SelectionEntryKind
 from model.virtual_filters.property_cues.model.property_step import (
     ManualPropertyAssignment,
@@ -34,9 +35,18 @@ if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.property_step import PropertyStep
 
 
-_COLUMNS = ("Name", "Fade-in", "Dimmer", "Position", "Gobo", "Color", "Beam", "Focus", "Frost")
+# S1: the step tree's property columns derive from the registry so a new
+# property class only needs to add a :class:`PropertyEntry` with a
+# ``step_tree_column`` for the column to appear here.
+_PROPERTY_COLUMN_SEQUENCE: tuple[tuple[str, str], ...] = tuple(
+    (e.id, e.step_tree_column)
+    for e in properties_in_order()
+    if e.step_tree_column is not None
+)
+_COLUMNS: tuple[str, ...] = ("Name", "Fade-in", *(label for _pid, label in _PROPERTY_COLUMN_SEQUENCE))
+# Column index -> property id. Static columns ("Name", "Fade-in") occupy 0..1.
 _PROPERTY_COLUMNS: dict[int, str] = {
-    2: "dimmer", 3: "position", 4: "gobo", 5: "color", 6: "beam", 7: "focus", 8: "frost",
+    i + 2: pid for i, (pid, _label) in enumerate(_PROPERTY_COLUMN_SEQUENCE)
 }
 _ROLE_STEP_INDEX = Qt.ItemDataRole.UserRole + 1
 _ROLE_NODE_PATH = Qt.ItemDataRole.UserRole + 2
@@ -91,7 +101,7 @@ def _summary_for(property_id: str, assignment: object) -> str:
 def _summary_cells(step: PropertyStep, node_path: str) -> list[str]:
     assignments = step.assignments.get(node_path)
     cells: list[str] = []
-    for col in range(2, 9):
+    for col in sorted(_PROPERTY_COLUMNS):
         prop_id = _PROPERTY_COLUMNS[col]
         if assignments is None:
             cells.append("-")

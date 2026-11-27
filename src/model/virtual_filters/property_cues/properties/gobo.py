@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from model.filter import DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
-from model.virtual_filters.property_cues.properties.base import Property, child_start_timestep
-
-if TYPE_CHECKING:
-    from model.virtual_filters.property_cues.distribution import Distribution
+from model.virtual_filters.property_cues.properties.base import Property
 
 
 def _slot_channel(wheel_index: int) -> str:
@@ -28,7 +23,10 @@ class GoboProperty(Property):
     """Per-wheel gobo slot (discrete) and rotation speed (continuous).
 
     ``slots`` and ``rotations`` are indexed by wheel index. Entries missing
-    from the user-supplied dicts default to 0.
+    from the user-supplied dicts default to 0. S2: the base class builds
+    the keyframe requests from :meth:`channel_values`; slot channels are
+    marked ``discrete`` on their :class:`ChannelSpec` so the base emits
+    them with :attr:`TransferFunction.EDGE` (see L26).
     """
 
     wheel_count: int = 1
@@ -46,36 +44,10 @@ class GoboProperty(Property):
             specs.append(ChannelSpec(name=_rotation_channel(i), data_type=DataType.DT_DOUBLE))
         return tuple(specs)
 
-    def generate_requests(
-        self,
-        step_start_40hz: int,
-        step_duration_40hz: int,
-        child_index: int,
-        distribution: Distribution,
-    ) -> dict[str, list[KeyframeRequest]]:
-        """Emit slot and rotation keyframe requests for each gobo wheel.
-
-        Slot channels always use ``TransferFunction.EDGE`` because stepping
-        a gobo wheel between two slot numbers by interpolation would walk
-        the wheel through every slot in between (L26). Rotations stay
-        continuous and honour ``self.transition``.
-        """
-        del step_duration_40hz
-        start = child_start_timestep(step_start_40hz, distribution, child_index)
-        out: dict[str, list[KeyframeRequest]] = {}
+    def channel_values(self) -> dict[str, float | int]:
+        """Return the authored slot (int) and rotation (float) per wheel."""
+        out: dict[str, float | int] = {}
         for i in range(self.wheel_count):
-            out[_slot_channel(i)] = [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=int(self.slots.get(i, 0)),
-                    transition=TransferFunction.EDGE,
-                ),
-            ]
-            out[_rotation_channel(i)] = [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=float(self.rotations.get(i, 0.0)),
-                    transition=self.transition,
-                ),
-            ]
+            out[_slot_channel(i)] = int(self.slots.get(i, 0))
+            out[_rotation_channel(i)] = float(self.rotations.get(i, 0.0))
         return out

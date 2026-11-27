@@ -14,7 +14,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel, QStackedWidget, QTabWidget, QVBoxLayout, QWidget
 
 from model.ofl.capability_discovery import discover_capabilities
-from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
+from model.virtual_filters.property_cues._property_registry import properties_in_order
 
 from .editors.beam_editor import BeamEditor
 from .editors.color_editor import ColorEditor
@@ -29,17 +29,14 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from model.ofl.fixture import UsedFixture
+    from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
 
 
-_PROPERTY_ORDER: tuple[tuple[str, str, EnabledCapability], ...] = (
-    ("dimmer", "Dimmer", EnabledCapability.DIMMER),
-    ("position", "Position", EnabledCapability.POSITION),
-    ("color", "Color", EnabledCapability.COLOR),
-    ("gobo", "Gobo", EnabledCapability.GOBO),
-    ("beam", "Beam", EnabledCapability.BEAM),
-    ("focus", "Focus", EnabledCapability.FOCUS),
-    ("frost", "Frost", EnabledCapability.FROST),
+# S1: derived from the unified property registry so the tabs, their labels
+# and their gating capabilities stay in sync with the compiler.
+_PROPERTY_ORDER: tuple[tuple[str, str, EnabledCapability], ...] = tuple(
+    (e.id, e.label, e.capability) for e in properties_in_order()
 )
 
 

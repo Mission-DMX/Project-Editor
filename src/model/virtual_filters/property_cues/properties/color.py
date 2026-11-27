@@ -11,17 +11,12 @@ the fixture discovery; assignments only persist the authored
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from model.color_hsi import ColorHSI
 from model.filter import DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
-from model.virtual_filters.property_cues.properties.base import Property, child_start_timestep
-
-if TYPE_CHECKING:
-    from model.virtual_filters.property_cues.distribution import Distribution
+from model.virtual_filters.property_cues.properties.base import Property
 
 _COLOR = "color"
 
@@ -75,25 +70,16 @@ class ColorProperty(Property):
             for i in range(count)
         )
 
-    def generate_requests(
-        self,
-        step_start_40hz: int,
-        step_duration_40hz: int,
-        child_index: int,
-        distribution: Distribution,
-    ) -> dict[str, list[KeyframeRequest]]:
-        """Emit colour keyframe requests distributed across each segment."""
-        del step_duration_40hz
-        start = child_start_timestep(step_start_40hz, distribution, child_index)
+    def channel_values(self) -> dict[str, ColorHSI]:
+        """Return a distributed colour per segment, keyed by channel name.
+
+        S2: dynamic channel count — the base class's ``channel_values``
+        contract is satisfied by enumerating one entry per segment from
+        :func:`distribute_colors`.
+        """
         count = max(1, int(self.segment_count))
         per_segment = distribute_colors(self.colors, count)
         return {
-            color_channel_name(i, count): [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=per_segment[i],
-                    transition=self.transition,
-                ),
-            ]
+            color_channel_name(i, count): per_segment[i]
             for i in range(count)
         }

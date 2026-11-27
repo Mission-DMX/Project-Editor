@@ -28,12 +28,14 @@ logger = getLogger(__name__)
 def _user_facing_outputs(channel_specs: dict) -> dict:
     """Return ``{name: DataType}`` for the output terminals the node should expose.
 
-    Hides the raw channels that only exist to feed post-processing filters
-    (``strobefreq``, ``duty_cycle``, ``pan_value``, ``pan_curvesel``,
-    ``tilt_value``, ``tilt_curvesel``) and synthesises the post-processed
-    outputs they drive (``pan``, ``tilt`` -- 16-bit; ``brightness`` already
-    shares a name with its raw counterpart since the strobe generator preserves
-    the float type). Order follows :func:`channel_sort_key`.
+    S5: raw channels that only exist to feed post-processing filters (such as
+    ``strobefreq``, ``duty_cycle``, ``pan_value``, ``tilt_curvesel``) are
+    identified by their :attr:`ChannelSpec.exposed_locally` flag instead of
+    the historic ``INTERNAL_LOCAL_NAMES`` lookup. The post-processed outputs
+    they drive (``pan``, ``tilt`` -- 16-bit; ``brightness`` already shares a
+    name with its raw counterpart since the strobe generator preserves the
+    float type) are still synthesised via :func:`synthesized_output`. Order
+    follows :func:`channel_sort_key`.
     """
     full: dict[str, object] = {}
     for name, spec in channel_specs.items():
@@ -42,6 +44,14 @@ def _user_facing_outputs(channel_specs: dict) -> dict:
         if syn is not None:
             syn_local, syn_type = syn
             full.setdefault(f"{prefix}__{syn_local}", syn_type)
+        # ``exposed_locally`` defaults to ``True`` so specs produced by
+        # older code paths (defaulted CONST channels, headless unit-test
+        # stubs) still surface on the node.
+        if not getattr(spec, "exposed_locally", True):
+            continue
+        # Belt-and-braces fallback for callers that didn't thread the flag
+        # through: keep the historic internal-local-names check so a legacy
+        # spec dict still hides the raw channels.
         if local in INTERNAL_LOCAL_NAMES:
             continue
         full[name] = spec.data_type
@@ -105,13 +115,20 @@ class PropertyBasedCueFilter(PreviewFilter):
     def _ensure_compiled(self) -> CompileResult:
         """Compile the model if needed and refresh ``self._out_data_types``.
 
-        L14: the preset library is loaded once per compile (the loader
-        module caches the default library, so this is effectively free when
-        nothing changed on disk since the last compile).
+        L14 + S4: a short-lived :class:`BoardFixtureInfo` memoises every
+        per-fixture capability / wheel / segment lookup for the duration of
+        the compile so repeated references to the same fixture only pay the
+        board-lookup cost once. The preset library is cached module-wide so
+        this call is effectively free when nothing changed on disk since the
+        last compile.
         """
         if self._last_compile is None:
+            from model.virtual_filters.property_cues.fixture_info import BoardFixtureInfo
             from model.virtual_filters.property_cues.presets import load_preset_library
             name_map = self._build_fixture_name_map()
+            scene = getattr(self, "scene", None)
+            board = getattr(scene, "board_configuration", None) if scene is not None else None
+            info = BoardFixtureInfo(board)
             self._last_compile = compile_property_model(
                 self._property_model,
                 cue_filter_id=self.filter_id,
@@ -119,74 +136,37 @@ class PropertyBasedCueFilter(PreviewFilter):
                 pos=self.pos,
                 preset_library=load_preset_library(),
                 name_resolver=lambda fid: name_map.get(fid, fid),
-                capability_lookup=self._capability_lookup,
-                gobo_wheel_count_lookup=self._gobo_wheel_count_lookup,
-                beam_sub_capabilities_lookup=self._beam_sub_capabilities_lookup,
-                color_segment_count_lookup=self._color_segment_count_lookup,
+                capability_lookup=lambda fid, _info=info: self._capabilities_or_all_enabled(_info, fid),
+                gobo_wheel_count_lookup=info.gobo_wheels,
+                beam_sub_capabilities_lookup=info.beam_parts,
+                color_segment_count_lookup=info.color_segments,
             )
             self._out_data_types = _user_facing_outputs(self._last_compile.channel_specs)
         return self._last_compile
 
-    def _find_fixture(self, fixture_id: str):  # noqa: ANN202 — UsedFixture lazy import
-        """Look up a fixture by UUID, preferring :meth:`BoardConfiguration.get_fixture`.
+    def _capabilities_or_all_enabled(self, info, fixture_id: str) -> set[str]:  # noqa: ANN001
+        """Return the fixture's physical capabilities, or every enabled one if unknown.
 
-        L14: the previous implementation scanned every fixture on every
-        capability lookup, which for a 12-fixture show meant ~100+ linear
-        scans per compile. The board already keeps fixtures in a dict keyed
-        by UUID; use that fast path when available and fall back to the
-        scan so headless unit tests that attach a bare fixture list keep
-        working.
+        Falls back to the model's enabled capability set when the fixture
+        can't be located so headless tests still see output terminals for
+        every capability they ticked.
         """
+        caps = info.capabilities(fixture_id)
+        if caps:
+            return caps
+        return {cap.value for cap in self._property_model.fixture_selection.enabled_capabilities}
+
+    def _find_fixture(self, fixture_id: str):  # noqa: ANN202 — UsedFixture lazy import
+        """Compatibility shim: delegate to a transient :class:`BoardFixtureInfo`.
+
+        Retained for the small number of callers (tests, external integrations)
+        that still reach for ``_find_fixture`` directly. Production code paths
+        go through :class:`BoardFixtureInfo` via :meth:`_ensure_compiled`.
+        """
+        from model.virtual_filters.property_cues.fixture_info import BoardFixtureInfo
         scene = getattr(self, "scene", None)
         board = getattr(scene, "board_configuration", None) if scene is not None else None
-        if board is None:
-            return None
-        getter = getattr(board, "get_fixture", None)
-        if callable(getter):
-            try:
-                found = getter(fixture_id)
-            except (ValueError, TypeError, AttributeError):
-                found = None
-            if found is not None:
-                return found
-        for fixture in getattr(board, "fixtures", []) or []:
-            if str(getattr(fixture, "uuid", "")) == fixture_id:
-                return fixture
-        return None
-
-    def _capability_lookup(self, fixture_id: str) -> set[str]:
-        """Return the capability tags the fixture actually supports."""
-        fixture = self._find_fixture(fixture_id)
-        if fixture is None:
-            # Unknown fixture: permit every enabled capability so the user still
-            # sees output terminals.
-            return {cap.value for cap in self._property_model.fixture_selection.enabled_capabilities}
-        from model.ofl.capability_discovery import discover_capabilities
-        return discover_capabilities([fixture])
-
-    def _gobo_wheel_count_lookup(self, fixture_id: str) -> int:
-        """Return the number of gobo wheels on the fixture (0 if none)."""
-        fixture = self._find_fixture(fixture_id)
-        if fixture is None:
-            return 1
-        from model.ofl.capability_discovery import gobo_wheels_of
-        return len(gobo_wheels_of(fixture))
-
-    def _beam_sub_capabilities_lookup(self, fixture_id: str) -> set[str]:
-        """Return the beam sub-capabilities (``"zoom"``, ``"iris"``, ``"prism"``) the fixture has."""
-        fixture = self._find_fixture(fixture_id)
-        if fixture is None:
-            return {"zoom", "iris", "prism"}
-        from model.ofl.capability_discovery import beam_sub_capabilities
-        return beam_sub_capabilities(fixture)
-
-    def _color_segment_count_lookup(self, fixture_id: str) -> int:
-        """Return the number of HSI colour segments on the fixture (1 if none)."""
-        fixture = self._find_fixture(fixture_id)
-        if fixture is None:
-            return 1
-        from model.ofl.capability_discovery import color_segment_count_of
-        return color_segment_count_of(fixture)
+        return BoardFixtureInfo(board)._fixture(fixture_id)
 
     def _build_fixture_name_map(self) -> dict[str, str]:
         """Build ``{fixture_id: display_name}`` with collision-safe suffixes.

@@ -1,8 +1,10 @@
 """Helpers for the keyframe solver.
 
-``make_state`` / ``make_frame`` are kept as thin wrappers over
-:meth:`State.from_value` / :meth:`KeyFrame.at` so callers that still import
-them don't have to be updated at the same time.
+S6: ``make_state`` and ``_dedupe_and_sort`` / ``_collapse_same_slot`` / the
+``slot_to_frame`` dict were removed when :class:`KeyframeSolver.solve`
+collapsed to a single pass. Only the small time-conversion helpers and the
+``make_frame`` factory remain -- they are still used by the compiler's L5
+closing-keyframe pass, the native builder, and the solver tests.
 """
 
 from __future__ import annotations
@@ -30,11 +32,6 @@ def slot_from_seconds(seconds: float) -> int:
     return round(seconds * 40.0)
 
 
-def make_state(spec: ChannelSpec, transition: TransferFunction, value: Union[float, ColorHSI]) -> State:
-    """Create the ``State`` subclass matching ``spec.data_type`` and populate it."""
-    return State.from_value(spec.data_type, transition, value)
-
-
 def make_frame(spec: ChannelSpec, timestep_40hz: int, transition: TransferFunction,
                value: Union[float, ColorHSI]) -> KeyFrame:
     """Build a single-state ``KeyFrame`` for channel ``spec``."""
@@ -42,13 +39,3 @@ def make_frame(spec: ChannelSpec, timestep_40hz: int, transition: TransferFuncti
         seconds_from_slot(timestep_40hz),
         states=[State.from_value(spec.data_type, transition, value)],
     )
-
-
-def group_rank(channel_count: int, tree_depth: int) -> tuple[int, int]:
-    """Return a comparable rank used for conflict resolution.
-
-    Groups with fewer channels (more specialised) are preferred.
-    Among equally-specialised groups the deeper one wins. The rank is used with
-    ``min`` so smaller tuples win.
-    """
-    return (channel_count, -tree_depth)

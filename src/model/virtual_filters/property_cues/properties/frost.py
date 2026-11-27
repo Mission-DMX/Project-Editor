@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from model.filter import DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
-from model.virtual_filters.property_cues.properties.base import Property, child_start_timestep
-
-if TYPE_CHECKING:
-    from model.virtual_filters.property_cues.distribution import Distribution
+from model.virtual_filters.property_cues.properties.base import Property
 
 _FROST_INTENSITY = "frost_intensity"
 
@@ -29,22 +24,6 @@ class FrostProperty(Property):
         """Return the single 8-bit frost-intensity channel spec."""
         return (ChannelSpec(name=_FROST_INTENSITY, data_type=DataType.DT_8_BIT),)
 
-    def generate_requests(
-        self,
-        step_start_40hz: int,
-        step_duration_40hz: int,
-        child_index: int,
-        distribution: Distribution,
-    ) -> dict[str, list[KeyframeRequest]]:
-        """Emit a keyframe request for the frost-intensity channel."""
-        del step_duration_40hz
-        start = child_start_timestep(step_start_40hz, distribution, child_index)
-        return {
-            _FROST_INTENSITY: [
-                KeyframeRequest(
-                    timestep_40hz=start,
-                    requested_value=int(self.frost_intensity),
-                    transition=self.transition,
-                ),
-            ],
-        }
+    def channel_values(self) -> dict[str, int]:
+        """Return the authored frost intensity keyed by channel name."""
+        return {_FROST_INTENSITY: int(self.frost_intensity)}

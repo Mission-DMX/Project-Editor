@@ -46,8 +46,8 @@ class KeyframeSolverTest(unittest.TestCase):
         req_y_mid = KeyframeRequest(timestep_40hz=50, requested_value=0.5, transition=TransferFunction.LINEAR)
         group = RequestGroup(
             origin_label="prop_a",
-            tree_depth=1,
-            channel_names=frozenset({"X", "Y"}),
+
+
             requests={"X": [req_x_a, req_x_b], "Y": [req_y_mid]},
         )
         inp = SolveInput(
@@ -72,14 +72,14 @@ class KeyframeSolverTest(unittest.TestCase):
         """
         earlier = RequestGroup(
             origin_label="earlier",
-            tree_depth=1,
-            channel_names=frozenset({"X"}),
+
+
             requests={"X": [KeyframeRequest(timestep_40hz=10, requested_value=7.0)]},
         )
         later = RequestGroup(
             origin_label="later",
-            tree_depth=1,
-            channel_names=frozenset({"X"}),
+
+
             requests={"X": [KeyframeRequest(timestep_40hz=10, requested_value=42.0)]},
         )
         inp = SolveInput(
@@ -98,8 +98,8 @@ class KeyframeSolverTest(unittest.TestCase):
         """
         group = RequestGroup(
             origin_label="mix",
-            tree_depth=0,
-            channel_names=frozenset({"X", "Y"}),
+
+
             requests={
                 "X": [
                     KeyframeRequest(timestep_40hz=0, requested_value=0.0, transition=TransferFunction.EDGE),
@@ -122,8 +122,8 @@ class KeyframeSolverTest(unittest.TestCase):
         """Verify requests sharing a timestep collapse to a single frame per channel."""
         group = RequestGroup(
             origin_label="dense",
-            tree_depth=0,
-            channel_names=frozenset({"X", "Y"}),
+
+
             requests={
                 "X": [
                     KeyframeRequest(timestep_40hz=0, requested_value=0.0, transition=TransferFunction.LINEAR),
@@ -156,14 +156,14 @@ class KeyframeSolverTest(unittest.TestCase):
         """
         first = RequestGroup(
             origin_label="first",
-            tree_depth=2,
-            channel_names=frozenset({"X"}),
+
+
             requests={"X": [KeyframeRequest(timestep_40hz=0, requested_value=11.0)]},
         )
         second = RequestGroup(
             origin_label="second",
-            tree_depth=2,
-            channel_names=frozenset({"X"}),
+
+
             requests={"X": [KeyframeRequest(timestep_40hz=0, requested_value=22.0)]},
         )
         inp = SolveInput(channel_specs={"X": _spec("X")}, groups=[first, second])
@@ -190,8 +190,6 @@ class ChannelConsolidatorTest(unittest.TestCase):
         def _run(channel_name: str, value: float) -> list:
             group = RequestGroup(
                 origin_label="g",
-                tree_depth=0,
-                channel_names=frozenset({channel_name}),
                 requests={channel_name: [KeyframeRequest(timestep_40hz=0, requested_value=value)]},
             )
             inp = SolveInput(

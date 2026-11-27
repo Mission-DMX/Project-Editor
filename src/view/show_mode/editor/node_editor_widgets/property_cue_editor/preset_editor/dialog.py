@@ -36,6 +36,10 @@ from PySide6.QtWidgets import (
 )
 
 from model.filters._channel_names import sanitize_channel_name
+from model.virtual_filters.property_cues._property_registry import (
+    preset_channels_for,
+    properties_in_order,
+)
 from model.virtual_filters.property_cues.presets import (
     EffectPreset,
     PresetHintSpec,
@@ -48,24 +52,16 @@ from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox, Jogwhee
 
 logger = getLogger(__name__)
 
-_APPLIES_FOR_CHOICES = ("dimmer", "position", "color", "gobo", "beam", "focus", "frost")
+# S1: the "Applies for" choices and the per-property preset channel columns
+# derive from :data:`_property_registry.REGISTRY` so there is no second table
+# to keep in sync with the compiler.
+_APPLIES_FOR_CHOICES = tuple(e.id for e in properties_in_order())
 _HINT_TYPE_CHOICES = ("float", "int", "color")
 
-# L12: the channel list must match what the property's ``channel_specs``
-# actually emit. Previously "dimmer" listed ``brightness`` (shadowed in the
-# solver by ``brightness_raw``) and "beam" included the long-moved ``focus``
-# without any prism entries. Both broke the preset editor's round-trip for
-# dimmer and beam presets.
+# Populated from the registry at import time; kept as a dict for subscript-style
+# access by existing readers (tests, debugger utilities).
 _PROPERTY_CHANNELS: dict[str, tuple[str, ...]] = {
-    "dimmer": ("brightness_raw", "strobefreq", "duty_cycle"),
-    "position": ("pan_value", "pan_curvesel", "tilt_value", "tilt_curvesel"),
-    "color": ("color",),
-    # Beam no longer owns focus; focus has its own property. Prism contributes
-    # both a discrete selection channel and a continuous rotation channel.
-    "beam": ("zoom", "iris", "prism_selection", "prism_rotation"),
-    "focus": ("focus",),
-    "gobo": ("goboslot_0", "goborotation_0", "goboslot_1", "goborotation_1"),
-    "frost": ("frost_intensity",),
+    e.id: preset_channels_for(e.id) for e in properties_in_order()
 }
 
 _DEFAULT_USER_SUBDIR = "cuepresets"
