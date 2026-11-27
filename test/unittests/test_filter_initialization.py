@@ -1251,7 +1251,6 @@ class FixtureToFilterRegressionTests(unittest.TestCase):
 
         Mirrors a 5-channel Dimmer / Red / Green / Blue / White fixture.
         """
-
         from model.patching.fixture_channel import FixtureChannelType
 
         class _ChannelStub:
