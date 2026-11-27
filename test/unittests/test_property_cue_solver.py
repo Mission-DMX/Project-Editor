@@ -213,7 +213,7 @@ class ChannelConsolidatorTest(unittest.TestCase):
             "MH1__pan": _spec("MH1__pan"),
         }
         post = {"MH1__brightness": "pp", "MH2__brightness": "pp", "MH1__pan": "pp"}
-        mapping = consolidate(per_cue_frames, specs, post)
+        mapping = consolidate(per_cue_frames, specs)
         self.assertEqual("MH1__brightness", mapping.canonical("MH1__brightness"))
         self.assertEqual("MH1__brightness", mapping.canonical("MH2__brightness"))
         self.assertEqual("MH1__pan", mapping.canonical("MH1__pan"))
@@ -246,13 +246,21 @@ class ChannelConsolidatorTest(unittest.TestCase):
             "MH1__strobefreq": "dimmer:None:None",
             "MH1__duty_cycle": "dimmer:None:None",
         }
-        mapping = consolidate(per_cue_frames, specs, post)
+        mapping = consolidate(per_cue_frames, specs)
         self.assertEqual("MH1__brightness_raw", mapping.canonical("MH1__brightness_raw"))
         self.assertEqual("MH1__strobefreq", mapping.canonical("MH1__strobefreq"))
         self.assertEqual("MH1__duty_cycle", mapping.canonical("MH1__duty_cycle"))
 
-    def test_different_postprocess_keeps_channels_separate(self) -> None:
-        """Verify channels with differing post-process signatures do not consolidate."""
+    def test_divergent_postprocess_wiring_resolved_at_chain_cache(self) -> None:
+        """Verify channels with identical frame streams still consolidate.
+
+        Phase 4 removed the ``postprocess_signatures`` arg from
+        :func:`consolidate`. Differing post-process wiring (e.g. two
+        fixtures whose strobe-freq streams diverge even though brightness
+        consolidates) is now resolved at the chain-cache key level in
+        :func:`_build_ports` (L1), not here. This test documents the new
+        boundary: identical per-channel frame streams collapse unconditionally.
+        """
         per_cue_frames = {
             "cue_1": {
                 "MH1__brightness": [],
@@ -260,10 +268,9 @@ class ChannelConsolidatorTest(unittest.TestCase):
             },
         }
         specs = {"MH1__brightness": _spec("MH1__brightness"), "MH2__brightness": _spec("MH2__brightness")}
-        post = {"MH1__brightness": "pp_a", "MH2__brightness": "pp_b"}
-        mapping = consolidate(per_cue_frames, specs, post)
+        mapping = consolidate(per_cue_frames, specs)
         self.assertEqual("MH1__brightness", mapping.canonical("MH1__brightness"))
-        self.assertEqual("MH2__brightness", mapping.canonical("MH2__brightness"))
+        self.assertEqual("MH1__brightness", mapping.canonical("MH2__brightness"))
 
 
 if __name__ == "__main__":

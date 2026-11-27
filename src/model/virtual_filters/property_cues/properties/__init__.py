@@ -1,4 +1,4 @@
-"""Concrete properties for the property-based cue vfilter (WP4)."""
+"""Concrete properties for the property-based cue vfilter."""
 
 from model.virtual_filters.property_cues.properties.base import (
     TIMESTEPS_PER_SECOND,

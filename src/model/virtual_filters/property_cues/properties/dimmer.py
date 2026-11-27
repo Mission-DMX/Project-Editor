@@ -1,4 +1,4 @@
-"""Dimmer property for the property-based cue vfilter (WP4).
+"""Dimmer property for the property-based cue vfilter.
 
 The raw brightness channel is named ``brightness_raw`` so it cannot collide
 with the user-facing ``brightness`` port the dimmer post-processing strategy

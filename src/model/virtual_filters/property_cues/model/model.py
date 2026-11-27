@@ -98,6 +98,13 @@ class PropertyCueFilterModel:
         in-place mutation here avoids the "stale model" trap that follows a
         plain reassignment (editors would silently read the pre-reload model
         after a configuration load).
+
+        L20: parse the entire blob into stand-alone staging values before
+        touching ``self``. If anything raises partway through -- a JSON
+        parse error, an unsupported schema version, a malformed cue --
+        the model stays in its pre-load state instead of ending up
+        half-replaced (which previously made the show file unrecoverable
+        from within the editor).
         """
         if blob_str == "":
             self.fixture_selection = FixtureSelection()
@@ -111,9 +118,13 @@ class PropertyCueFilterModel:
                 f"Unsupported PropertyCueFilterModel schema version: {version!r} "
                 f"(expected {CURRENT_SCHEMA_VERSION})",
             )
-        self.fixture_selection = FixtureSelection.from_json(blob.get("fixture_selection", {}))
-        self.general = PropertyCueGeneralSettings.from_json(blob.get("general", {}))
-        self.cues[:] = [PropertyCue.from_json(cue_blob) for cue_blob in blob.get("cues", [])]
+        new_fixture_selection = FixtureSelection.from_json(blob.get("fixture_selection", {}))
+        new_general = PropertyCueGeneralSettings.from_json(blob.get("general", {}))
+        new_cues = [PropertyCue.from_json(cue_blob) for cue_blob in blob.get("cues", [])]
+        # All parsing succeeded; commit atomically.
+        self.fixture_selection = new_fixture_selection
+        self.general = new_general
+        self.cues[:] = new_cues
 
     @classmethod
     def from_json_str(cls, blob_str: str) -> PropertyCueFilterModel:
@@ -153,7 +164,3 @@ class PropertyCueFilterModel:
                 step.assignments[new_fixture_path] = PropertyAssignments(
                     by_property=copy.deepcopy(source.by_property),
                 )
-
-    def compile_to_native_cue_filter(self) -> None:
-        """To be wired in WP9."""
-        raise NotImplementedError

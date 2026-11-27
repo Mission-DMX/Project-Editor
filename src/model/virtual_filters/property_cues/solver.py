@@ -1,4 +1,4 @@
-"""Keyframe solver (WP3).
+"""Keyframe solver.
 
 Consumes :class:`RequestGroup` objects emitted by property and preset invocations
 and produces a per-channel stream of :class:`KeyFrame` instances suitable for a

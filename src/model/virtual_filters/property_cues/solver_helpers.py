@@ -1,4 +1,4 @@
-"""Helpers for the keyframe solver (WP3).
+"""Helpers for the keyframe solver.
 
 ``make_state`` / ``make_frame`` are kept as thin wrappers over
 :meth:`State.from_value` / :meth:`KeyFrame.at` so callers that still import

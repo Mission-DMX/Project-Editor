@@ -4,10 +4,10 @@ The keyframe editor is implemented as a plain ``QTableWidget`` rather than
 reusing ``TimelineContainer``. The timeline container is tightly coupled to
 the ``Cue``/``BankSet`` runtime (desk columns, live preview, etc.) and surfacing
 a stand-alone keyframe-expression authoring experience through it would require
-a substantial stubbing effort. For WP13 we author the per-channel expression
-strings directly in a simple table: that keeps the dialog self-contained and
-matches the preset JSON structure one-for-one. The dialog accepts dialed-in
-literal numbers and translates them to literal expression strings on save.
+a substantial stubbing effort. Per-channel expression strings are authored
+directly in a simple table that matches the preset JSON structure
+one-for-one; dialed-in literal numbers get written as literal expression
+strings on save.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Collapse output channels that resolve to identical keyframe streams (WP3)."""
+"""Collapse output channels that resolve to identical keyframe streams."""
 
 from __future__ import annotations
 
@@ -61,9 +61,8 @@ def _stream_signature(frames: list[KeyFrame]) -> tuple:
 def consolidate(
     per_cue_frames: dict[str, dict[str, list[KeyFrame]]],
     channel_specs: dict[str, ChannelSpec],
-    postprocess_signatures: dict[str, str],
 ) -> ConsolidationMap:
-    """Collapse channels whose frames match across all cues and share postprocess signatures.
+    """Collapse channels whose frames match across all cues.
 
     Pick the alphabetically-earliest channel name as the canonical survivor in each
     equivalence class.
@@ -83,13 +82,12 @@ def consolidate(
     def channel_fingerprint(name: str) -> tuple:
         spec = channel_specs[name]
         local = name.partition("__")[2] or name
-        post = postprocess_signatures.get(name, "")
         per_cue: list = []
         for cue_id in cue_ids:
             cue_map = per_cue_frames.get(cue_id, {})
             frames = cue_map.get(name, [])
             per_cue.append((cue_id, _stream_signature(frames)))
-        return (local, spec.data_type, post, tuple(per_cue))
+        return (local, spec.data_type, tuple(per_cue))
 
     buckets: dict[tuple, list[str]] = {}
     for name in channel_names:

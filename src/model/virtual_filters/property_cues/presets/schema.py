@@ -1,51 +1,18 @@
-"""JSON schema and hand-written validator for the effect preset format."""
+"""Hand-written validator for the effect preset JSON format."""
 
 from __future__ import annotations
-
-PRESET_JSON_SCHEMA: dict = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "EffectPreset",
-    "type": "object",
-    "required": ["name", "applies_for", "kf_requests"],
-    "properties": {
-        "name": {"type": "string"},
-        "description": {"type": "string"},
-        "applies_for": {"type": "string"},
-        "hints": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["id", "type", "default"],
-                "properties": {
-                    "id": {"type": "string"},
-                    "type": {"enum": ["float", "int", "color"]},
-                    "default": {},
-                    "min": {"type": "number"},
-                    "max": {"type": "number"},
-                },
-            },
-        },
-        "kf_requests": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["duration", "channels"],
-                "properties": {
-                    "duration": {"type": "string"},
-                    "channels": {"type": "object", "additionalProperties": {"type": "string"}},
-                },
-            },
-        },
-    },
-}
 
 _ALLOWED_HINT_TYPES = {"float", "int", "color"}
 
 
 def validate(blob: dict) -> list[str]:
-    """Validate a preset JSON blob against :data:`PRESET_JSON_SCHEMA`.
+    """Validate a preset JSON blob.
 
     Returns a list of human-readable error messages; empty if the blob is valid.
+    The required shape is: top-level ``name``, ``applies_for`` and
+    ``kf_requests`` (array of ``{duration, channels}`` objects); optional
+    ``description`` and ``hints``. Hint ``type`` must be ``"float"``,
+    ``"int"`` or ``"color"``.
     """
     errors: list[str] = []
     if not isinstance(blob, dict):

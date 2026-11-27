@@ -170,8 +170,7 @@ def _spec_table_for(
         return {}
     return {f"{prefix}__{s.name}": ChannelSpec(
         name=f"{prefix}__{s.name}", data_type=s.data_type,
-        default_value=s.default_value, aliases=s.aliases,
-        discrete=s.discrete,
+        default_value=s.default_value, discrete=s.discrete,
     ) for s in prop.channel_specs}
 
 
@@ -645,8 +644,7 @@ def compile_property_model(
         per_cue_frames[f"cue_{cue_index}"] = {n: s.frames for n, s in solved.items()}
     ch_prefix = {n: n.partition("__")[0] for n in all_specs}
     ch_capability = {n: _infer_capability(n.partition("__")[2]) for n in all_specs}
-    pp_sigs = {n: f"{ch_capability[n]}:None:None" for n in all_specs}
-    consolidation = consolidate(per_cue_frames, all_specs, pp_sigs)
+    consolidation = consolidate(per_cue_frames, all_specs)
     # Detect canonical channels that have no keyframes anywhere; emit a
     # ``FILTER_CONSTANT_*`` for each so the native cue filter doesn't have to
     # carry a channel whose only purpose is to publish its own default. A

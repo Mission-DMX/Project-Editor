@@ -1,7 +1,7 @@
 """Preview controller for the property-based cue editor widget.
 
-Owned by the PropertyCueEditor (WP10): bridges the editor's time cursor and
-play/pause state into the :class:`PropertyCuesPreviewThread` from WP12.
+Owned by the PropertyCueEditor: bridges the editor's time cursor and
+play/pause state into the :class:`PropertyCuesPreviewThread`.
 """
 
 from __future__ import annotations

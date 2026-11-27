@@ -1,4 +1,4 @@
-"""Property ABC and shared helpers for the property-based cue vfilter (WP4)."""
+"""Property ABC and shared helpers for the property-based cue vfilter."""
 
 from __future__ import annotations
 

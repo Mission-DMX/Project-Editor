@@ -136,11 +136,24 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
         default = PropertyCueFilterModel()
         self.assertEqual(default, loaded)
 
-    def test_compile_not_implemented(self) -> None:
-        """Verify the legacy compile_to_native_cue_filter helper raises NotImplementedError."""
+    def test_load_from_json_str_rejects_unsupported_schema_version_atomically(self) -> None:
+        """Regression (L20): a bad schema version leaves the model untouched."""
         model = PropertyCueFilterModel()
-        with self.assertRaises(NotImplementedError):
-            model.compile_to_native_cue_filter()
+        from model.virtual_filters.property_cues.model import (
+            FixtureSelection,
+            FixtureSelectionEntry,
+            SelectionEntryKind,
+        )
+        model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="orig")],
+            enabled_capabilities=set(),
+        )
+        with self.assertRaises(ValueError):
+            model.load_from_json_str('{"version": 9999, "cues": []}')
+        self.assertEqual(
+            "orig", model.fixture_selection.entries[0].id,
+            "A failed load must not have touched self.fixture_selection",
+        )
 
 
 class FixtureSelectionDiffTest(unittest.TestCase):

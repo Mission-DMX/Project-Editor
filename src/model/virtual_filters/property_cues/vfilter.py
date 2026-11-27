@@ -1,4 +1,4 @@
-"""Property-based cue virtual filter shell (WP9)."""
+"""Property-based cue virtual filter shell."""
 
 from __future__ import annotations
 
@@ -245,8 +245,8 @@ class PropertyBasedCueFilter(PreviewFilter):
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         if self.in_preview_mode:
-            # WP12: the live preview replaces the native cue filter with a set
-            # of constants driven by the preview runtime thread.
+            # In preview mode the live preview replaces the native cue filter
+            # with a set of constants driven by the preview runtime thread.
             from model.virtual_filters.property_cues.preview_runtime import (
                 build_preview_filters,
             )

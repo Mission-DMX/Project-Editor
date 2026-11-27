@@ -47,7 +47,7 @@ logger = getLogger(__name__)
 
 
 class PropertyCueEditor(PreviewEditWidget):
-    """Shell editor; step tree and property pane are filled in by WP11."""
+    """Property-based cue editor widget: cue table, step tree and property pane."""
 
     def __init__(self, f: Filter | None = None) -> None:
         """Initialize the shell editor widget."""
@@ -375,7 +375,7 @@ class PropertyCueEditor(PreviewEditWidget):
 
     @override
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
-        # Preview mode is wired by WP12; the shell exposes no live preview channels.
+        # Preview channels are published by the compiled vfilter, not the shell.
         return []
 
     @override

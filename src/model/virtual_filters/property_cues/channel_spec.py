@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -25,5 +25,4 @@ class ChannelSpec:
     name: str
     data_type: DataType
     default_value: str = ""
-    aliases: tuple[str, ...] = field(default_factory=tuple)
     discrete: bool = False

@@ -1,8 +1,6 @@
 """Launch helper for the preset editor dialog.
 
 Used by the property pane's "Edit preset..." / "New preset..." menu entries.
-The pane itself is still being built (WP11), so this helper is already
-available so WP11 can wire it in without further changes here.
 """
 
 from __future__ import annotations

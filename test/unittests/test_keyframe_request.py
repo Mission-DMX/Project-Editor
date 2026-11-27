@@ -56,10 +56,10 @@ class ChannelSpecTest(unittest.TestCase):
     """Basic correctness of the ChannelSpec primitive."""
 
     def test_defaults(self) -> None:
-        """Verify ChannelSpec default_value and aliases default to empty values."""
+        """Verify ChannelSpec default_value and discrete default to empty/False."""
         spec = ChannelSpec(name="MH1__pan_value", data_type=DataType.DT_DOUBLE)
         self.assertEqual("", spec.default_value)
-        self.assertEqual((), spec.aliases)
+        self.assertFalse(spec.discrete)
 
     def test_frozen_and_slots(self) -> None:
         """Verify ChannelSpec instances are frozen and reject field assignment."""

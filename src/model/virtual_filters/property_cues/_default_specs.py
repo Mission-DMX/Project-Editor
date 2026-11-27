@@ -1,43 +1,31 @@
 """Enumerate default channel specs for every (fixture, enabled capability) pair.
 
 Even without any dialed-in assignment, the native cue filter has to expose
-one channel per capability so downstream filters can hook up.  Lives in its
-own module so :mod:`compiler` stays below its 300-LOC budget.
+one channel per capability so downstream filters can hook up.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.properties import (
-    BeamProperty,
-    ColorProperty,
-    DimmerProperty,
-    FocusProperty,
-    FrostProperty,
-    GoboProperty,
-    PositionProperty,
-    Property,
-)
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from model.virtual_filters.property_cues.compiler import (
+        BeamSubCapabilityLookup,
+        CapabilityLookup,
+        ColorSegmentCountLookup,
+        GoboWheelCountLookup,
+        ResolvedChild,
+    )
     from model.virtual_filters.property_cues.model.fixture_selection import FixtureSelection
 
-ResolvedChild = tuple[str, int | None]
-NameResolver = Callable[[str], str]
-CapabilityLookup = Callable[[str], set[str]]
-GoboWheelCountLookup = Callable[[str], int]
-BeamSubCapabilityLookup = Callable[[str], set[str]]
-ColorSegmentCountLookup = Callable[[str], int]
-
-_PROPERTY_CLASS: dict[str, type[Property]] = {
-    "dimmer": DimmerProperty, "position": PositionProperty,
-    "color": ColorProperty,
-    "beam": BeamProperty, "gobo": GoboProperty,
-    "focus": FocusProperty, "frost": FrostProperty,
-}
+__all__ = [
+    "default_specs_for_fixtures",
+    "property_kwargs_for_fixture",
+]
 
 
 def property_kwargs_for_fixture(
@@ -92,6 +80,11 @@ def default_specs_for_fixtures(
     colour segments on the fixture, so multi-pixel LED bars expose one
     ``color_N`` output per segment.
     """
+    # Local import to break the ``compiler.py <-> _default_specs.py`` import
+    # cycle: ``compiler.py`` owns ``_PROPERTY_CLASS`` (the single source of
+    # truth) and imports ``default_specs_for_fixtures`` from here at module
+    # scope, so importing back is only safe at call time.
+    from model.virtual_filters.property_cues.compiler import _PROPERTY_CLASS
     specs: dict[str, ChannelSpec] = {}
     enabled = {cap.value for cap in selection.enabled_capabilities}
     for fid, segment in children:
@@ -114,7 +107,6 @@ def default_specs_for_fixtures(
                 channel_name = f"{prefix}__{s.name}"
                 specs.setdefault(channel_name, ChannelSpec(
                     name=channel_name, data_type=s.data_type,
-                    default_value=s.default_value, aliases=s.aliases,
-                    discrete=s.discrete,
+                    default_value=s.default_value, discrete=s.discrete,
                 ))
     return specs

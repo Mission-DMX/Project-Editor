@@ -1,8 +1,7 @@
 """Main-menu integration helper for the preset editor dialog.
 
-WP13 only exposes the helper; the actual wiring (which menu to attach to) is
-left to WP14. Call ``install_main_menu_entry(main_window)`` from the main
-window setup once the integration decision has been made.
+Call ``install_main_menu_entry(main_window)`` from the main window setup
+to attach the preset editor to the Edit / Tools menu.
 """
 
 from __future__ import annotations

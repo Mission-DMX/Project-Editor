@@ -1252,16 +1252,27 @@ class FixtureToFilterRegressionTests(unittest.TestCase):
         Mirrors a 5-channel Dimmer / Red / Green / Blue / White fixture.
         """
 
+        from model.patching.fixture_channel import FixtureChannelType
+
         class _ChannelStub:
-            def __init__(self, name: str) -> None:
+            def __init__(self, name: str, ch_type: FixtureChannelType) -> None:
                 self.name = name
+                self.type = ch_type
+                self.channel_template = None
+                self.is_fine = False
 
         class _FixtureStub:
             def __init__(self) -> None:
                 self.parent_universe = 1
                 self.start_index = 0
                 self.name = "GenericDRGBW"
-                self._channels = tuple(_ChannelStub(n) for n in ("Dimmer", "Red", "Green", "Blue", "White"))
+                self._channels = (
+                    _ChannelStub("Dimmer", FixtureChannelType.INTENSITY),
+                    _ChannelStub("Red", FixtureChannelType.RED),
+                    _ChannelStub("Green", FixtureChannelType.GREEN),
+                    _ChannelStub("Blue", FixtureChannelType.BLUE),
+                    _ChannelStub("White", FixtureChannelType.WHITE),
+                )
 
             @property
             def channel_length(self) -> int:
@@ -1279,7 +1290,7 @@ class FixtureToFilterRegressionTests(unittest.TestCase):
     def test_drgbw_fixture_produces_filters_with_populated_io(self) -> None:
         """Regression: every placed filter must have a non-empty I/O signature."""
         from model.filter import DataType, FilterTypeEnumeration
-        from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_filters_in_scene
+        from controller.show_manipulation.fixture_to_filter import place_fixture_filters_in_scene
 
         scene, page = self._make_scene_and_page()
         fixture = self._make_drgbw_fixture_stub()

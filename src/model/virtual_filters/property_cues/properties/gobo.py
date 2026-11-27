@@ -1,4 +1,4 @@
-"""Gobo property for the property-based cue vfilter (WP4)."""
+"""Gobo property for the property-based cue vfilter."""
 
 from __future__ import annotations
 

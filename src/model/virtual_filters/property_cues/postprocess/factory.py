@@ -61,7 +61,6 @@ class CapabilityContext:
     pan_range: tuple[int, int] | None = None
     tilt_range: tuple[int, int] | None = None
     pos: PositionTuple = None
-    extra_params: dict[str, str] = field(default_factory=dict)
     constant_inputs: dict[str, str] = field(default_factory=dict)
 
 
