@@ -30,8 +30,17 @@ def _value(frame) -> float:
 class KeyframeSolverTest(unittest.TestCase):
     """Tests for the KeyframeSolver conflict resolution and interpolation."""
 
-    def test_mid_segment_edit_from_sibling(self) -> None:
-        """Verify a sibling request can edit a value mid-segment between two frames."""
+    def test_solver_emits_one_frame_per_request(self) -> None:
+        """Verify the solver emits exactly one frame per surviving request.
+
+        Before L4 the solver injected synthetic mid-frames on channel X at
+        slots where a sibling channel Y had a keyframe. That mid-frame
+        insertion has moved into :func:`_native_builder._state_for`: the
+        solver now returns the requested frames unmodified and the native
+        builder interpolates when another channel contributes a slot this
+        one does not touch (see
+        :class:`test_property_cue_end_to_end.PropertyCueEndToEndTests.test_unrelated_keyframe_does_not_reshape_fade`).
+        """
         req_x_a = KeyframeRequest(timestep_40hz=0, requested_value=0.0, transition=TransferFunction.LINEAR)
         req_x_b = KeyframeRequest(timestep_40hz=100, requested_value=1.0, transition=TransferFunction.LINEAR)
         req_y_mid = KeyframeRequest(timestep_40hz=50, requested_value=0.5, transition=TransferFunction.LINEAR)
@@ -46,62 +55,47 @@ class KeyframeSolverTest(unittest.TestCase):
             groups=[group],
         )
         solved = KeyframeSolver().solve(inp)
-        x_frames = solved["X"].frames
-        slots = [slot_from_seconds(f.timestamp) for f in x_frames]
-        self.assertIn(50, slots)
-        mid_frame = x_frames[slots.index(50)]
-        self.assertAlmostEqual(0.5, _value(mid_frame), places=5)
+        x_slots = [slot_from_seconds(f.timestamp) for f in solved["X"].frames]
+        self.assertEqual([0, 100], sorted(x_slots))
+        y_slots = [slot_from_seconds(f.timestamp) for f in solved["Y"].frames]
+        self.assertEqual([50], y_slots)
 
-    def test_specialisation_smaller_group_wins(self) -> None:
-        """Verify the more specialised (smaller channel set) group wins conflict resolution."""
-        contender_specific = RequestGroup(
-            origin_label="specific",
+    def test_last_emission_wins_at_contested_slot(self) -> None:
+        """Verify last-emitted group wins when two groups share a channel/slot.
+
+        Before L6, the solver ranked groups by (channel_count, tree_depth) and
+        the "more specialised" group won. That tiebreak has moved into
+        :func:`_collect_cue`, which now emits only the winning assignment per
+        (fixture, property, step). The solver itself does last-write-wins
+        deduplication: a group emitted later in the per-cue stream (higher
+        group index) overrides any earlier group's request on the same slot.
+        """
+        earlier = RequestGroup(
+            origin_label="earlier",
+            tree_depth=1,
+            channel_names=frozenset({"X"}),
+            requests={"X": [KeyframeRequest(timestep_40hz=10, requested_value=7.0)]},
+        )
+        later = RequestGroup(
+            origin_label="later",
             tree_depth=1,
             channel_names=frozenset({"X"}),
             requests={"X": [KeyframeRequest(timestep_40hz=10, requested_value=42.0)]},
         )
-        contender_broad = RequestGroup(
-            origin_label="broad",
-            tree_depth=1,
-            channel_names=frozenset({"X", "Y", "Z"}),
-            requests={
-                "X": [KeyframeRequest(timestep_40hz=10, requested_value=7.0)],
-                "Y": [KeyframeRequest(timestep_40hz=10, requested_value=8.0)],
-                "Z": [KeyframeRequest(timestep_40hz=10, requested_value=9.0)],
-            },
-        )
         inp = SolveInput(
-            channel_specs={"X": _spec("X"), "Y": _spec("Y"), "Z": _spec("Z")},
-            groups=[contender_specific, contender_broad],
+            channel_specs={"X": _spec("X")}, groups=[earlier, later],
         )
         solved = KeyframeSolver().solve(inp)
         self.assertAlmostEqual(42.0, _value(solved["X"].frames[0]))
-        self.assertAlmostEqual(9.0, _value(solved["Z"].frames[0]))
-        self.assertAlmostEqual(8.0, _value(solved["Y"].frames[0]))
-
-    def test_depth_tiebreak(self) -> None:
-        """Verify the deeper tree_depth wins when channel-set sizes tie."""
-        shallow = RequestGroup(
-            origin_label="shallow",
-            tree_depth=1,
-            channel_names=frozenset({"X", "Y"}),
-            requests={"X": [KeyframeRequest(timestep_40hz=0, requested_value=1.0)]},
-        )
-        deep = RequestGroup(
-            origin_label="deep",
-            tree_depth=5,
-            channel_names=frozenset({"X", "Y"}),
-            requests={"X": [KeyframeRequest(timestep_40hz=0, requested_value=9.0)]},
-        )
-        inp = SolveInput(
-            channel_specs={"X": _spec("X"), "Y": _spec("Y")},
-            groups=[shallow, deep],
-        )
-        solved = KeyframeSolver().solve(inp)
-        self.assertAlmostEqual(9.0, _value(solved["X"].frames[0]))
 
     def test_incompatible_transition_does_not_crash(self) -> None:
-        """Verify the solver tolerates mixed transition kinds within the same channel."""
+        """Verify the solver tolerates mixed transition kinds within the same channel.
+
+        Updated for L4: cross-channel insertion moved to the native builder, so
+        the solver no longer tries to interpolate across the mixed-transition
+        pair. It emits the two X frames at the original slots and the Y frame
+        at its own slot; the native builder handles any cross-channel fills.
+        """
         group = RequestGroup(
             origin_label="mix",
             tree_depth=0,
@@ -119,9 +113,10 @@ class KeyframeSolverTest(unittest.TestCase):
             groups=[group],
         )
         solved = KeyframeSolver().solve(inp)
-        x_frames = solved["X"].frames
-        slots = [slot_from_seconds(f.timestamp) for f in x_frames]
-        self.assertIn(40, slots)
+        x_slots = [slot_from_seconds(f.timestamp) for f in solved["X"].frames]
+        self.assertEqual([0, 80], sorted(x_slots))
+        y_slots = [slot_from_seconds(f.timestamp) for f in solved["Y"].frames]
+        self.assertEqual([40], y_slots)
 
     def test_sub_slot_collapse(self) -> None:
         """Verify requests sharing a timestep collapse to a single frame per channel."""
@@ -151,8 +146,14 @@ class KeyframeSolverTest(unittest.TestCase):
         for slot in x_slots:
             self.assertEqual(1, x_slots.count(slot))
 
-    def test_tie_group_index_fallback(self) -> None:
-        """Verify earlier group index wins when depth and channel-set size all tie."""
+    def test_last_write_wins_on_identical_slot(self) -> None:
+        """Verify later group index wins on a tied slot (last-write-wins).
+
+        After L6, precedence is resolved in :func:`_collect_cue` so the
+        solver receives at most one group per (fixture, property) per step.
+        For any residual slot-level collision, the solver keeps the later
+        emission — matching "last write wins" semantics in authoring order.
+        """
         first = RequestGroup(
             origin_label="first",
             tree_depth=2,
@@ -167,7 +168,7 @@ class KeyframeSolverTest(unittest.TestCase):
         )
         inp = SolveInput(channel_specs={"X": _spec("X")}, groups=[first, second])
         solved = KeyframeSolver().solve(inp)
-        self.assertAlmostEqual(11.0, _value(solved["X"].frames[0]))
+        self.assertAlmostEqual(22.0, _value(solved["X"].frames[0]))
 
 
 class ChannelConsolidatorTest(unittest.TestCase):

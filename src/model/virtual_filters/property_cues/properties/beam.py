@@ -47,7 +47,8 @@ class BeamProperty(Property):
         if self.include_zoom:
             specs.append(ChannelSpec(name=_ZOOM, data_type=DataType.DT_8_BIT))
         if self.include_prism:
-            specs.append(ChannelSpec(name=_PRISM_SELECTION, data_type=DataType.DT_8_BIT))
+            specs.append(ChannelSpec(name=_PRISM_SELECTION, data_type=DataType.DT_8_BIT,
+                                     discrete=True))
             specs.append(ChannelSpec(name=_PRISM_ROTATION, data_type=DataType.DT_DOUBLE))
         if self.include_iris:
             specs.append(ChannelSpec(name=_IRIS, data_type=DataType.DT_8_BIT))
@@ -60,7 +61,13 @@ class BeamProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
-        """Emit keyframe requests for each enabled beam sub-channel."""
+        """Emit keyframe requests for each enabled beam sub-channel.
+
+        ``prism_selection`` is a discrete channel index and always uses
+        ``TransferFunction.EDGE`` so a selection change does not walk
+        through intermediate prism indices (L26). Zoom, iris and prism
+        rotation are continuous.
+        """
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         requests: dict[str, list[KeyframeRequest]] = {}
@@ -71,7 +78,7 @@ class BeamProperty(Property):
         if self.include_prism:
             requests[_PRISM_SELECTION] = [KeyframeRequest(
                 timestep_40hz=start, requested_value=int(self.prism_selection),
-                transition=self.transition,
+                transition=TransferFunction.EDGE,
             )]
             requests[_PRISM_ROTATION] = [KeyframeRequest(
                 timestep_40hz=start, requested_value=float(self.prism_rotation),

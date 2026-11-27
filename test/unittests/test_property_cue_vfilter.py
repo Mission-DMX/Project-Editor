@@ -774,6 +774,147 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         finally:
             del type(scene.board_configuration).fixtures
 
+    def test_sanitize_strips_punctuation_without_partition_breakage(self) -> None:
+        """Regression (L2): a name containing ``#`` must not produce ``__`` after sanitisation.
+
+        The previous sanitiser replaced every non-alphanumeric character with
+        ``_``, so "Hero Spot #3" became "Hero_Spot__3" — a prefix that then
+        broke the compiler's ``partition("__")`` splits and silently dropped
+        the fixture's post-processing chain. The shared sanitiser strips
+        ``#`` entirely so the prefix becomes "Hero_Spot_3" with no double
+        underscore, and the chain publishes a ``brightness`` port.
+        """
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_hash_name")
+        uid = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
+
+        cap = MagicMock(); cap.type = CapabilityType.INTENSITY
+        template = MagicMock(); template.get_capabilities.return_value = [cap]
+        ch = MagicMock(); ch.name = "Intensity"; ch.channel_template = template
+
+        fx = MagicMock(); fx.uuid = uid; fx.name_on_stage = "Hero Spot #3"
+        fx.fixture_channels = (ch,)
+        fx._fixture = MagicMock(); fx._fixture.wheels = {}
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[fx])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uid)],
+                enabled_capabilities={EnabledCapability.DIMMER},
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40,
+                             assignments={f"fixture:{uid}": _manual_dimmer(0.5)}),
+            ]))
+            f._rebuild_io()
+            self.assertIn("Hero_Spot_3__brightness", f.out_data_types)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_sanitize_dash_and_space_are_distinct(self) -> None:
+        """Regression (L2): "MH 1" sanitises to "MH_1" and "MH-1" stays "MH-1".
+
+        The old sanitiser mapped every non-alphanumeric character — including
+        ``-`` — to ``_``, so both names collapsed to "MH_1" and the second
+        fixture silently overwrote the first. The shared sanitiser leaves
+        ``-`` alone, so the two prefixes stay distinct without needing a
+        UUID suffix.
+        """
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_dash_space")
+        uuid_a = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
+        uuid_b = "9f752ce5-3a25-4ed0-86f8-31ff47d4e5c9"
+
+        def _intensity_channel() -> MagicMock:
+            cap = MagicMock(); cap.type = CapabilityType.INTENSITY
+            template = MagicMock(); template.get_capabilities.return_value = [cap]
+            ch = MagicMock(); ch.name = "Intensity"; ch.channel_template = template
+            return ch
+
+        fa = MagicMock(); fa.uuid = uuid_a; fa.name_on_stage = "MH 1"
+        fa.fixture_channels = (_intensity_channel(),)
+        fa._fixture = MagicMock(); fa._fixture.wheels = {}
+        fb = MagicMock(); fb.uuid = uuid_b; fb.name_on_stage = "MH-1"
+        fb.fixture_channels = (_intensity_channel(),)
+        fb._fixture = MagicMock(); fb._fixture.wheels = {}
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[fa, fb])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uuid_a),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uuid_b),
+                ],
+                enabled_capabilities={EnabledCapability.DIMMER},
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40, assignments={
+                    f"fixture:{uuid_a}": _manual_dimmer(0.25),
+                    f"fixture:{uuid_b}": _manual_dimmer(0.75),
+                }),
+            ]))
+            f._rebuild_io()
+            channels = set(f.out_data_types)
+            self.assertIn("MH_1__brightness", channels)
+            self.assertIn("MH-1__brightness", channels)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_sanitize_detects_post_sanitisation_collisions(self) -> None:
+        """Regression (L2): names differing only in stripped characters get UUID suffixes.
+
+        The sanitiser strips ``#``, ``:`` and ``|``, so "MH#1" and "MH:1" both
+        collapse to "MH1". Without post-sanitisation collision detection the
+        second fixture would silently overwrite the first's output. The fix
+        counts collisions on the sanitised form and adds a deterministic
+        UUID suffix to each colliding fixture.
+        """
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_sanitise_coll")
+        uuid_a = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
+        uuid_b = "9f752ce5-3a25-4ed0-86f8-31ff47d4e5c9"
+
+        def _intensity_channel() -> MagicMock:
+            cap = MagicMock(); cap.type = CapabilityType.INTENSITY
+            template = MagicMock(); template.get_capabilities.return_value = [cap]
+            ch = MagicMock(); ch.name = "Intensity"; ch.channel_template = template
+            return ch
+
+        fa = MagicMock(); fa.uuid = uuid_a; fa.name_on_stage = "MH#1"
+        fa.fixture_channels = (_intensity_channel(),)
+        fa._fixture = MagicMock(); fa._fixture.wheels = {}
+        fb = MagicMock(); fb.uuid = uuid_b; fb.name_on_stage = "MH:1"
+        fb.fixture_channels = (_intensity_channel(),)
+        fb._fixture = MagicMock(); fb._fixture.wheels = {}
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[fa, fb])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uuid_a),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uuid_b),
+                ],
+                enabled_capabilities={EnabledCapability.DIMMER},
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40, assignments={
+                    f"fixture:{uuid_a}": _manual_dimmer(0.25),
+                    f"fixture:{uuid_b}": _manual_dimmer(0.75),
+                }),
+            ]))
+            f._rebuild_io()
+            channels = set(f.out_data_types)
+            brightness_ports = [c for c in channels if "__brightness" in c]
+            self.assertEqual(2, len(brightness_ports),
+                             f"Expected 2 brightness ports, got {brightness_ports}")
+            self.assertNotIn("MH1__brightness", channels,
+                             "Bare collision name must not appear — one fixture would lose")
+        finally:
+            del type(scene.board_configuration).fixtures
+
     def test_roundtrip_configuration(self) -> None:
         """Verify serialising and deserialising a filter preserves cues and assignments."""
         scene = _make_scene()

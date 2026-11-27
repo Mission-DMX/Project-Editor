@@ -44,33 +44,44 @@ class DistributionTest(unittest.TestCase):
         self.assertEqual([0.0, 0.5, 1.0, 1.5], delays)
 
     def test_phase_sin_amplitude(self) -> None:
-        """Verify PHASE_SIN delays follow a sine wave scaled by amplitude."""
+        """Verify PHASE_SIN delays remap to [0, amplitude] preserving sine shape (L7).
+
+        The previous implementation returned ``amplitude * sin(phase * i)``
+        which produced negative delays for half of the sine wave; those
+        pushed keyframes into negative time and got dropped by the solver.
+        The current implementation returns ``amplitude * (sin(phase * i) + 1) / 2``
+        so the delay sweeps [0, amplitude] and the shape of the wave
+        (relative delays across children) is preserved.
+        """
         dist = Distribution(method=DistributionMethod.PHASE_SIN, phase_offset=math.pi / 2, amplitude=2.0)
         delays = [dist.delay_for_child(i) for i in range(4)]
-        self.assertAlmostEqual(0.0, delays[0], places=6)
+        self.assertAlmostEqual(1.0, delays[0], places=6)
         self.assertAlmostEqual(2.0, delays[1], places=6)
-        self.assertAlmostEqual(0.0, delays[2], places=6)
-        self.assertAlmostEqual(-2.0, delays[3], places=6)
+        self.assertAlmostEqual(1.0, delays[2], places=6)
+        self.assertAlmostEqual(0.0, delays[3], places=6)
+        # All delays non-negative.
+        for d in delays:
+            self.assertGreaterEqual(d, 0.0)
 
     def test_phase_cos_amplitude(self) -> None:
-        """Verify PHASE_COS delays follow a cosine wave scaled by amplitude."""
+        """Verify PHASE_COS delays remap to [0, amplitude] preserving cosine shape (L7)."""
         dist = Distribution(method=DistributionMethod.PHASE_COS, phase_offset=math.pi, amplitude=1.0)
         delays = [dist.delay_for_child(i) for i in range(3)]
         self.assertAlmostEqual(1.0, delays[0], places=6)
-        self.assertAlmostEqual(-1.0, delays[1], places=6)
+        self.assertAlmostEqual(0.0, delays[1], places=6)
         self.assertAlmostEqual(1.0, delays[2], places=6)
 
     def test_phase_saw_shape(self) -> None:
-        """Verify PHASE_SAW produces the expected sawtooth delay sequence."""
+        """Verify PHASE_SAW produces a non-negative sawtooth from 0 to amplitude (L7)."""
         dist = Distribution(method=DistributionMethod.PHASE_SAW, phase_offset=math.pi, amplitude=1.0)
         # phase_offset=pi -> fraction increments by 0.5 per step.
-        # child 0 -> fraction 0.0  -> (0.0 - 0.5)*2 = -1.0
-        # child 1 -> fraction 0.5  -> (0.5 - 0.5)*2 =  0.0
-        # child 2 -> fraction 0.0  -> (0.0 - 0.5)*2 = -1.0
+        # child 0 -> fraction 0.0 -> delay 0.0
+        # child 1 -> fraction 0.5 -> delay 0.5
+        # child 2 -> fraction 0.0 -> delay 0.0 (wraps)
         delays = [dist.delay_for_child(i) for i in range(3)]
-        self.assertAlmostEqual(-1.0, delays[0], places=6)
-        self.assertAlmostEqual(0.0, delays[1], places=6)
-        self.assertAlmostEqual(-1.0, delays[2], places=6)
+        self.assertAlmostEqual(0.0, delays[0], places=6)
+        self.assertAlmostEqual(0.5, delays[1], places=6)
+        self.assertAlmostEqual(0.0, delays[2], places=6)
 
 
 class DimmerPropertyTest(unittest.TestCase):

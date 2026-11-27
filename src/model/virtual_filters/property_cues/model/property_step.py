@@ -8,6 +8,7 @@ from typing import Any
 
 from model.color_hsi import ColorHSI
 from model.virtual_filters.property_cues.distribution import Distribution, DistributionMethod
+from model.virtual_filters.property_cues.model._json_coerce import coerce_int_keys
 
 logger = getLogger(__name__)
 
@@ -44,7 +45,12 @@ def _value_from_json(blob: dict | list | float | str | bool | None) -> object:
     if isinstance(blob, dict):
         if blob.get("__kind__") == "color_hsi":
             return ColorHSI.from_filter_str(blob["value"], strict=True)
-        return {k: _value_from_json(v) for k, v in blob.items()}
+        # L3: before recursing, restore integer keys lost to JSON string
+        # encoding on any dict whose keys parse as decimal ints (gobo slots,
+        # colour segments, ...). Strings remain strings when at least one
+        # key doesn't look numeric, so property values with named keys are
+        # untouched.
+        return {k: _value_from_json(v) for k, v in coerce_int_keys(blob).items()}
     if isinstance(blob, list):
         return [_value_from_json(v) for v in blob]
     return blob

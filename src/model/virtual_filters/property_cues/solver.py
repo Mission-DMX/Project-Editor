@@ -11,12 +11,8 @@ from dataclasses import dataclass
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from model.filter_data.cues import curves
-from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.solver_helpers import (
-    group_rank,
     make_frame,
-    make_state,
     slot_from_seconds,
 )
 
@@ -74,8 +70,11 @@ class KeyframeSolver:
             request_stream = _dedupe_and_sort(surviving)
             if not request_stream:
                 continue
-            insertion_slots = _collect_insertion_slots(channel_name, request_stream, winners)
-            frames = _materialise(spec, request_stream, insertion_slots)
+            # L4: cross-group interpolation is now handled in the native
+            # builder's ``_state_for``. The solver just emits one frame per
+            # surviving request; the builder fills intermediate slots when
+            # another channel contributes a slot this one does not have.
+            frames = _materialise(spec, request_stream)
             result[channel_name] = SolvedChannel(name=channel_name, frames=frames)
         return result
 
@@ -83,15 +82,17 @@ class KeyframeSolver:
 def _select_winners(
     groups: list[RequestGroup],
 ) -> dict[str, list[tuple[KeyframeRequest, RequestGroup]]]:
-    """Resolve per-channel/per-slot conflicts.
+    """Deduplicate per-channel/per-slot requests.
 
-    Returns a mapping ``channel -> [(request, winning_group), ...]`` with at most one
-    survivor per slot and preserving the group each request originated from.
+    Returns a mapping ``channel -> [(request, originating_group), ...]`` with
+    at most one survivor per slot, preserving the group each request originated
+    from. Precedence between step- and fixture-level assignments is resolved
+    upstream in :func:`_collect_cue` (L6), so here we simply keep the latest
+    emission at any contested slot — later group index wins on a tie, matching
+    "last-write-wins" semantics within a cue.
     """
-    # per-channel per-slot winner candidate
-    best: dict[str, dict[int, tuple[tuple[int, int], int, KeyframeRequest, RequestGroup]]] = {}
+    best: dict[str, dict[int, tuple[int, KeyframeRequest, RequestGroup]]] = {}
     for group_index, group in enumerate(groups):
-        rank = group_rank(len(group.channel_names), group.tree_depth)
         for channel_name, requests in group.requests.items():
             if channel_name not in group.channel_names:
                 continue
@@ -99,14 +100,12 @@ def _select_winners(
             for req in requests:
                 slot = int(req.timestep_40hz)
                 existing = per_slot.get(slot)
-                # Tie-break: smaller rank wins; otherwise earlier group index wins.
-                candidate = (rank, group_index, req, group)
-                if existing is None or candidate < existing:
-                    per_slot[slot] = candidate
+                if existing is None or group_index >= existing[0]:
+                    per_slot[slot] = (group_index, req, group)
     out: dict[str, list[tuple[KeyframeRequest, RequestGroup]]] = {}
     for channel_name, per_slot in best.items():
         ordered = sorted(per_slot.items(), key=lambda kv: kv[0])
-        out[channel_name] = [(entry[2], entry[3]) for _, entry in ordered]
+        out[channel_name] = [(entry[1], entry[2]) for _, entry in ordered]
     return out
 
 
@@ -117,74 +116,20 @@ def _dedupe_and_sort(
     return sorted(stream, key=lambda rg: int(rg[0].timestep_40hz))
 
 
-def _collect_insertion_slots(
-    channel_name: str,
-    request_stream: list[tuple[KeyframeRequest, RequestGroup]],
-    winners: dict[str, list[tuple[KeyframeRequest, RequestGroup]]],
-) -> set[int]:
-    """Collect timesteps at which sibling channels have events inside this channel's segments.
-
-    An "inner event" is an event whose slot is strictly between two consecutive events
-    on the current channel. Only sibling channels that share a request group with the
-    bracketing event on this channel contribute insertions.
-    """
-    own_slots = {int(req.timestep_40hz) for req, _ in request_stream}
-    sibling_slots: set[int] = set()
-    if len(request_stream) < 2:
-        return sibling_slots
-    for i in range(len(request_stream) - 1):
-        prev_req, prev_group = request_stream[i]
-        nxt_req, nxt_group = request_stream[i + 1]
-        prev_slot = int(prev_req.timestep_40hz)
-        nxt_slot = int(nxt_req.timestep_40hz)
-        if nxt_slot <= prev_slot + 1:
-            continue
-        sibling_names = (prev_group.channel_names | nxt_group.channel_names) - {channel_name}
-        for sibling in sibling_names:
-            sibling_stream = winners.get(sibling)
-            if not sibling_stream:
-                continue
-            for sib_req, _ in sibling_stream:
-                slot = int(sib_req.timestep_40hz)
-                if prev_slot < slot < nxt_slot and slot not in own_slots:
-                    sibling_slots.add(slot)
-    return sibling_slots
-
-
 def _materialise(
     spec: ChannelSpec,
     request_stream: list[tuple[KeyframeRequest, RequestGroup]],
-    insertion_slots: set[int],
 ) -> list[KeyFrame]:
-    """Build :class:`KeyFrame` instances from the surviving requests and sibling-triggered inserts."""
+    """Build :class:`KeyFrame` instances from the surviving requests, one per request.
+
+    Cross-channel interpolation at slots this channel does not touch is
+    handled in :func:`_native_builder._state_for` using the next frame's
+    transition (F1). The solver no longer inserts synthetic mid-frames.
+    """
     frames: list[KeyFrame] = []
-    slot_to_frame: dict[int, KeyFrame] = {}
-    for i, (req, _group) in enumerate(request_stream):
+    for req, _group in request_stream:
         slot = int(req.timestep_40hz)
-        frame = make_frame(spec, slot, req.transition, req.requested_value)
-        slot_to_frame[slot] = frame
-        frames.append(frame)
-        if i + 1 >= len(request_stream):
-            continue
-        nxt_req, _ = request_stream[i + 1]
-        nxt_slot = int(nxt_req.timestep_40hz)
-        if nxt_slot <= slot + 1:
-            continue
-        prev_state_full = make_state(spec, req.transition, req.requested_value)
-        nxt_state_full = make_state(spec, nxt_req.transition, nxt_req.requested_value)
-        if curves.is_compatible(prev_state_full, nxt_state_full):
-            segment_transition = req.transition
-        else:
-            segment_transition = TransferFunction.LINEAR
-        for mid_slot in sorted(s for s in insertion_slots if slot < s < nxt_slot):
-            rel = (mid_slot - slot) / float(nxt_slot - slot)
-            try:
-                mid_value = curves.value_at(rel, prev_state_full, nxt_state_full, segment_transition)
-            except ValueError:
-                mid_value = curves.value_at(rel, prev_state_full, nxt_state_full, TransferFunction.LINEAR)
-            mid_frame = make_frame(spec, mid_slot, segment_transition, mid_value)
-            slot_to_frame[mid_slot] = mid_frame
-            frames.append(mid_frame)
+        frames.append(make_frame(spec, slot, req.transition, req.requested_value))
     return _collapse_same_slot(frames)
 
 

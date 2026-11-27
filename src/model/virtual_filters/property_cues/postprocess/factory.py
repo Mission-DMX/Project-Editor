@@ -157,14 +157,45 @@ def _position_chain(capability: str, raw_range: tuple[int, int] | None,
     )
     cos_filter.channel_links["value_in"] = value_src
 
+    # L23: sin/cos trig filters emit floats in [-1.0, 1.0]. Feeding them
+    # into the final [0, 1]-input range adapter would clamp the entire
+    # negative half of the waveform onto the low bound, so a cos pan curve
+    # only ever reached the positive half of the fixture's mechanical
+    # travel. Remap each trig output into [0.0, 1.0] here so the switch's
+    # three inputs share a common range and the direct branch (which
+    # already carries values in [0, 1]) still maps correctly through the
+    # main range adapter.
+    sin_rescale_id = f"{base_id}_sin_to_01"
+    cos_rescale_id = f"{base_id}_cos_to_01"
+    sin_rescale = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE),
+        sin_rescale_id, pos=ctx.pos,
+        filter_configurations={
+            "lower_bound_in": "-1.0", "upper_bound_in": "1.0",
+            "lower_bound_out": "0.0", "upper_bound_out": "1.0",
+            "limit_range": "1",
+        },
+    )
+    sin_rescale.channel_links["value_in"] = f"{sin_id}:value"
+    cos_rescale = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE),
+        cos_rescale_id, pos=ctx.pos,
+        filter_configurations={
+            "lower_bound_in": "-1.0", "upper_bound_in": "1.0",
+            "lower_bound_out": "0.0", "upper_bound_out": "1.0",
+            "limit_range": "1",
+        },
+    )
+    cos_rescale.channel_links["value_in"] = f"{cos_id}:value"
+
     switch_filter = construct_filter_instance(
         ctx.scene, int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT), switch_id, pos=ctx.pos,
         filter_configurations={"nr_inputs": "3"},
     )
     switch_filter.channel_links["select"] = curvesel_src
     switch_filter.channel_links["0"] = value_src
-    switch_filter.channel_links["1"] = f"{sin_id}:value"
-    switch_filter.channel_links["2"] = f"{cos_id}:value"
+    switch_filter.channel_links["1"] = f"{sin_rescale_id}:value"
+    switch_filter.channel_links["2"] = f"{cos_rescale_id}:value"
 
     low, high = raw_range if raw_range is not None else _DEFAULT_16BIT_RANGE
     range_filter = construct_filter_instance(
@@ -181,7 +212,7 @@ def _position_chain(capability: str, raw_range: tuple[int, int] | None,
     range_filter.channel_links["value_in"] = f"{switch_id}:out"
 
     return PostprocessOutput(
-        filters=(sin_filter, cos_filter, switch_filter, range_filter),
+        filters=(sin_filter, cos_filter, sin_rescale, cos_rescale, switch_filter, range_filter),
         external_ports={capability: (range_id, "value")},
     )
 

@@ -43,9 +43,9 @@ class PositionProperty(Property):
         """Return the pan/tilt value and curve-selector channel specs."""
         return (
             ChannelSpec(name=_PAN_VALUE, data_type=DataType.DT_DOUBLE),
-            ChannelSpec(name=_PAN_CURVESEL, data_type=DataType.DT_8_BIT),
+            ChannelSpec(name=_PAN_CURVESEL, data_type=DataType.DT_8_BIT, discrete=True),
             ChannelSpec(name=_TILT_VALUE, data_type=DataType.DT_DOUBLE),
-            ChannelSpec(name=_TILT_CURVESEL, data_type=DataType.DT_8_BIT),
+            ChannelSpec(name=_TILT_CURVESEL, data_type=DataType.DT_8_BIT, discrete=True),
         )
 
     def generate_requests(
@@ -55,7 +55,13 @@ class PositionProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
-        """Emit keyframe requests for the pan/tilt values and curve selectors."""
+        """Emit keyframe requests for the pan/tilt values and curve selectors.
+
+        Curve-selector channels always use ``TransferFunction.EDGE`` because
+        going from curve 0 (direct) to curve 2 (cos) by interpolation would
+        spend time at curve 1 (sin) during the transition (L26). Pan and
+        tilt values stay continuous and honour ``self.transition``.
+        """
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         return {
@@ -70,7 +76,7 @@ class PositionProperty(Property):
                 KeyframeRequest(
                     timestep_40hz=start,
                     requested_value=int(self.pan_curvesel),
-                    transition=self.transition,
+                    transition=TransferFunction.EDGE,
                 ),
             ],
             _TILT_VALUE: [
@@ -84,7 +90,7 @@ class PositionProperty(Property):
                 KeyframeRequest(
                     timestep_40hz=start,
                     requested_value=int(self.tilt_curvesel),
-                    transition=self.transition,
+                    transition=TransferFunction.EDGE,
                 ),
             ],
         }

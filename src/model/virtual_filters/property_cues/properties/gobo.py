@@ -41,7 +41,8 @@ class GoboProperty(Property):
         """Return a slot and rotation channel spec for each gobo wheel."""
         specs: list[ChannelSpec] = []
         for i in range(self.wheel_count):
-            specs.append(ChannelSpec(name=_slot_channel(i), data_type=DataType.DT_8_BIT))
+            specs.append(ChannelSpec(name=_slot_channel(i), data_type=DataType.DT_8_BIT,
+                                     discrete=True))
             specs.append(ChannelSpec(name=_rotation_channel(i), data_type=DataType.DT_DOUBLE))
         return tuple(specs)
 
@@ -52,7 +53,13 @@ class GoboProperty(Property):
         child_index: int,
         distribution: Distribution,
     ) -> dict[str, list[KeyframeRequest]]:
-        """Emit slot and rotation keyframe requests for each gobo wheel."""
+        """Emit slot and rotation keyframe requests for each gobo wheel.
+
+        Slot channels always use ``TransferFunction.EDGE`` because stepping
+        a gobo wheel between two slot numbers by interpolation would walk
+        the wheel through every slot in between (L26). Rotations stay
+        continuous and honour ``self.transition``.
+        """
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         out: dict[str, list[KeyframeRequest]] = {}
@@ -61,7 +68,7 @@ class GoboProperty(Property):
                 KeyframeRequest(
                     timestep_40hz=start,
                     requested_value=int(self.slots.get(i, 0)),
-                    transition=self.transition,
+                    transition=TransferFunction.EDGE,
                 ),
             ]
             out[_rotation_channel(i)] = [

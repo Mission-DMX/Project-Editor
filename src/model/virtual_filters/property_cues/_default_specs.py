@@ -115,5 +115,6 @@ def default_specs_for_fixtures(
                 specs.setdefault(channel_name, ChannelSpec(
                     name=channel_name, data_type=s.data_type,
                     default_value=s.default_value, aliases=s.aliases,
+                    discrete=s.discrete,
                 ))
     return specs

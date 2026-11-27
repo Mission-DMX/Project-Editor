@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.ofl.capability_discovery import gobo_wheels_of
+from model.virtual_filters.property_cues.model._json_coerce import coerce_int_keys
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 from ._property_editor_base import PropertyEditorBase
@@ -135,8 +136,8 @@ class GoboEditor(PropertyEditorBase):
         }
 
     def _load_manual_values(self, values: dict[str, Any]) -> None:
-        slots = _coerce_int_keys(values.get("slots", {}))
-        rotations = _coerce_int_keys(values.get("rotations", {}))
+        slots = coerce_int_keys(values.get("slots", {}) or {})
+        rotations = coerce_int_keys(values.get("rotations", {}) or {})
         for i, block in enumerate(self._wheel_blocks):
             want = int(slots.get(i, 0))
             for idx in range(block.slot_combo.count()):
@@ -144,22 +145,3 @@ class GoboEditor(PropertyEditorBase):
                     block.slot_combo.setCurrentIndex(idx)
                     break
             block.rotation.setValue(float(rotations.get(i, 0.0)))
-
-
-def _coerce_int_keys(mapping: Any) -> dict[int, Any]:  # noqa: ANN401
-    """Normalise str/int keys from a JSON-roundtripped dict back to int.
-
-    ``json.dumps`` silently rewrites int keys to strings, so a dict stored as
-    ``{0: 3, 1: 7}`` comes back as ``{"0": 3, "1": 7}``. Downstream lookups
-    with int keys would miss. This helper keeps the loader robust to either
-    shape.
-    """
-    if not isinstance(mapping, dict):
-        return {}
-    out: dict[int, Any] = {}
-    for raw_key, value in mapping.items():
-        try:
-            out[int(raw_key)] = value
-        except (TypeError, ValueError):
-            continue
-    return out

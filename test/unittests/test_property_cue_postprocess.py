@@ -60,27 +60,47 @@ class PanStrategyTest(unittest.TestCase):
         return build_postprocess_chain("pan", _ctx(pan_range=pan_range))
 
     def test_pan_strategy_wires_chain(self) -> None:
-        """Verify the pan strategy wires sin/cos/switch/range filters together correctly."""
-        out = self._build()
-        self.assertEqual(4, len(out.filters))
-        by_type: dict[int, Filter] = {int(f.filter_type): f for f in out.filters}
-        self.assertIn(int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN), by_type)
-        self.assertIn(int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN), by_type)
-        self.assertIn(int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT), by_type)
-        self.assertIn(int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE), by_type)
+        """Verify the pan strategy wires sin/cos/rescale/switch/range filters correctly.
 
-        sin_f = by_type[int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN)]
-        cos_f = by_type[int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN)]
-        switch_f = by_type[int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT)]
-        range_f = by_type[int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE)]
+        L23: two additional ``FLOAT_TO_FLOAT_RANGE`` adapters remap the
+        trig outputs from [-1, 1] to [0, 1] so the switch sees a consistent
+        range across all three branches. The chain now has six filters
+        (sin, cos, sin_to_01, cos_to_01, switch, range) instead of four.
+        """
+        out = self._build()
+        self.assertEqual(6, len(out.filters))
+        by_type: dict[int, list[Filter]] = {}
+        for f in out.filters:
+            by_type.setdefault(int(f.filter_type), []).append(f)
+        self.assertEqual(1, len(by_type.get(int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN), [])))
+        self.assertEqual(1, len(by_type.get(int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN), [])))
+        self.assertEqual(1, len(by_type.get(int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT), [])))
+        self.assertEqual(1, len(by_type.get(int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE), [])))
+        self.assertEqual(2, len(by_type.get(int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE), [])),
+                         "L23: expected two [-1,1]->[0,1] trig rescalers")
+
+        sin_f = by_type[int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN)][0]
+        cos_f = by_type[int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN)][0]
+        switch_f = by_type[int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT)][0]
+        range_f = by_type[int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE)][0]
+        rescales = by_type[int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE)]
 
         self.assertEqual("cuef:MH1__pan_value", sin_f.channel_links["value_in"])
         self.assertEqual("cuef:MH1__pan_value", cos_f.channel_links["value_in"])
 
+        # Both rescalers remap [-1, 1] -> [0, 1].
+        for r in rescales:
+            self.assertEqual("-1.0", r.filter_configurations["lower_bound_in"])
+            self.assertEqual("1.0", r.filter_configurations["upper_bound_in"])
+            self.assertEqual("0.0", r.filter_configurations["lower_bound_out"])
+            self.assertEqual("1.0", r.filter_configurations["upper_bound_out"])
+        sin_rescale = next(r for r in rescales if r.channel_links["value_in"] == f"{sin_f.filter_id}:value")
+        cos_rescale = next(r for r in rescales if r.channel_links["value_in"] == f"{cos_f.filter_id}:value")
+
         self.assertEqual("cuef:MH1__pan_curvesel", switch_f.channel_links["select"])
         self.assertEqual("cuef:MH1__pan_value", switch_f.channel_links["0"])
-        self.assertEqual(f"{sin_f.filter_id}:value", switch_f.channel_links["1"])
-        self.assertEqual(f"{cos_f.filter_id}:value", switch_f.channel_links["2"])
+        self.assertEqual(f"{sin_rescale.filter_id}:value", switch_f.channel_links["1"])
+        self.assertEqual(f"{cos_rescale.filter_id}:value", switch_f.channel_links["2"])
 
         self.assertEqual(f"{switch_f.filter_id}:out", range_f.channel_links["value_in"])
 

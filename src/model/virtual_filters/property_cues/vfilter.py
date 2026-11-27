@@ -6,6 +6,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration
+from model.filters._channel_names import sanitize_channel_name
 from model.virtual_filters.cue_vfilter import PreviewFilter
 from model.virtual_filters.property_cues._channel_ordering import (
     INTERNAL_LOCAL_NAMES,
@@ -166,12 +167,15 @@ class PropertyBasedCueFilter(PreviewFilter):
     def _build_fixture_name_map(self) -> dict[str, str]:
         """Build ``{fixture_id: display_name}`` with collision-safe suffixes.
 
-        When several fixtures share the same stage name (e.g. two "Hero Spot"
-        instances), each gets an 8-character hex tail from its UUID appended
-        so the resulting output port names remain distinct and deterministic
-        across show reloads. Fixtures whose name is already unique keep the
-        bare name. If the board is detached (tests, headless) the map is
-        empty and the resolver falls back to the raw id.
+        Collisions are detected AFTER running the stage name through the same
+        sanitiser the compiler applies. Two fixtures named "MH 1" and "MH-1"
+        both sanitise to "MH_1" — without post-sanitisation dedup, the second
+        fixture's output ports would silently replace the first. Each colliding
+        fixture gets an 8-character hex tail from its UUID so the resulting
+        output port names remain distinct and deterministic across show reloads.
+        Fixtures whose sanitised name is already unique keep the bare name.
+        If the board is detached (tests, headless) the map is empty and the
+        resolver falls back to the raw id.
         """
         scene = getattr(self, "scene", None)
         board = getattr(scene, "board_configuration", None) if scene is not None else None
@@ -189,10 +193,12 @@ class PropertyBasedCueFilter(PreviewFilter):
             )
         counts: dict[str, int] = {}
         for name in bases.values():
-            counts[name] = counts.get(name, 0) + 1
+            sanitized = sanitize_channel_name(name).rstrip("_")
+            counts[sanitized] = counts.get(sanitized, 0) + 1
         result: dict[str, str] = {}
         for fid, name in bases.items():
-            if counts[name] > 1:
+            sanitized = sanitize_channel_name(name).rstrip("_")
+            if counts[sanitized] > 1:
                 result[fid] = f"{name}_{fid.replace('-', '')[:8]}"
             else:
                 result[fid] = name

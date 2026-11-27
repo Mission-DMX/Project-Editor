@@ -30,6 +30,15 @@ class Distribution:
     methods and the seconds-per-child-index step for :attr:`DistributionMethod.PHASE_LINEAR`.
     ``amplitude`` scales the raw delay function output.
 
+    All methods return a non-negative delay (L7). The periodic shapes (sin,
+    cos, saw) previously produced values on ``[-amplitude, +amplitude)``
+    which, when added to the step start timestep, pushed keyframes into
+    negative time — the solver would then drop them silently. The periodic
+    methods are now remapped to span ``[0, amplitude]`` while preserving the
+    wave shape across the children: sin/cos are shifted and scaled to
+    ``(f + 1) / 2`` and saw sweeps linearly from 0 to ``amplitude`` as the
+    phase cycles.
+
     When :attr:`introduction_delay_only` is set the consumer is expected to
     apply the delay to the start time only and NOT to scale the requested value.
     Discrete-channel properties always treat the distribution this way, regardless
@@ -42,16 +51,20 @@ class Distribution:
     introduction_delay_only: bool = False
 
     def delay_for_child(self, child_index: int) -> float:
-        """Return the extra start-time offset (seconds) for ``child_index``."""
+        """Return the extra start-time offset (seconds) for ``child_index``.
+
+        Guaranteed non-negative for every method (L7).
+        """
         if self.method is DistributionMethod.CONSTANT:
             return 0.0
         if self.method is DistributionMethod.PHASE_LINEAR:
-            return self.amplitude * self.phase_offset * child_index
+            delay = self.amplitude * self.phase_offset * child_index
+            return max(0.0, delay)
         if self.method is DistributionMethod.PHASE_SIN:
-            return self.amplitude * math.sin(self.phase_offset * child_index)
+            return self.amplitude * (math.sin(self.phase_offset * child_index) + 1.0) * 0.5
         if self.method is DistributionMethod.PHASE_COS:
-            return self.amplitude * math.cos(self.phase_offset * child_index)
+            return self.amplitude * (math.cos(self.phase_offset * child_index) + 1.0) * 0.5
         if self.method is DistributionMethod.PHASE_SAW:
             fraction = (self.phase_offset * child_index / (2.0 * math.pi)) % 1.0
-            return self.amplitude * (fraction - 0.5) * 2.0
+            return self.amplitude * fraction
         raise ValueError(f"Unknown distribution method: {self.method!r}")

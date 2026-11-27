@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from logging import getLogger
@@ -10,12 +9,14 @@ from typing import TYPE_CHECKING
 
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.filter_data.transfer_function import TransferFunction
+from model.filters._channel_names import sanitize_channel_name
 from model.filters.factory import construct_filter_instance
 from model.virtual_filters.property_cues import capability_wiring as _capability_wiring
 from model.virtual_filters.property_cues._default_specs import default_specs_for_fixtures
 from model.virtual_filters.property_cues._native_builder import build_native
 from model.virtual_filters.property_cues.channel_consolidator import consolidate
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
+from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
 from model.virtual_filters.property_cues.model.fixture_selection import FixtureSelection, SelectionEntryKind
 from model.virtual_filters.property_cues.model.property_step import (
     ManualPropertyAssignment,
@@ -64,7 +65,6 @@ BeamSubCapabilityLookup = Callable[[str], set[str]]
 # Return the number of independent HSI colour segments on the fixture (0 if none).
 ColorSegmentCountLookup = Callable[[str], int]
 
-_SANITISE = re.compile(r"[^A-Za-z0-9_]")
 _PROPERTY_CLASS: dict[str, type[Property]] = {
     "dimmer": DimmerProperty, "position": PositionProperty,
     "color": ColorProperty,
@@ -96,10 +96,13 @@ def _prefix(fixture_id: str, segment: int | None, name_resolver: NameResolver) -
 
     ``name_resolver`` maps a raw fixture id (typically its UUID) to a stage
     name (e.g. ``"Hero Spot #3"``). The result is passed through
-    :data:`_SANITISE` so stage names with spaces or punctuation produce a
-    legal filter channel identifier.
+    :func:`sanitize_channel_name` (shared with the dimmer/color directors)
+    which strips ``#``/``:``/``|``, maps spaces to ``_`` and collapses any
+    literal ``__`` to ``-`` so that the downstream ``{prefix}__{local}``
+    separator remains unambiguous. Any trailing ``_`` is stripped so the
+    separator can't collide with a terminal underscore in the sanitised name.
     """
-    base = _SANITISE.sub("_", name_resolver(fixture_id))
+    base = sanitize_channel_name(name_resolver(fixture_id)).rstrip("_")
     return base if segment is None else f"{base}.segment{int(segment)}"
 
 
@@ -168,6 +171,7 @@ def _spec_table_for(
     return {f"{prefix}__{s.name}": ChannelSpec(
         name=f"{prefix}__{s.name}", data_type=s.data_type,
         default_value=s.default_value, aliases=s.aliases,
+        discrete=s.discrete,
     ) for s in prop.channel_specs}
 
 
@@ -239,8 +243,24 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
 
     groups: list[RequestGroup] = []
     specs: dict[str, ChannelSpec] = {}
+    # L5: track the last-emitted request per channel so we can synthesise a
+    # closing keyframe at the cue's end slot. Without it fish treats a cue
+    # as finished at its last authored keyframe, so a step with duration
+    # 10 s that only emits at its start silently loses the 10 s hold.
+    last_per_channel: dict[str, KeyframeRequest] = {}
     step_start = 0
     for si, step in enumerate(cue.steps):
+        # L6: resolve per-(child, pid) precedence BEFORE emitting. The
+        # previous code emitted one RequestGroup per (node_path, pid, child)
+        # and relied on :func:`_select_winners` to reconcile at the 40 Hz
+        # slot level. That was wrong whenever a less-specific assignment
+        # (step-level, with a distribution delay or a preset emitting many
+        # keyframes) produced keyframes on slots the more-specific
+        # fixture-level assignment did not cover: the fixture-level
+        # override would then be "replaced" at those slots by the step-
+        # level stream. Resolving per step here means the winner emits for
+        # the whole step, delays and all.
+        candidates: dict[tuple[ResolvedChild, str], tuple[int, str, PropertyAssignment, int]] = {}
         for node_path, assignments in step.assignments.items():
             matches = _resolve_path_children(node_path, children)
             if not matches:
@@ -248,51 +268,82 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
             depth = len([p for p in node_path.split("/") if p])
             for pid, assignment in assignments.by_property.items():
                 for ci, child in matches:
-                    # A step- or group-level assignment expands to every matched
-                    # child; silently drop children whose fixture doesn't have
-                    # the capability so a wash doesn't grow gobo outputs just
-                    # because the step-level assignment also covers a spot.
-                    if not _child_supports_property(child[0], pid, capability_lookup):
-                        continue
-                    prefix = _prefix(child[0], child[1], name_resolver)
-                    fixture_kwargs = property_kwargs_for_fixture(
-                        pid, child[0],
-                        gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
-                        color_segment_count_lookup,
-                    )
-                    local_specs = _spec_table_for(pid, prefix, assignment, fixture_kwargs)
-                    specs.update(local_specs)
-                    try:
-                        raw = _emit_requests(assignment, pid, step_start,
-                                             step.duration_40hz, ci, library, fixture_kwargs)
-                    except ValueError as exc:
-                        raise ValueError(
-                            f"Cue {cue_index} step {si} property {pid!r}"
-                            f" @ {node_path!r}: {exc}",
-                        ) from exc
-                    if pid == "color":
-                        raw = _expand_color_preset_stream(
-                            raw, int(fixture_kwargs.get("segment_count", 1)),
-                        )
-                    prefixed = {f"{prefix}__{n}": r for n, r in raw.items()}
-                    if not prefixed:
-                        continue
-                    # A preset may emit channels for properties *other* than its
-                    # ``applies_for`` (``pan_sweep`` writes the dimmer on top of
-                    # pan, for instance). Accept those extras as long as the
-                    # fixture actually has specs for them -- otherwise they stay
-                    # out of ``channel_names`` and the solver drops them, which
-                    # is how an unsupported dimmer ask on a gobo-only fixture
-                    # goes away silently.
-                    claimed = set(local_specs.keys())
-                    claimed.update(name for name in prefixed if name in all_specs)
-                    groups.append(RequestGroup(
-                        origin_label=f"c{cue_index}.s{si}.{pid}.{node_path}",
-                        tree_depth=depth,
-                        channel_names=frozenset(claimed),
-                        requests=prefixed,
-                    ))
+                    key = (child, pid)
+                    existing = candidates.get(key)
+                    # Specificity rule: deeper tree depth wins (fixture > step).
+                    # On a tie, earlier-seen wins (preserves the step dict's
+                    # insertion order so authored intent is predictable).
+                    if existing is None or depth > existing[0]:
+                        candidates[key] = (depth, node_path, assignment, ci)
+        for (child, pid), (depth, node_path, assignment, ci) in candidates.items():
+            if not _child_supports_property(child[0], pid, capability_lookup):
+                continue
+            prefix = _prefix(child[0], child[1], name_resolver)
+            fixture_kwargs = property_kwargs_for_fixture(
+                pid, child[0],
+                gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
+                color_segment_count_lookup,
+            )
+            local_specs = _spec_table_for(pid, prefix, assignment, fixture_kwargs)
+            specs.update(local_specs)
+            try:
+                raw = _emit_requests(assignment, pid, step_start,
+                                     step.duration_40hz, ci, library, fixture_kwargs)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Cue {cue_index} step {si} property {pid!r}"
+                    f" @ {node_path!r}: {exc}",
+                ) from exc
+            if pid == "color":
+                raw = _expand_color_preset_stream(
+                    raw, int(fixture_kwargs.get("segment_count", 1)),
+                )
+            prefixed = {f"{prefix}__{n}": r for n, r in raw.items()}
+            if not prefixed:
+                continue
+            # A preset may emit channels for properties *other* than its
+            # ``applies_for`` (``pan_sweep`` writes the dimmer on top of
+            # pan, for instance). Accept those extras as long as the
+            # fixture actually has specs for them -- otherwise they stay
+            # out of ``channel_names`` and the solver drops them, which
+            # is how an unsupported dimmer ask on a gobo-only fixture
+            # goes away silently.
+            claimed = set(local_specs.keys())
+            claimed.update(name for name in prefixed if name in all_specs)
+            groups.append(RequestGroup(
+                origin_label=f"c{cue_index}.s{si}.{pid}.{node_path}",
+                tree_depth=depth,
+                channel_names=frozenset(claimed),
+                requests=prefixed,
+            ))
+            for ch_name, reqs in prefixed.items():
+                if not reqs:
+                    continue
+                latest = max(reqs, key=lambda r: int(r.timestep_40hz))
+                cur = last_per_channel.get(ch_name)
+                if cur is None or int(latest.timestep_40hz) >= int(cur.timestep_40hz):
+                    last_per_channel[ch_name] = latest
         step_start += int(step.duration_40hz)
+    # L5: add a trailing keyframe at the cue's total duration repeating each
+    # channel's last value with EDGE so fish holds through to the end.
+    total_duration = step_start
+    if total_duration > 0 and last_per_channel:
+        closing_requests: dict[str, list[KeyframeRequest]] = {}
+        for ch_name, last_req in last_per_channel.items():
+            if int(last_req.timestep_40hz) >= total_duration:
+                continue
+            closing_requests[ch_name] = [KeyframeRequest(
+                timestep_40hz=total_duration,
+                requested_value=last_req.requested_value,
+                transition=TransferFunction.EDGE,
+            )]
+        if closing_requests:
+            groups.append(RequestGroup(
+                origin_label=f"c{cue_index}.closing",
+                tree_depth=0,
+                channel_names=frozenset(closing_requests.keys()),
+                requests=closing_requests,
+            ))
     return groups, specs
 
 
@@ -386,29 +437,25 @@ def _detect_defaulted_canonicals(
 
 
 def _collect_constant_inputs(
-    canonical_prefix: str, cap: str,
+    virtual_names: list[str],
     all_specs: dict[str, ChannelSpec],
     defaulted_canonicals: set[str],
     consolidation: ConsolidationMap,
-    ch_capability: dict[str, str],
 ) -> dict[str, str]:
-    """Return ``{local_name: default_value_str}`` for raw channels in a defaulted canonical group.
+    """Return ``{local_name: default_value_str}`` for raw channels whose canonical is defaulted.
 
-    Covers every raw channel in this ``(prefix, capability)`` group whose canonical
-    is defaulted. Empty dict if any raw channel in the group is live -- strategies
-    only fold when **every** input is static.
+    Walks every virtual channel in this ``(virtual_prefix, capability)`` group and
+    checks whether its canonical stream is defaulted (i.e. no cue carries a
+    keyframe for it). Strategies only fold when **every** input is static;
+    we return an empty dict as soon as any input resolves to a live canonical.
     """
     out: dict[str, str] = {}
-    for spec_name, spec in all_specs.items():
-        prefix, _, local = spec_name.partition("__")
-        if prefix != canonical_prefix:
-            continue
-        if ch_capability.get(spec_name) != cap:
-            continue
+    for spec_name in virtual_names:
         canonical = consolidation.canonical(spec_name)
         if canonical not in defaulted_canonicals:
-            return {}  # live input in this group -- cannot fold
-        out[local] = _default_value_for(spec)
+            return {}
+        local = spec_name.partition("__")[2]
+        out[local] = _default_value_for(all_specs[spec_name])
     return out
 
 
@@ -419,81 +466,131 @@ def _build_ports(all_specs: dict[str, ChannelSpec], consolidation: Consolidation
                  defaulted_canonicals: set[str],
                  defaulted_source_map: dict[str, str],
                  ) -> tuple[list[Filter], dict[str, tuple[str, str]]]:
+    """Build post-processing chains, keyed on the canonical input tuple.
+
+    L1: chains are cached per *tuple of canonical input sources*, not per
+    ``(canonical_prefix, capability)``. Two fixtures whose brightness streams
+    consolidate but whose strobe-freq streams differ therefore each get their
+    own strobe generator; two fixtures whose entire dimmer input set
+    consolidates share a single chain. After building each strategy, all its
+    filters' ``channel_links`` are rewritten to read from the canonical
+    stream of each raw input — so a strategy constructed for MH2's dimmer
+    (built with the MH2 prefix) can still read ``MH1__brightness_raw`` if
+    that is the canonical for MH2's brightness after consolidation.
+    """
+    _ = ch_prefix  # retained for backward signature compatibility; unused in L1 path.
     pp_filters: list[Filter] = []
     external_ports: dict[str, tuple[str, str]] = {}
     raw_locals = {name.partition("__")[2] for name in all_specs}
-    # Cache the post-process chain per (canonical_prefix, capability) so a
-    # consolidated sibling prefix can reuse the canonical strategy's output
-    # ports without re-building a second chain. Before the dimmer rename made
-    # raw and exposed names distinct, the sibling case fell through to the
-    # native cue filter channel (which only resolved correctly because raw
-    # and exposed names happened to match).
-    cached_strategies: dict[tuple[str, str], PostprocessOutput] = {}
+
+    # Group specs by (virtual_prefix, capability). One strategy per group.
+    by_prefix_cap: dict[tuple[str, str], list[str]] = {}
     for virtual_name in sorted(all_specs.keys()):
-        canonical = consolidation.canonical(virtual_name)
         virtual_prefix = virtual_name.partition("__")[0]
-        canonical_prefix = ch_prefix[canonical]
         cap = ch_capability[virtual_name]
-        key = (canonical_prefix, cap)
-        if key not in cached_strategies:
+        by_prefix_cap.setdefault((virtual_prefix, cap), []).append(virtual_name)
+
+    cached_strategies: dict[tuple[tuple[str, str], ...], PostprocessOutput] = {}
+    for (virtual_prefix, cap), virtual_names in by_prefix_cap.items():
+        # The cache key is the sorted tuple of (local_name, canonical_source)
+        # pairs that the strategy will read from. Equal tuples mean equal
+        # wiring, so the chain can be reused; different tuples -- even when
+        # the virtual_prefix and capability match a cached strategy -- must
+        # produce their own chain to prevent MH2's capability from being
+        # served by MH1's wiring.
+        inputs_key = tuple(sorted(
+            (vn.partition("__")[2], consolidation.canonical(vn))
+            for vn in virtual_names
+        ))
+        if inputs_key not in cached_strategies:
             const_inputs = _collect_constant_inputs(
-                canonical_prefix, cap, all_specs, defaulted_canonicals,
-                consolidation, ch_capability,
+                virtual_names, all_specs, defaulted_canonicals, consolidation,
             )
             out = build_postprocess_chain(cap, CapabilityContext(
                 scene=scene, cue_filter_id=cue_filter_id,
-                channel_name_prefix=canonical_prefix, pos=pos,
+                channel_name_prefix=virtual_prefix, pos=pos,
                 constant_inputs=const_inputs,
             ))
-            _check_strategy_shadowing(cap, canonical_prefix, out, raw_locals)
-            # Rewrite any strategy-internal references to defaulted raw
-            # channels so they read from the constant filter the compiler
-            # emitted for that channel, not from the (now absent) native
-            # cue filter output.
+            _check_strategy_shadowing(cap, virtual_prefix, out, raw_locals)
+            # Rewrite every ``{cue_fid}:{raw}`` channel_link so it points at
+            # the actual canonical for that raw (which may live on a sibling
+            # prefix after consolidation) and -- when that canonical is
+            # defaulted -- at the standalone constant filter the compiler
+            # emitted in its place.
             for pp_filter in out.filters:
                 for input_port, source in list(pp_filter.channel_links.items()):
-                    override = defaulted_source_map.get(source)
-                    if override is not None:
-                        pp_filter.channel_links[input_port] = override
+                    rewritten = _canonicalise_link(
+                        source, cue_filter_id, consolidation, defaulted_source_map,
+                    )
+                    if rewritten is not None:
+                        pp_filter.channel_links[input_port] = rewritten
             pp_filters.extend(out.filters)
-            cached_strategies[key] = out
-        out = cached_strategies[key]
+            cached_strategies[inputs_key] = out
+        out = cached_strategies[inputs_key]
         for cap_name, port in out.external_ports.items():
-            # Publish the strategy's output under the virtual prefix so both
-            # the canonical and the consolidated siblings expose the gated
-            # port (e.g. MH1__brightness and MH2__brightness both point at
-            # the MH1 strobe generator when their timelines consolidated).
             port_fid, port_ch = port
-            if (
-                port_fid == cue_filter_id
-                and port_ch in defaulted_canonicals
-            ):
+            if port_fid == cue_filter_id and port_ch in defaulted_canonicals:
                 # Passthrough-style strategies (focus / frost / gobo / colour /
                 # a beam fixture with no sub-caps) publish their external port
                 # as a direct reference to a channel on the native cue filter.
                 # When that channel is defaulted it was pulled OFF the cue
                 # filter and materialised as a standalone constant; redirect
                 # the external port onto the constant so downstream
-                # ``channel_override_dict`` entries don't end up mapping
-                # ``cue_filter:ch`` to itself (which fish then rejects with
-                # ``corresponding output channel wasn't found``).
+                # ``channel_override_dict`` entries don't map
+                # ``cue_filter:ch`` to itself (fish rejects that).
                 const_ref = defaulted_source_map[f"{cue_filter_id}:{port_ch}"]
                 const_id, _, const_port_name = const_ref.partition(":")
                 resolved_port = (const_id, const_port_name)
+            elif port_fid == cue_filter_id:
+                # Passthrough strategies also point at the (possibly
+                # consolidated) canonical, not at a dangling virtual name.
+                canonical = consolidation.canonical(port_ch)
+                resolved_port = (port_fid, canonical)
             else:
                 resolved_port = port
             external_ports.setdefault(f"{virtual_prefix}__{cap_name}", resolved_port)
-        # Passthrough fallback: for raw channels the vfilter still has to be
-        # addressable by, point at the native cue filter unless the channel
-        # was defaulted -- in which case point at the constant filter the
-        # compiler emitted for it.
-        if canonical in defaulted_canonicals:
-            source_ref = defaulted_source_map[f"{cue_filter_id}:{canonical}"]
-            const_id, _, const_port = source_ref.partition(":")
-            external_ports.setdefault(virtual_name, (const_id, const_port))
-        else:
-            external_ports.setdefault(virtual_name, (cue_filter_id, canonical))
+        # Raw-channel passthrough: for every virtual raw name the user may
+        # address directly, publish a port pointing at the canonical cue
+        # filter output (or the defaulted constant filter).
+        for virtual_name in virtual_names:
+            canonical = consolidation.canonical(virtual_name)
+            if canonical in defaulted_canonicals:
+                source_ref = defaulted_source_map[f"{cue_filter_id}:{canonical}"]
+                const_id, _, const_port = source_ref.partition(":")
+                external_ports.setdefault(virtual_name, (const_id, const_port))
+            else:
+                external_ports.setdefault(virtual_name, (cue_filter_id, canonical))
     return pp_filters, external_ports
+
+
+def _canonicalise_link(
+    source: str, cue_filter_id: str,
+    consolidation: ConsolidationMap, defaulted_source_map: dict[str, str],
+) -> str | None:
+    """Rewrite a strategy filter's ``channel_links`` source through consolidation.
+
+    Returns the new source string, or ``None`` if no rewrite is needed.
+    Entries that already point at a defaulted source map win first; otherwise
+    an ``{cue_fid}:{raw}`` reference is replaced with its canonical, and that
+    canonical's defaulted mapping if applicable. References that don't
+    address the cue filter (e.g. links into another strategy filter) are
+    left untouched.
+    """
+    override = defaulted_source_map.get(source)
+    if override is not None:
+        return override
+    prefix = f"{cue_filter_id}:"
+    if not source.startswith(prefix):
+        return None
+    raw_ref = source[len(prefix):]
+    canonical = consolidation.canonical(raw_ref)
+    canonical_ref = f"{cue_filter_id}:{canonical}"
+    canonical_override = defaulted_source_map.get(canonical_ref)
+    if canonical_override is not None:
+        return canonical_override
+    if canonical == raw_ref:
+        return None
+    return canonical_ref
 
 
 def compile_property_model(

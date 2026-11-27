@@ -438,6 +438,346 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         self.assertAlmostEqual(0.3, brightness_values[0], places=5)
         self.assertAlmostEqual(1.0, brightness_values[-1], places=5)
 
+    def test_int_key_dicts_survive_json_roundtrip(self) -> None:
+        """Regression (L3): gobo slots and colour segments must keep int keys after reload.
+
+        ``json.dumps`` encodes every dict key as a string, so a gobo
+        ``{slots: {0: 3, 1: 7}}`` would come back as ``{slots: {"0": 3, "1": 7}}``
+        and ``GoboProperty.generate_requests`` would miss every wheel with an
+        int lookup. The fix coerces all-decimal-key dicts back to int keys at
+        the model boundary.
+        """
+        import json
+        from model.virtual_filters.property_cues.model.property_step import (
+            ManualPropertyAssignment,
+        )
+        # Build a manual gobo assignment with 12 slots (so a lexicographic
+        # sort of string keys would also reorder them: "0" < "1" < "10" <
+        # "11" < "2" < ...).
+        original = ManualPropertyAssignment(
+            values={
+                "wheel_count": 12,
+                "slots": {i: (i * 3) % 7 for i in range(12)},
+                "rotations": {i: float(i) / 10.0 for i in range(12)},
+            },
+        )
+        blob = json.loads(json.dumps(original.to_json()))
+        reloaded = ManualPropertyAssignment.from_json(blob)
+        slots = reloaded.values["slots"]
+        rotations = reloaded.values["rotations"]
+        self.assertIsInstance(slots, dict)
+        for k in slots:
+            self.assertIsInstance(k, int, f"Key {k!r} is {type(k).__name__}, expected int")
+        for k in rotations:
+            self.assertIsInstance(k, int, f"Key {k!r} is {type(k).__name__}, expected int")
+        # Round-trip equality: a lookup with an integer key must return the
+        # original value, not the default.
+        self.assertEqual((5 * 3) % 7, slots[5])
+        self.assertAlmostEqual(0.5, rotations[5], places=5)
+
+    def test_unrelated_keyframe_does_not_reshape_fade(self) -> None:
+        """Regression (L4): an unrelated channel's keyframe must not turn a fade into a hold.
+
+        Before L4, :func:`_native_builder._state_for` copied the prior
+        keyframe's value when the timestamp slot had no hit on this channel.
+        A fade 0 → 1 over 2 s on channel A compiled to [0 @ 0 s, 1 @ 2 s].
+        Adding a keyframe for another fixture at 1 s introduced the slot
+        into the cue's union, and A's state at 1 s became the held prior
+        value 0 — turning the fade into "hold 0 until 1 s, then fade to 1
+        over 1 s". The fix interpolates in ``_state_for`` using the next
+        frame's transition, so A's state at 1 s is the midpoint 0.5.
+        """
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyCueFilterModel,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        model = PropertyCueFilterModel()
+        model.fixture_selection = FixtureSelection(
+            entries=[
+                FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="A"),
+                FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="B"),
+            ],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+
+        def _dim(brightness: float) -> PropertyAssignments:
+            return PropertyAssignments(
+                by_property={
+                    "dimmer": ManualPropertyAssignment(
+                        values={"brightness": brightness, "strobefreq": 0.0},
+                    ),
+                },
+            )
+        # Three 1 s steps. A assigns only at steps 0 and 2 (slots 0, 80), so
+        # A's keyframes bracket the cue 0s..2s with no hit at slot 40. B
+        # assigns at steps 0 and 1 (slots 0, 40), which adds slot 40 to the
+        # cue-wide union. The L4 fix must interpolate A at slot 40 instead
+        # of holding A's prior value.
+        model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=40, assignments={
+                "fixture:A": _dim(0.0),
+                "fixture:B": _dim(0.1),
+            }),
+            PropertyStep(name="s1", duration_40hz=40, assignments={
+                "fixture:B": _dim(0.9),
+            }),
+            PropertyStep(name="s2", duration_40hz=40, assignments={
+                "fixture:A": _dim(1.0),
+            }),
+        ]))
+        res = compile_property_model(model, cue_filter_id="pcf_l4", scene=self.scene)
+        cue = res.native_model.cues[0]
+        a_idx = next(
+            i for i, (name, _dt) in enumerate(cue._channel_definitions)
+            if name == "A__brightness_raw"
+        )
+        # At t=1 s (slot 40, between A's 0@0 s and 1@2 s), A must be ~0.5,
+        # not the held 0.0 — because B contributes a slot at 40 and A's
+        # state must be the interpolation of A's bracket at that slot.
+        # Find the frame at slot 40 (t=1 s).
+        slot40 = [kf for kf in cue._frames if round(kf.timestamp, 3) == 1.0]
+        self.assertTrue(slot40, "Expected a combined keyframe at t=1.0 s")
+        a_value_at_1s = float(slot40[0]._states[a_idx]._value)
+        self.assertAlmostEqual(
+            0.5, a_value_at_1s, places=3,
+            msg=f"A's interpolated value at t=1 s should be 0.5, got {a_value_at_1s}",
+        )
+
+    def test_consolidation_preserves_divergent_strobe_wiring(self) -> None:
+        """Regression (L1): same brightness + different strobe freq must not merge.
+
+        Before L1, the post-process chain cache was keyed on
+        ``(canonical_prefix, capability)``. When MH1's brightness consolidated
+        onto MH2 (identical stream) but their strobe-freq streams diverged,
+        the strategy for MH2 reused MH1's chain — so MH2's ``brightness``
+        port silently pointed at MH1's strobe generator which drew MH1's
+        frequency, and MH2's own strobefreq was ignored. The fix keys the
+        cache on the sorted tuple of canonical input sources so divergent
+        wiring forces a new chain.
+        """
+        from model.filter import FilterTypeEnumeration
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
+
+        def _dimmer(brightness: float, strobefreq: float) -> PropertyAssignments:
+            return PropertyAssignments(
+                by_property={
+                    "dimmer": ManualPropertyAssignment(
+                        values={"brightness": brightness, "strobefreq": strobefreq},
+                    ),
+                },
+            )
+
+        vfilter = PropertyBasedCueFilter(self.scene, "pcf_l1")
+        vfilter.property_model.fixture_selection = FixtureSelection(
+            entries=[
+                FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1"),
+                FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH2"),
+            ],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        vfilter.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=40, assignments={
+                "fixture:MH1": _dimmer(0.5, 2.0),  # 2 Hz strobe
+                "fixture:MH2": _dimmer(0.5, 5.0),  # 5 Hz strobe — SAME brightness,
+                                                   # different frequency
+            }),
+        ]))
+        res = vfilter._ensure_compiled()
+        strobes = tuple(
+            f for f in res.postprocess_filters
+            if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)
+        )
+        # Must have TWO strobe generators — one per fixture — because strobefreq
+        # didn't consolidate even though brightness_raw did.
+        self.assertEqual(
+            2, len(strobes),
+            f"Expected 2 strobe generators (divergent strobefreq), got {len(strobes)}: "
+            f"{[s.filter_id for s in strobes]}",
+        )
+        # Each strobe generator's frequency input must come from the right
+        # fixture's own strobefreq (not consolidated to the sibling).
+        strobe_by_prefix = {}
+        for s in strobes:
+            # Strobe filter id matches "{cue_fid}__{prefix}__dimmer_strobe";
+            # the prefix lives between the cue_fid and the dimmer_strobe
+            # suffix. Here cue_fid == "pcf_l1" (no "__") so we can strip it.
+            suffix_tail = "__dimmer_strobe"
+            self.assertTrue(s.filter_id.endswith(suffix_tail))
+            without_suffix = s.filter_id[:-len(suffix_tail)]
+            # The remaining string is "{cue_fid}__{prefix}"; prefix is after
+            # the first "__".
+            parts = without_suffix.split("__", 1)
+            if len(parts) == 2:
+                strobe_by_prefix[parts[1]] = s
+        mh1_strobe = strobe_by_prefix.get("MH1")
+        mh2_strobe = strobe_by_prefix.get("MH2")
+        self.assertIsNotNone(mh1_strobe,
+                             f"Could not locate MH1 strobe among {list(strobe_by_prefix)}")
+        self.assertIsNotNone(mh2_strobe,
+                             f"Could not locate MH2 strobe among {list(strobe_by_prefix)}")
+        # MH2's strobe must read from a chain whose freq ultimately resolves
+        # to MH2__strobefreq, not MH1__strobefreq. The freq input goes
+        # through the float-to-8bit adapter; follow the chain.
+        mh2_freq_link = mh2_strobe.channel_links["frequency"]
+        self.assertIn("MH2", mh2_freq_link,
+                      f"MH2's strobe reads from the wrong fixture's chain: {mh2_freq_link}")
+        self.assertNotIn("MH1__strobefreq", mh2_freq_link,
+                         f"MH2's strobe pulled MH1's strobefreq: {mh2_freq_link}")
+
+    def test_cue_length_matches_sum_of_step_durations(self) -> None:
+        """Regression (L5): the last step's duration must reach the compiled cue.
+
+        Before L5 each step emitted a keyframe only at its start, so a two-
+        step cue 1 s + 10 s compiled to a cue ending at 1.0 s (fish
+        treats the last keyframe timestamp as the cue's end). After L5 the
+        compiler synthesises a closing keyframe at the sum of all step
+        durations.
+        """
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyCueFilterModel,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        model = PropertyCueFilterModel()
+        model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="A")],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+
+        def _dim(brightness: float) -> PropertyAssignments:
+            return PropertyAssignments(
+                by_property={
+                    "dimmer": ManualPropertyAssignment(
+                        values={"brightness": brightness, "strobefreq": 0.0},
+                    ),
+                },
+            )
+        model.cues.append(PropertyCue(name="C1", steps=[
+            # 1 s + 10 s = 11 s.
+            PropertyStep(name="s0", duration_40hz=40,  assignments={"fixture:A": _dim(0.3)}),
+            PropertyStep(name="s1", duration_40hz=400, assignments={"fixture:A": _dim(0.8)}),
+        ]))
+        res = compile_property_model(model, cue_filter_id="pcf_l5", scene=self.scene)
+        cue = res.native_model.cues[0]
+        last_timestamp = max(kf.timestamp for kf in cue._frames)
+        self.assertAlmostEqual(
+            11.0, last_timestamp, places=3,
+            msg=f"Cue must end at 11.0 s (1 + 10), got {last_timestamp}",
+        )
+        a_idx = next(
+            i for i, (name, _dt) in enumerate(cue._channel_definitions)
+            if name == "A__brightness_raw"
+        )
+        last_frame = max(cue._frames, key=lambda kf: kf.timestamp)
+        self.assertAlmostEqual(0.8, float(last_frame._states[a_idx]._value), places=3,
+                               msg="Closing keyframe must repeat the last authored value")
+
+    def test_fixture_override_holds_across_step_duration(self) -> None:
+        """Regression (L6): a fixture-level override must hold for the whole step.
+
+        Before L6, a step-level assignment produced a separate RequestGroup
+        for every fixture it covered, and the solver reconciled per-slot.
+        If the step-level emission landed on a slot the fixture-level
+        override did not touch (e.g. because of a distribution delay), the
+        step-level value "leaked through" at that slot, overwriting the
+        override mid-step. The fix is to resolve precedence per
+        ``(fixture, property, step)`` in :func:`_collect_cue` and only
+        emit the winning assignment's requests.
+        """
+        from model.filter_data.transfer_function import TransferFunction
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.distribution import (
+            Distribution,
+            DistributionMethod,
+        )
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyCueFilterModel,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        model = PropertyCueFilterModel()
+        model.fixture_selection = FixtureSelection(
+            entries=[
+                FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="A"),
+                FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="B"),
+            ],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        # Step-level assignment (brightness=1.0) with a linear per-child delay:
+        # fixture A @ t=0, fixture B @ t=0.5s. Fixture-level override on B
+        # (brightness=0.25) which should hold for the entire step on B.
+        step_level = PropertyAssignments(
+            by_property={
+                "dimmer": ManualPropertyAssignment(
+                    values={"brightness": 1.0, "strobefreq": 0.0},
+                    distribution=Distribution(
+                        method=DistributionMethod.PHASE_LINEAR,
+                        phase_offset=0.5, amplitude=1.0,
+                    ),
+                ),
+            },
+        )
+        override = PropertyAssignments(
+            by_property={
+                "dimmer": ManualPropertyAssignment(
+                    values={"brightness": 0.25, "strobefreq": 0.0},
+                ),
+            },
+        )
+        model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=80, assignments={
+                "": step_level,
+                "fixture:B": override,
+            }),
+        ]))
+        res = compile_property_model(model, cue_filter_id="pcf_l6", scene=self.scene)
+        cue = res.native_model.cues[0]
+        b_raw_idx = next(
+            i for i, (name, _dt) in enumerate(cue._channel_definitions)
+            if name == "B__brightness_raw"
+        )
+        # Collect every brightness_raw value emitted for fixture B across the
+        # step. None of them should be the step-level value 1.0 — the override
+        # 0.25 must dominate throughout.
+        b_raw_values = {round(float(kf._states[b_raw_idx]._value), 5) for kf in cue._frames}
+        self.assertIn(0.25, b_raw_values)
+        self.assertNotIn(1.0, b_raw_values,
+                         f"Step-level 1.0 leaked into B's stream: {b_raw_values}")
+        # Suppress linter warning for unused import — present so the test runs
+        # even if the transfer function constants aren't referenced below.
+        _ = TransferFunction
+
 
 if __name__ == "__main__":
     unittest.main()
