@@ -8,7 +8,10 @@ for a given step duration and per-child delay.
 """
 
 from model.virtual_filters.property_cues.presets.evaluator import evaluate_preset
-from model.virtual_filters.property_cues.presets.loader import load_preset_library
+from model.virtual_filters.property_cues.presets.loader import (
+    load_preset_library,
+    reload_preset_library,
+)
 from model.virtual_filters.property_cues.presets.model import (
     EffectPreset,
     PresetHintSpec,
@@ -23,4 +26,5 @@ __all__ = [
     "PresetKeyFrameEntry",
     "evaluate_preset",
     "load_preset_library",
+    "reload_preset_library",
 ]

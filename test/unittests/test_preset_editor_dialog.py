@@ -186,6 +186,132 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertEqual("17", entry.channel_exprs["tilt_value"])
 
 
+    def test_dimmer_channels_match_compiler(self) -> None:
+        """Regression (L12): the dialog's dimmer channel list must match what the compiler emits.
+
+        Before L12 the dialog listed ``brightness`` but the compiler's raw
+        name is ``brightness_raw``; the resulting preset compiled to a
+        constant brightness of 0 because ``brightness`` never showed up in
+        the solver's channel set.
+        """
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
+            _PROPERTY_CHANNELS,
+        )
+        dimmer_channels = _PROPERTY_CHANNELS["dimmer"]
+        self.assertIn("brightness_raw", dimmer_channels)
+        self.assertNotIn("brightness", dimmer_channels)
+
+    def test_beam_channels_no_focus_include_prism(self) -> None:
+        """Regression (L12): beam channel list reflects BeamProperty (no focus; prism present)."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
+            _PROPERTY_CHANNELS,
+        )
+        beam = _PROPERTY_CHANNELS["beam"]
+        self.assertNotIn("focus", beam)
+        self.assertIn("prism_selection", beam)
+        self.assertIn("prism_rotation", beam)
+
+    def test_filename_sanitisation_round_trips(self) -> None:
+        """Regression (L12): names with spaces or unsafe chars get a safe filename."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
+            PresetEditorDialog,
+        )
+        user_dir = self._tmpdir()
+        dialog = PresetEditorDialog(user_dir=user_dir)
+        dialog._applies_combo.setCurrentText("dimmer")
+        dialog._name_edit.setText("Hero Spot / foo")
+        dialog._save()
+        files = sorted(p.name for p in user_dir.glob("*.json"))
+        self.assertEqual(1, len(files), f"Expected one preset file, got {files}")
+        for ch in (" ", "/", "\\", ":"):
+            self.assertNotIn(ch, files[0])
+
+    def test_rename_in_user_dir_deletes_old_file(self) -> None:
+        """Regression (L12): renaming a user preset drops the old JSON file."""
+        from model.virtual_filters.property_cues.presets import load_preset_library
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
+            PresetEditorDialog,
+        )
+        user_dir = self._tmpdir()
+        dialog = PresetEditorDialog(user_dir=user_dir)
+        dialog._applies_combo.setCurrentText("dimmer")
+        dialog._name_edit.setText("OriginalName")
+        dialog._save()
+        self.assertTrue((user_dir / "OriginalName.json").is_file())
+
+        # Reload the preset and open it for editing.
+        empty_builtin = self._tmpdir()
+        library = load_preset_library(builtin_dir=str(empty_builtin), user_dir=str(user_dir))
+        preset = library["OriginalName"]
+        dialog2 = PresetEditorDialog(existing=preset, user_dir=user_dir)
+        dialog2._name_edit.setText("Renamed")
+        dialog2._save()
+
+        files = sorted(p.name for p in user_dir.glob("*.json"))
+        self.assertEqual(["Renamed.json"], files,
+                         f"Expected only the renamed file; got {files}")
+
+    def test_applies_for_change_preserves_channel_exprs(self) -> None:
+        """Regression (L12): switching applies_for back and forth preserves per-channel values."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
+            PresetEditorDialog,
+        )
+        user_dir = self._tmpdir()
+        dialog = PresetEditorDialog(user_dir=user_dir)
+        dialog._applies_combo.setCurrentText("position")
+        dialog._add_kf_row(
+            duration_expr="1.0",
+            channel_exprs={"pan_value": "42", "tilt_value": "17"},
+        )
+        # Switch to a different applies_for and back.
+        dialog._applies_combo.setCurrentText("dimmer")
+        dialog._applies_combo.setCurrentText("position")
+        # The pan_value and tilt_value expressions must still be in place
+        # because they live in the passthrough map when position's columns
+        # are rebuilt.
+        self.assertEqual(1, dialog._kf_table.rowCount())
+        exprs = dialog._collect_kf_blob()
+        self.assertIn("pan_value", exprs[0]["channels"])
+        self.assertIn("tilt_value", exprs[0]["channels"])
+        self.assertEqual("42", exprs[0]["channels"]["pan_value"])
+        self.assertEqual("17", exprs[0]["channels"]["tilt_value"])
+
+    def test_color_hint_default_preserved_on_round_trip(self) -> None:
+        """Regression (L12): colour hint defaults are preserved as the ``"H,S,I"`` string."""
+        from model.virtual_filters.property_cues.presets import (
+            EffectPreset,
+            PresetHintSpec,
+            PresetHintType,
+            PresetKeyFrameEntry,
+            load_preset_library,
+        )
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
+            PresetEditorDialog,
+        )
+        user_dir = self._tmpdir()
+        existing = EffectPreset(
+            name="ColorHintPreset",
+            description="Carries a colour hint",
+            applies_for="color",
+            hints=(PresetHintSpec(id="start_color", type=PresetHintType.COLOR, default="120.0,1.0,1.0"),),
+            kf_requests=(PresetKeyFrameEntry(duration_expr="1.0", channel_exprs={"color": "{{start_color}}"}),),
+            source_path=str(user_dir / "ColorHintPreset.json"),
+            is_builtin=False,
+        )
+        # Pre-seed the file so the library loader can find it after rewrite.
+        (user_dir / "ColorHintPreset.json").write_text("{}", encoding="utf-8")
+
+        dialog = PresetEditorDialog(existing=existing, user_dir=user_dir)
+        dialog._save()
+
+        empty_builtin = self._tmpdir()
+        library = load_preset_library(builtin_dir=str(empty_builtin), user_dir=str(user_dir))
+        reloaded = library["ColorHintPreset"]
+        self.assertEqual(1, len(reloaded.hints))
+        self.assertEqual(PresetHintType.COLOR, reloaded.hints[0].type)
+        self.assertEqual("120.0,1.0,1.0", reloaded.hints[0].default)
+
+
 def _rmtree(path: Path) -> None:
     import shutil
     try:

@@ -225,6 +225,130 @@ class PresetEvaluatorTest(unittest.TestCase):
         self.assertEqual(5, color_requests[0].timestep_40hz)
 
 
+class PresetLibraryCacheTest(unittest.TestCase):
+    """L14: the module-level preset cache must be returned on subsequent calls."""
+
+    def test_default_invocation_is_cached(self) -> None:
+        """Verify ``load_preset_library()`` returns the same object on repeat calls."""
+        from model.virtual_filters.property_cues.presets import (
+            load_preset_library,
+            reload_preset_library,
+        )
+        reload_preset_library()
+        first = load_preset_library()
+        second = load_preset_library()
+        self.assertIs(first, second)
+        reload_preset_library()
+        third = load_preset_library()
+        self.assertIsNot(first, third,
+                         "reload_preset_library must drop the cache so the next call rebuilds")
+
+    def test_custom_dir_bypasses_cache(self) -> None:
+        """Verify passing a custom dir does not return the cached default library."""
+        from model.virtual_filters.property_cues.presets import load_preset_library
+        with tempfile.TemporaryDirectory() as tmp:
+            empty = load_preset_library(builtin_dir=tmp, user_dir=tmp)
+            self.assertEqual({}, empty)
+
+
+class PresetTemplateCacheTest(unittest.TestCase):
+    """L14: Jinja template compilations must be cached across evaluations."""
+
+    def test_template_cache_reuses_compiled_templates(self) -> None:
+        """Verify evaluating the same expression twice returns the same compiled template."""
+        from model.virtual_filters.property_cues.presets.evaluator import (
+            _TEMPLATE_CACHE,
+            _compile_template,
+            clear_template_cache,
+        )
+        from controller.utils.jinja_math import get_math_enabled_jinja_env
+
+        clear_template_cache()
+        env = get_math_enabled_jinja_env()
+        a = _compile_template(env, "{{ x }}")
+        b = _compile_template(env, "{{ x }}")
+        self.assertIs(a, b)
+        self.assertIn("{{ x }}", _TEMPLATE_CACHE)
+        clear_template_cache()
+        self.assertNotIn("{{ x }}", _TEMPLATE_CACHE)
+
+
+class PresetHintValidationTest(unittest.TestCase):
+    """L16: unknown hints must be tolerated; min/max must be enforced."""
+
+    def _dimmer_preset(self, hints: tuple[PresetHintSpec, ...]) -> EffectPreset:
+        return EffectPreset(
+            name="P", description="", applies_for="dimmer", hints=hints,
+            kf_requests=(
+                PresetKeyFrameEntry(
+                    duration_expr="1.0",
+                    channel_exprs={"brightness_raw": "{{ speed }}"},
+                ),
+            ),
+            source_path="",
+            is_builtin=False,
+        )
+
+    def test_unknown_hint_is_warning_not_error(self) -> None:
+        """Regression (L16): unknown hint ids are dropped with a warning (not raised)."""
+        preset = self._dimmer_preset(
+            hints=(PresetHintSpec(id="speed", type=PresetHintType.FLOAT, default=0.5),),
+        )
+        # Provided hints include a renamed/removed id -- evaluation should
+        # still succeed using the known hint's default.
+        result = evaluate_preset(
+            preset, {"speed": 0.3, "legacy_removed": 1.0},
+            step_start_40hz=0, step_duration_40hz=40, per_child_delay_seconds=0.0,
+        )
+        self.assertIn("brightness_raw", result)
+        self.assertEqual(0.3, float(result["brightness_raw"][0].requested_value))
+
+    def test_min_max_clamp_numeric_hint(self) -> None:
+        """Regression (L16): numeric hint values outside [min, max] are clamped."""
+        preset = self._dimmer_preset(
+            hints=(PresetHintSpec(
+                id="speed", type=PresetHintType.FLOAT,
+                default=0.5, minimum=0.0, maximum=1.0,
+            ),),
+        )
+        result = evaluate_preset(
+            preset, {"speed": 999.0},
+            step_start_40hz=0, step_duration_40hz=40, per_child_delay_seconds=0.0,
+        )
+        # Clamped to maximum=1.0.
+        self.assertEqual(1.0, float(result["brightness_raw"][0].requested_value))
+
+        result_neg = evaluate_preset(
+            preset, {"speed": -2.0},
+            step_start_40hz=0, step_duration_40hz=40, per_child_delay_seconds=0.0,
+        )
+        self.assertEqual(0.0, float(result_neg["brightness_raw"][0].requested_value))
+
+    def test_int_hint_clamped_and_rounded(self) -> None:
+        """Regression (L16): int hints respect min/max and are coerced to int."""
+        preset = EffectPreset(
+            name="P", description="", applies_for="gobo",
+            hints=(PresetHintSpec(
+                id="wheel", type=PresetHintType.INT, default=0,
+                minimum=0, maximum=5,
+            ),),
+            kf_requests=(
+                PresetKeyFrameEntry(
+                    duration_expr="1.0",
+                    channel_exprs={"goboslot_0": "{{ wheel }}"},
+                ),
+            ),
+            source_path="",
+            is_builtin=False,
+        )
+        result = evaluate_preset(
+            preset, {"wheel": 42.7},
+            step_start_40hz=0, step_duration_40hz=40, per_child_delay_seconds=0.0,
+        )
+        # Clamped to max=5, coerced to int.
+        self.assertEqual(5.0, float(result["goboslot_0"][0].requested_value))
+
+
 class PresetSchemaTest(unittest.TestCase):
     """Hand-written validator for the preset JSON schema."""
 

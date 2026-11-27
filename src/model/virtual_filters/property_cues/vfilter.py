@@ -103,14 +103,21 @@ class PropertyBasedCueFilter(PreviewFilter):
             logger.warning("Failed to compile property model during I/O refresh: %s", exc)
 
     def _ensure_compiled(self) -> CompileResult:
-        """Compile the model if needed and refresh ``self._out_data_types``."""
+        """Compile the model if needed and refresh ``self._out_data_types``.
+
+        L14: the preset library is loaded once per compile (the loader
+        module caches the default library, so this is effectively free when
+        nothing changed on disk since the last compile).
+        """
         if self._last_compile is None:
+            from model.virtual_filters.property_cues.presets import load_preset_library
             name_map = self._build_fixture_name_map()
             self._last_compile = compile_property_model(
                 self._property_model,
                 cue_filter_id=self.filter_id,
                 scene=self.scene,
                 pos=self.pos,
+                preset_library=load_preset_library(),
                 name_resolver=lambda fid: name_map.get(fid, fid),
                 capability_lookup=self._capability_lookup,
                 gobo_wheel_count_lookup=self._gobo_wheel_count_lookup,
@@ -121,10 +128,27 @@ class PropertyBasedCueFilter(PreviewFilter):
         return self._last_compile
 
     def _find_fixture(self, fixture_id: str):  # noqa: ANN202 — UsedFixture lazy import
+        """Look up a fixture by UUID, preferring :meth:`BoardConfiguration.get_fixture`.
+
+        L14: the previous implementation scanned every fixture on every
+        capability lookup, which for a 12-fixture show meant ~100+ linear
+        scans per compile. The board already keeps fixtures in a dict keyed
+        by UUID; use that fast path when available and fall back to the
+        scan so headless unit tests that attach a bare fixture list keep
+        working.
+        """
         scene = getattr(self, "scene", None)
         board = getattr(scene, "board_configuration", None) if scene is not None else None
         if board is None:
             return None
+        getter = getattr(board, "get_fixture", None)
+        if callable(getter):
+            try:
+                found = getter(fixture_id)
+            except (ValueError, TypeError, AttributeError):
+                found = None
+            if found is not None:
+                return found
         for fixture in getattr(board, "fixtures", []) or []:
             if str(getattr(fixture, "uuid", "")) == fixture_id:
                 return fixture

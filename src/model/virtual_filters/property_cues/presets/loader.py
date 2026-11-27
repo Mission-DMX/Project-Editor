@@ -18,6 +18,28 @@ from utility import resource_path
 
 logger = getLogger(__name__)
 
+# L14: cache the default (no-argument) library so the compile pipeline
+# doesn't re-walk ``resources/cuepresets`` on every assignment. Custom
+# builtin/user dirs (tests) bypass the cache. Call
+# :func:`reload_preset_library` to drop the cache after the user saves a
+# new preset from the editor dialog.
+_DEFAULT_CACHE: dict[str, EffectPreset] | None = None
+
+
+def reload_preset_library() -> None:
+    """Drop the cached library so the next ``load_preset_library`` call re-walks disk.
+
+    Call after the preset editor saves/deletes a preset so open :class:`PresetPanel`
+    dropdowns and the compiler see the updated library. Also clears the
+    Jinja template cache in the evaluator so expressions that changed
+    on disk recompile on their next render.
+    """
+    global _DEFAULT_CACHE  # noqa: PLW0603 -- module-level cache is intentional
+    _DEFAULT_CACHE = None
+    # Local import to avoid a cycle: evaluator imports from loader for logging.
+    from model.virtual_filters.property_cues.presets.evaluator import clear_template_cache
+    clear_template_cache()
+
 
 def load_preset_library(
     builtin_dir: str | None = None,
@@ -33,7 +55,13 @@ def load_preset_library(
       user copy shadows the built-in in the returned mapping. The built-in
       JSON on disk is left untouched.
     - Malformed JSON files are logged and skipped.
+    - L14: the default (no-argument) invocation is cached; pass
+      ``builtin_dir`` or ``user_dir`` to bypass the cache (tests and
+      dev-time overrides).
     """
+    global _DEFAULT_CACHE  # noqa: PLW0603 -- module-level cache is intentional
+    if builtin_dir is None and user_dir is None and _DEFAULT_CACHE is not None:
+        return _DEFAULT_CACHE
     builtin_path = Path(builtin_dir) if builtin_dir is not None else Path(resource_path("resources/cuepresets"))
     user_path = Path(user_dir) if user_dir is not None else _USER_STORAGE_PATH / "cuepresets"
     library: dict[str, EffectPreset] = {}
@@ -41,6 +69,8 @@ def load_preset_library(
         library[preset.name] = preset
     for preset in _load_dir(user_path, is_builtin=False):
         library[preset.name] = preset
+    if builtin_dir is None and user_dir is None:
+        _DEFAULT_CACHE = library
     return library
 
 

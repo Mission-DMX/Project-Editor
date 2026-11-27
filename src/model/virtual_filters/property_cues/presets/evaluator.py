@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from jinja2 import TemplateError
@@ -13,6 +14,38 @@ from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
 from model.virtual_filters.property_cues.presets.model import (
     PresetHintType,
 )
+
+logger = getLogger(__name__)
+
+
+# L14: compile each distinct Jinja template once and reuse. The compiler used
+# to call ``env.from_string(expression)`` on every (cue, step, child, loop
+# iteration) tuple, which for a 12-fixture by 4-step "Circle" preset
+# produced ~11k template compilations per rebuild. Caching here makes the
+# hot path O(unique_expressions) rather than O(invocations). The cache is
+# module-level because the Jinja environment is a singleton and expressions
+# never alias across environments. Call :func:`clear_template_cache` from
+# :func:`reload_preset_library` so a modified preset re-compiles its exprs.
+_TEMPLATE_CACHE: dict[str, object] = {}
+
+
+def _compile_template(env: Environment, expression: str) -> object:
+    """Return a cached compiled Jinja template for ``expression``."""
+    cached = _TEMPLATE_CACHE.get(expression)
+    if cached is not None:
+        return cached
+    compiled = env.from_string(expression)
+    _TEMPLATE_CACHE[expression] = compiled
+    return compiled
+
+
+def clear_template_cache() -> None:
+    """Drop every cached Jinja template.
+
+    Called from :func:`reload_preset_library` so a saved edit to a preset
+    doesn't continue to render the pre-edit expressions out of the cache.
+    """
+    _TEMPLATE_CACHE.clear()
 
 if TYPE_CHECKING:
     from jinja2 import Environment
@@ -76,14 +109,59 @@ def _merge_hint_values(
     hints: tuple[PresetHintSpec, ...],
     provided: dict[str, float | int | str],
 ) -> dict[str, float | int | str]:
+    """Return the effective hint values for ``hints`` merging in ``provided``.
+
+    L16: unknown hint ids are logged and dropped instead of raising, so a
+    preset that renames or removes a hint doesn't break every cue that
+    used to reference it. The declared ``minimum`` and ``maximum`` bounds
+    on numeric hints are enforced here: user-supplied values outside the
+    range are clamped and the original is logged for traceability.
+    """
     merged: dict[str, float | int | str] = {}
     known_ids = {hint.id for hint in hints}
     unknown = set(provided) - known_ids
     if unknown:
-        raise ValueError(f"Unknown hint ids: {sorted(unknown)}")
+        logger.warning(
+            "Dropping unknown preset hint ids: %s (preset hints: %s)",
+            sorted(unknown), sorted(known_ids),
+        )
     for hint in hints:
-        merged[hint.id] = provided.get(hint.id, hint.default)
+        raw = provided.get(hint.id, hint.default)
+        merged[hint.id] = _clip_hint_value(hint, raw)
     return merged
+
+
+def _clip_hint_value(
+    hint: PresetHintSpec,
+    value: float | str,
+) -> float | int | str:
+    """Clamp ``value`` to the hint's declared ``[minimum, maximum]`` bounds (L16).
+
+    Only numeric hints (float/int) are clamped; colour hints and malformed
+    numeric values pass through untouched. A clamp is logged so the user
+    can tell whether their authored value made it through verbatim.
+    """
+    if hint.type is PresetHintType.COLOR:
+        return value
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return value
+    lo = hint.minimum
+    hi = hint.maximum
+    original = numeric
+    if lo is not None and numeric < float(lo):
+        numeric = float(lo)
+    if hi is not None and numeric > float(hi):
+        numeric = float(hi)
+    if numeric != original:
+        logger.info(
+            "Clamped preset hint %s=%r to %r (range [%s, %s])",
+            hint.id, original, numeric, lo, hi,
+        )
+    if hint.type is PresetHintType.INT:
+        return round(numeric)
+    return numeric
 
 
 def _render_duration(
@@ -92,7 +170,7 @@ def _render_duration(
     hint_values: dict[str, float | int | str],
 ) -> float:
     try:
-        rendered = env.from_string(expression).render(hint_values)
+        rendered = _compile_template(env, expression).render(hint_values)
     except TemplateError as exc:
         raise ValueError(f"Failed to render duration expression {expression!r}: {exc}") from exc
     try:
@@ -109,7 +187,7 @@ def _render_channel_value(
     hint_values: dict[str, float | int | str],
 ) -> float | ColorHSI:
     try:
-        rendered = env.from_string(expression).render(hint_values)
+        rendered = _compile_template(env, expression).render(hint_values)
     except TemplateError as exc:
         raise ValueError(f"Failed to render channel expression {expression!r}: {exc}") from exc
     stripped = rendered.strip()
