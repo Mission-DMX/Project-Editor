@@ -34,9 +34,9 @@ if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.property_step import PropertyStep
 
 
-_COLUMNS = ("Name", "Fade-in", "Dimmer", "Position", "Gobo", "Color", "Beam", "Focus")
+_COLUMNS = ("Name", "Fade-in", "Dimmer", "Position", "Gobo", "Color", "Beam", "Focus", "Frost")
 _PROPERTY_COLUMNS: dict[int, str] = {
-    2: "dimmer", 3: "position", 4: "gobo", 5: "color", 6: "beam", 7: "focus",
+    2: "dimmer", 3: "position", 4: "gobo", 5: "color", 6: "beam", 7: "focus", 8: "frost",
 }
 _ROLE_STEP_INDEX = Qt.ItemDataRole.UserRole + 1
 _ROLE_NODE_PATH = Qt.ItemDataRole.UserRole + 2
@@ -73,9 +73,17 @@ def _summary_for(property_id: str, assignment: object) -> str:
                 return ",".join(str(v) for v in slots.values())
             return "0"
         if property_id == "beam":
-            return f"f{values.get('focus', 0)}"
+            # L22: focus has moved to its own property; show the beam sub-channels
+            # the current BeamProperty actually exposes instead of the stale
+            # ``focus`` summary.
+            parts = [f"{key[0]}{values[key]}"
+                     for key in ("zoom", "iris", "prism_selection")
+                     if key in values]
+            return "/".join(parts) if parts else "set"
         if property_id == "focus":
             return str(values.get("focus", 0))
+        if property_id == "frost":
+            return str(values.get("frost_intensity", 0))
         return "set"
     return "-"
 
@@ -83,7 +91,7 @@ def _summary_for(property_id: str, assignment: object) -> str:
 def _summary_cells(step: PropertyStep, node_path: str) -> list[str]:
     assignments = step.assignments.get(node_path)
     cells: list[str] = []
-    for col in range(2, 8):
+    for col in range(2, 9):
         prop_id = _PROPERTY_COLUMNS[col]
         if assignments is None:
             cells.append("-")
@@ -115,7 +123,12 @@ class StepFixtureTree(QTreeWidget):
         self._current_cue_index: int = -1
         self.setColumnCount(len(_COLUMNS))
         self.setHeaderLabels(list(_COLUMNS))
+        # L24: keyboard arrows must update the property pane too. Clicking
+        # fires both ``itemClicked`` and ``currentItemChanged`` but keyboard
+        # navigation only fires the latter, so listen on both. The click
+        # handler forwards to the same slot as the selection change.
         self.itemClicked.connect(self._on_item_clicked)
+        self.currentItemChanged.connect(self._on_current_item_changed)
 
     def set_name_resolver(self, resolver: Callable[[str, str], str] | None) -> None:
         """Install a resolver that maps (kind, raw id) pairs to display names."""
@@ -202,8 +215,36 @@ class StepFixtureTree(QTreeWidget):
             step_item.setExpanded(True)
 
     def _on_item_clicked(self, item: QTreeWidgetItem, _column: int) -> None:
+        self._emit_selection_for(item)
+
+    def _on_current_item_changed(
+        self, item: QTreeWidgetItem | None, _previous: QTreeWidgetItem | None,
+    ) -> None:
+        if item is None:
+            return
+        self._emit_selection_for(item)
+
+    def _emit_selection_for(self, item: QTreeWidgetItem) -> None:
         step_index = item.data(0, _ROLE_STEP_INDEX)
         node_path = item.data(0, _ROLE_NODE_PATH)
         if step_index is None:
             return
         self.selection_changed.emit(int(step_index), str(node_path or ""))
+
+    def current_step_index(self) -> int:
+        """Return the step index of the current selection, or -1 if nothing is selected."""
+        saved = self._captured_selection()
+        if saved is None:
+            return -1
+        return saved[0]
+
+    def select_step(self, cue_index: int, step_index: int) -> None:
+        """Programmatically move the selection to ``(cue_index, step_index)``.
+
+        Switches the tree to ``cue_index`` first if the current cue differs.
+        Used by the XTouch forward/rev handlers to drive the preview from
+        the hardware transport controls.
+        """
+        if cue_index != self._current_cue_index:
+            self.set_current_cue(cue_index)
+        self._reselect(step_index, "")

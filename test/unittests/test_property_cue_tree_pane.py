@@ -100,6 +100,42 @@ class StepFixtureTreeTests(unittest.TestCase):
         tree._on_item_clicked(tree.topLevelItem(0), 0)
         self.assertEqual([(0, "fixture:F1"), (0, "")], emissions)
 
+    def test_frost_column_is_present(self) -> None:
+        """Regression (L22): the tree must include a Frost summary column."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
+            StepFixtureTree,
+            _COLUMNS,
+        )
+        self.assertIn("Frost", _COLUMNS)
+        model = _make_model(fixture_ids=["F1"], cue_specs=[[("s0", 40, 0)]])
+        tree = StepFixtureTree(model)
+        self.assertEqual(len(_COLUMNS), tree.columnCount())
+
+    def test_keyboard_selection_also_emits(self) -> None:
+        """Regression (L24): keyboard navigation (currentItemChanged) emits selection_changed."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
+            StepFixtureTree,
+        )
+        model = _make_model(fixture_ids=["F1"], cue_specs=[[("s0", 40, 0), ("s1", 40, 0)]])
+        tree = StepFixtureTree(model)
+        tree.set_current_cue(0)
+        emissions: list[tuple[int, str]] = []
+        tree.selection_changed.connect(lambda si, np: emissions.append((si, np)))
+        # setCurrentItem fires currentItemChanged which the tree now handles.
+        tree.setCurrentItem(tree.topLevelItem(1))
+        self.assertIn((1, ""), emissions)
+
+    def test_select_step_programmatic(self) -> None:
+        """Regression (L11): select_step moves the selection to (cue, step)."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
+            StepFixtureTree,
+        )
+        model = _make_model(fixture_ids=["F1"], cue_specs=[[("s0", 40, 0), ("s1", 40, 0), ("s2", 40, 0)]])
+        tree = StepFixtureTree(model)
+        tree.set_current_cue(0)
+        tree.select_step(0, 2)
+        self.assertEqual(2, tree.current_step_index())
+
     def test_fixture_name_resolver(self) -> None:
         """Verify the name_resolver callback is used when rendering fixture rows."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (

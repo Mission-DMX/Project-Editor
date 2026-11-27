@@ -2,10 +2,6 @@
 
 Owned by the PropertyCueEditor (WP10): bridges the editor's time cursor and
 play/pause state into the :class:`PropertyCuesPreviewThread` from WP12.
-
-TODO(WP14): wire this into the editor shell created in WP10 — call
-:meth:`start` from the editor's ``parent_opened`` hook (or from a dedicated
-"Start Preview" button) and :meth:`stop` from its teardown path.
 """
 
 from __future__ import annotations
@@ -13,8 +9,10 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, QTimer
 
+from model.control_desk import set_seven_seg_display_content
+from model.filter_data.utility import format_seconds
 from model.virtual_filters.property_cues.preview_runtime import (
     PropertyCuesPreviewThread,
     build_preview_filters,
@@ -28,14 +26,36 @@ logger = getLogger(__name__)
 
 
 _DEFAULT_SHUTDOWN_TIMEOUT_MS = 500
+# 100 ms matches the existing cue editor's visible update rate on the
+# XTouch 7-seg display without taxing the GUI thread.
+_SEVEN_SEG_TICK_MS = 100
+
+
+def _format_seven_seg(cue_index: int, timecode_sec: float) -> str:
+    """Return the 12-char XTouch 7-seg string for ``cue_index`` and ``timecode_sec``.
+
+    Mirrors ``TimelineContentWidget._update_7seg_text`` in the existing cue
+    editor so the two editors show timecodes identically: 10 pure-digit
+    characters for the time (zero-padded) prefixed by the 2-digit cue index.
+    """
+    txt = format_seconds(max(0.0, timecode_sec)).replace(":", "").replace(".", "")
+    while len(txt) < 10:
+        txt = "0" + txt
+    txt = str(cue_index % 100) + txt
+    while len(txt) < 12:
+        txt = " " + txt
+    return txt
 
 
 class PreviewController(QObject):
     """Holds the current :class:`PropertyCuesPreviewThread` for an editor.
 
-    The controller is stateless beyond the owning editor's lifetime: calling
-    :meth:`start` after a previous :meth:`stop` is supported and spins up a
-    fresh thread (and a fresh constant-filter mapping).
+    Owns a 100 ms :class:`QTimer` while the preview thread is live so the
+    GUI can advance the preview's own clock, update the XTouch 7-seg
+    display, and push the latest timecode into the preview thread. The
+    controller is stateless beyond the owning editor's lifetime: calling
+    :meth:`start` after a previous :meth:`stop` is supported and spins up
+    a fresh thread (and a fresh constant-filter mapping).
     """
 
     def __init__(
@@ -51,6 +71,9 @@ class PreviewController(QObject):
         self._timecode = 0.0
         self._playing = False
         self._cue_index = 0
+        self._tick_timer = QTimer(self)
+        self._tick_timer.setInterval(_SEVEN_SEG_TICK_MS)
+        self._tick_timer.timeout.connect(self._on_tick)
 
     @property
     def thread(self) -> PropertyCuesPreviewThread | None:
@@ -84,6 +107,12 @@ class PreviewController(QObject):
         thread.set_playing(self._playing)
         self._thread = thread
         thread.start()
+        # Start the 100 ms tick that drives the preview clock and 7-seg
+        # update once the thread is live; the first tick fires _SEVEN_SEG_TICK_MS
+        # later. Push the initial display immediately so the user sees
+        # "CC 0000000000" (or current timecode) the moment preview starts.
+        self._push_seven_seg()
+        self._tick_timer.start()
 
     def stop(self, timeout_ms: int = _DEFAULT_SHUTDOWN_TIMEOUT_MS) -> None:
         """Interrupt the preview thread and wait briefly for it to exit.
@@ -97,6 +126,10 @@ class PreviewController(QObject):
         scene because the cloned switch expects a uint8 ``select`` while
         the preview constant for ``pan_curvesel`` is still around.
         """
+        self._tick_timer.stop()
+        # Blank the 7-seg so the next editor to claim it doesn't inherit
+        # our preview timecode on the physical desk.
+        set_seven_seg_display_content(" " * 12, update_from_gui=True)
         if self._vfilter is not None:
             self._vfilter.in_preview_mode = False
             self._vfilter._channel_mapping = {}
@@ -111,11 +144,44 @@ class PreviewController(QObject):
             logger.debug("PreviewController.stop: thread already gone: %s", exc)
         self._thread = None
 
+    def rewind_to_start(self) -> None:
+        """Pause playback and jump back to cue 0, step 0, timecode 0.0 (L11 "stop" semantics).
+
+        The XTouch stop button maps to this: it always returns the user to
+        the very top of the preview so pressing play again starts fresh,
+        regardless of where playback was.
+        """
+        self.set_playing(False)
+        self.set_cue_index(0)
+        self.set_timecode(0.0)
+        self._push_seven_seg()
+
+    def toggle_playing(self) -> bool:
+        """Flip playback on/off and return the new state (L11 play button semantics)."""
+        self.set_playing(not self._playing)
+        return self._playing
+
+    @property
+    def is_playing(self) -> bool:
+        """Return True iff the preview thread is currently emitting updates."""
+        return self._playing
+
+    @property
+    def cue_index(self) -> int:
+        """Return the cue index the preview is currently evaluating."""
+        return self._cue_index
+
+    @property
+    def timecode(self) -> float:
+        """Return the current preview timecode in seconds (relative to the active cue)."""
+        return self._timecode
+
     def set_timecode(self, seconds: float) -> None:
         """Push the editor's time cursor into the preview thread."""
-        self._timecode = float(seconds)
+        self._timecode = max(0.0, float(seconds))
         if self._thread is not None:
             self._thread.set_timecode(self._timecode)
+            self._push_seven_seg()
 
     def set_playing(self, playing: bool) -> None:
         """Toggle whether the preview thread emits updates each tick."""
@@ -125,6 +191,22 @@ class PreviewController(QObject):
 
     def set_cue_index(self, index: int) -> None:
         """Select which compiled cue the preview thread evaluates."""
-        self._cue_index = int(index)
+        self._cue_index = max(0, int(index))
         if self._thread is not None:
             self._thread.set_cue_index(self._cue_index)
+            self._push_seven_seg()
+
+    def _on_tick(self) -> None:
+        """Timer callback: advance the preview clock, push it into the thread, update 7-seg."""
+        if self._thread is None:
+            return
+        if self._playing:
+            self._timecode += _SEVEN_SEG_TICK_MS / 1000.0
+            self._thread.set_timecode(self._timecode)
+        self._push_seven_seg()
+
+    def _push_seven_seg(self) -> None:
+        set_seven_seg_display_content(
+            _format_seven_seg(self._cue_index, self._timecode),
+            update_from_gui=True,
+        )

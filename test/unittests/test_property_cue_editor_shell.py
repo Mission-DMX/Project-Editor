@@ -141,6 +141,96 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual(1, editor2._cue_table.rowCount())
         self.assertEqual("Beta", editor2._cue_table.item(0, 1).text())
 
+    def test_mutations_drop_vfilter_compile_cache(self) -> None:
+        """Regression (L10): model mutations must invalidate the vfilter's compile cache.
+
+        Before L10 only :meth:`_rebuild_io` (dialog close) and ``deserialize``
+        cleared ``PropertyBasedCueFilter._last_compile``, so starting the
+        preview after an edit replayed the pre-edit timeline. Every mutator
+        in the editor shell now routes through :meth:`_invalidate_cache`.
+        """
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+
+        def _prime_cache() -> None:
+            f._last_compile = object()
+
+        _prime_cache()
+        editor._add_cue()
+        self.assertIsNone(f._last_compile, "add_cue must invalidate compile cache")
+
+        _prime_cache()
+        editor._add_step()
+        self.assertIsNone(f._last_compile, "add_step must invalidate compile cache")
+
+        _prime_cache()
+        editor._persistence_toggled(True)
+        self.assertIsNone(f._last_compile, "persistence toggle must invalidate compile cache")
+
+        # end_action / restart_on_play mutate the selected cue; the above
+        # ``_add_step`` called ``_refresh_cue_table`` which clears the
+        # selection, so re-select before testing per-cue mutators.
+        editor._cue_table.selectRow(0)
+        _prime_cache()
+        editor._end_action_changed("START_AGAIN")
+        self.assertIsNone(f._last_compile, "end_action change must invalidate compile cache")
+
+        _prime_cache()
+        editor._restart_on_play_toggled(True)
+        self.assertIsNone(f._last_compile, "restart_on_play change must invalidate compile cache")
+
+    def test_delete_cue_removes_from_model(self) -> None:
+        """Regression (L19): the delete-cue button removes the selected cue."""
+        from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        for name in ("A", "B", "C"):
+            f.property_model.cues.append(
+                PropertyCue(name=name, steps=[PropertyStep(name="s0", duration_40hz=40)]),
+            )
+        editor._refresh_cue_table()
+        editor._cue_table.selectRow(1)
+        editor._delete_cue()
+        self.assertEqual([c.name for c in f.property_model.cues], ["A", "C"])
+
+    def test_move_cue_swaps_order(self) -> None:
+        """Regression (L19): move-cue reorders the cues in the model."""
+        from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        for name in ("A", "B", "C"):
+            f.property_model.cues.append(
+                PropertyCue(name=name, steps=[PropertyStep(name="s0", duration_40hz=40)]),
+            )
+        editor._refresh_cue_table()
+        editor._cue_table.selectRow(0)
+        editor._move_cue(1)
+        self.assertEqual([c.name for c in f.property_model.cues], ["B", "A", "C"])
+
+    def test_rename_cue_via_table_edit(self) -> None:
+        """Regression (L19): editing the Name cell writes the new name back to the model."""
+        from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        f.property_model.cues.append(
+            PropertyCue(name="Old", steps=[PropertyStep(name="s0", duration_40hz=40)]),
+        )
+        editor._refresh_cue_table()
+        editor._cue_table.item(0, 1).setText("Renamed")
+        self.assertEqual("Renamed", f.property_model.cues[0].name)
+
     def test_add_cue_button_appends_cue_with_default_step(self) -> None:
         """Verify adding a cue creates a default step and selects the new row."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (

@@ -32,6 +32,9 @@ def build_root_ui(editor: PropertyCueEditor) -> None:
     editor._cue_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
     editor._cue_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
     editor._cue_table.itemSelectionChanged.connect(editor._cue_selection_changed)
+    # L19: the Name column is editable in place -- double-click to rename.
+    # ``_on_cue_table_item_changed`` writes the new text back into the model.
+    editor._cue_table.itemChanged.connect(editor._on_cue_table_item_changed)
     layout.addWidget(editor._cue_table)
 
     cue_button_row = QHBoxLayout()
@@ -42,6 +45,31 @@ def build_root_ui(editor: PropertyCueEditor) -> None:
     editor._add_step_button.clicked.connect(editor._add_step)
     editor._add_step_button.setEnabled(False)
     cue_button_row.addWidget(editor._add_step_button)
+    # L19: delete / reorder buttons for both cues and steps.
+    editor._delete_cue_button = QPushButton("Delete cue")
+    editor._delete_cue_button.clicked.connect(editor._delete_cue)
+    editor._delete_cue_button.setEnabled(False)
+    cue_button_row.addWidget(editor._delete_cue_button)
+    editor._delete_step_button = QPushButton("Delete step")
+    editor._delete_step_button.clicked.connect(editor._delete_step)
+    editor._delete_step_button.setEnabled(False)
+    cue_button_row.addWidget(editor._delete_step_button)
+    editor._move_cue_up_button = QPushButton("↑ Cue")
+    editor._move_cue_up_button.clicked.connect(lambda: editor._move_cue(-1))
+    editor._move_cue_up_button.setEnabled(False)
+    cue_button_row.addWidget(editor._move_cue_up_button)
+    editor._move_cue_down_button = QPushButton("↓ Cue")
+    editor._move_cue_down_button.clicked.connect(lambda: editor._move_cue(1))
+    editor._move_cue_down_button.setEnabled(False)
+    cue_button_row.addWidget(editor._move_cue_down_button)
+    editor._move_step_up_button = QPushButton("↑ Step")
+    editor._move_step_up_button.clicked.connect(lambda: editor._move_step(-1))
+    editor._move_step_up_button.setEnabled(False)
+    cue_button_row.addWidget(editor._move_step_up_button)
+    editor._move_step_down_button = QPushButton("↓ Step")
+    editor._move_step_down_button.clicked.connect(lambda: editor._move_step(1))
+    editor._move_step_down_button.setEnabled(False)
+    cue_button_row.addWidget(editor._move_step_down_button)
     cue_button_row.addStretch(1)
     layout.addLayout(cue_button_row)
 
@@ -88,10 +116,16 @@ def install_live_panes(editor: PropertyCueEditor) -> None:
     editor._splitter.setStretchFactor(0, 2)
     editor._splitter.setStretchFactor(1, 1)
     editor._step_tree.selection_changed.connect(editor._property_pane.show_editor)
+    # L11: whenever the step selection changes (mouse or keyboard), update the
+    # preview playhead so the XTouch transport operates on the selected step.
+    editor._step_tree.selection_changed.connect(editor._on_step_tree_selection_changed)
     # Apply only redraws the tree summary columns -- cue count/step count are
     # structural and only change through the Add buttons, so we deliberately do
     # NOT refresh the cue table here (that would blow away the user's row
     # selection and reset the tree).
     editor._property_pane.assignment_applied.connect(editor._step_tree.refresh)
+    # L10: any assignment Apply mutates the model, so drop the vfilter's
+    # cached compile before the next preview rebuild uses stale data.
+    editor._property_pane.assignment_applied.connect(editor._invalidate_cache)
     editor._step_tree.set_current_cue(-1)
     editor._property_pane.set_current_cue(-1)

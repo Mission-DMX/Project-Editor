@@ -5,6 +5,7 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -87,6 +88,18 @@ class PropertyCueEditor(PreviewEditWidget):
         """Return the placeholder widget that hosts the property pane."""
         return self._property_pane_placeholder
 
+    def _invalidate_cache(self) -> None:
+        """Drop the vfilter's cached compile so the next preview rebuild uses current model state.
+
+        L10: :meth:`PropertyBasedCueFilter.invalidate_compile_cache` is only
+        called from this helper; every editor mutator that touches the
+        property model routes through here. Without this the preview would
+        render the pre-edit timeline until the dialog was closed and the
+        next ``_rebuild_io`` dropped the cache.
+        """
+        if self._property_filter is not None:
+            self._property_filter.invalidate_compile_cache()
+
     def _end_action_changed(self, text: str) -> None:
         cue = self._selected_cue()
         if cue is None:
@@ -95,12 +108,15 @@ class PropertyCueEditor(PreviewEditWidget):
             cue.end_action = EndAction[text]
         except KeyError:
             logger.warning("Unknown end action: %s", text)
+            return
+        self._invalidate_cache()
 
     def _restart_on_play_toggled(self, checked: bool) -> None:
         cue = self._selected_cue()
         if cue is None:
             return
         cue.restart_on_play = checked
+        self._invalidate_cache()
 
     def _selected_cue(self) -> PropertyCue | None:
         if self._property_filter is None or self._cue_table is None:
@@ -113,6 +129,15 @@ class PropertyCueEditor(PreviewEditWidget):
 
     def _cue_selection_changed(self) -> None:
         self._apply_cue_selection_state()
+        # L11: anchor the preview playhead to whatever the user selects,
+        # so pressing PLAY on the XTouch picks up at the right cue.
+        if self._preview_active:
+            self._preview_push_current_selection()
+
+    def _on_step_tree_selection_changed(self, _step_index: int, _node_path: str) -> None:
+        """L11: when the user picks a step in the tree, jump the preview to that step's start."""
+        if self._preview_active:
+            self._preview_push_current_selection()
 
     def _apply_cue_selection_state(self) -> None:
         cue = self._selected_cue()
@@ -131,6 +156,7 @@ class PropertyCueEditor(PreviewEditWidget):
             self._step_tree.set_current_cue(idx)
         if self._property_pane is not None:
             self._property_pane.set_current_cue(idx)
+        self._update_cue_step_button_state()
 
     def _add_cue(self) -> None:
         if self._property_filter is None or self._cue_table is None:
@@ -139,6 +165,7 @@ class PropertyCueEditor(PreviewEditWidget):
         name = f"Cue {len(model.cues) + 1}"
         new_cue = PropertyCue(name=name, steps=[PropertyStep(name="Step 1")])
         model.cues.append(new_cue)
+        self._invalidate_cache()
         self._refresh_cue_table()
         self._refresh_default_cue_combo()
         self._cue_table.selectRow(len(model.cues) - 1)
@@ -148,6 +175,7 @@ class PropertyCueEditor(PreviewEditWidget):
         if cue is None:
             return
         cue.steps.append(PropertyStep(name=f"Step {len(cue.steps) + 1}"))
+        self._invalidate_cache()
         self._refresh_cue_table()
         if self._step_tree is not None:
             self._step_tree.refresh()
@@ -156,11 +184,13 @@ class PropertyCueEditor(PreviewEditWidget):
         if self._property_filter is None:
             return
         self._property_filter.property_model.general.persistence = checked
+        self._invalidate_cache()
 
     def _default_cue_changed(self, index: int) -> None:
         if self._property_filter is None:
             return
         self._property_filter.property_model.general.default_cue_index = index - 1
+        self._invalidate_cache()
 
     def _board(self):  # noqa: ANN202 — BoardConfiguration imported lazily
         if self._property_filter is None:
@@ -188,6 +218,7 @@ class PropertyCueEditor(PreviewEditWidget):
             new_selection = self._wizard.result_selection()
             if new_selection is not None:
                 self._property_filter.property_model.fixture_selection = new_selection
+                self._invalidate_cache()
                 self._refresh_tree()
         self._wizard = None
 
@@ -208,12 +239,133 @@ class PropertyCueEditor(PreviewEditWidget):
     def _refresh_cue_table(self) -> None:
         if self._cue_table is None or self._property_filter is None:
             return
-        self._cue_table.setRowCount(0)
-        for i, cue in enumerate(self._property_filter.property_model.cues):
-            self._cue_table.insertRow(i)
-            self._cue_table.setItem(i, 0, QTableWidgetItem(str(i + 1)))
-            self._cue_table.setItem(i, 1, QTableWidgetItem(cue.name))
-            self._cue_table.setItem(i, 2, QTableWidgetItem(str(len(cue.steps))))
+        # Suspend itemChanged so refilling the table doesn't fire rename
+        # callbacks for every cell; re-enable after refresh.
+        self._cue_table.blockSignals(True)
+        try:
+            self._cue_table.setRowCount(0)
+            for i, cue in enumerate(self._property_filter.property_model.cues):
+                self._cue_table.insertRow(i)
+                idx_item = QTableWidgetItem(str(i + 1))
+                idx_item.setFlags(idx_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                self._cue_table.setItem(i, 0, idx_item)
+                # L19: the Name column is the only editable cell -- Qt handles
+                # double-click editing out of the box once ItemIsEditable is set.
+                name_item = QTableWidgetItem(cue.name)
+                name_item.setFlags(name_item.flags() | Qt.ItemFlag.ItemIsEditable)
+                self._cue_table.setItem(i, 1, name_item)
+                steps_item = QTableWidgetItem(str(len(cue.steps)))
+                steps_item.setFlags(steps_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                self._cue_table.setItem(i, 2, steps_item)
+        finally:
+            self._cue_table.blockSignals(False)
+        self._update_cue_step_button_state()
+
+    def _on_cue_table_item_changed(self, item: QTableWidgetItem) -> None:
+        """Persist in-place name edits back into the model (L19)."""
+        if self._property_filter is None:
+            return
+        if item.column() != 1:
+            return
+        row = item.row()
+        cues = self._property_filter.property_model.cues
+        if 0 <= row < len(cues):
+            new_name = item.text()
+            if cues[row].name != new_name:
+                cues[row].name = new_name
+                self._invalidate_cache()
+
+    def _delete_cue(self) -> None:
+        """Remove the currently selected cue from the model (L19)."""
+        if self._property_filter is None or self._cue_table is None:
+            return
+        row = self._cue_table.currentRow()
+        cues = self._property_filter.property_model.cues
+        if not (0 <= row < len(cues)):
+            return
+        del cues[row]
+        self._invalidate_cache()
+        self._refresh_cue_table()
+        self._refresh_default_cue_combo()
+        if cues:
+            self._cue_table.selectRow(min(row, len(cues) - 1))
+        else:
+            self._apply_cue_selection_state()
+
+    def _delete_step(self) -> None:
+        """Remove the currently selected step from the selected cue (L19)."""
+        cue = self._selected_cue()
+        if cue is None or self._step_tree is None:
+            return
+        step_idx = self._step_tree.current_step_index()
+        if not (0 <= step_idx < len(cue.steps)):
+            return
+        if len(cue.steps) <= 1:
+            logger.info("Refusing to delete the last step of a cue")
+            return
+        del cue.steps[step_idx]
+        self._invalidate_cache()
+        self._refresh_cue_table()
+        self._step_tree.refresh()
+
+    def _move_cue(self, delta: int) -> None:
+        """Move the selected cue up (delta=-1) or down (delta=+1) (L19)."""
+        if self._property_filter is None or self._cue_table is None:
+            return
+        row = self._cue_table.currentRow()
+        cues = self._property_filter.property_model.cues
+        new_row = row + delta
+        if not (0 <= row < len(cues)) or not (0 <= new_row < len(cues)):
+            return
+        cues[row], cues[new_row] = cues[new_row], cues[row]
+        self._invalidate_cache()
+        self._refresh_cue_table()
+        self._refresh_default_cue_combo()
+        self._cue_table.selectRow(new_row)
+
+    def _move_step(self, delta: int) -> None:
+        """Move the selected step up (delta=-1) or down (delta=+1) (L19)."""
+        cue = self._selected_cue()
+        if cue is None or self._step_tree is None:
+            return
+        step_idx = self._step_tree.current_step_index()
+        new_idx = step_idx + delta
+        if not (0 <= step_idx < len(cue.steps)) or not (0 <= new_idx < len(cue.steps)):
+            return
+        cue.steps[step_idx], cue.steps[new_idx] = cue.steps[new_idx], cue.steps[step_idx]
+        self._invalidate_cache()
+        self._refresh_cue_table()
+        self._step_tree.refresh()
+        self._step_tree.select_step(
+            self._cue_table.currentRow() if self._cue_table is not None else 0,
+            new_idx,
+        )
+
+    def _update_cue_step_button_state(self) -> None:
+        """Enable/disable delete/move buttons based on the current selection."""
+        if self._property_filter is None or self._cue_table is None:
+            return
+        cues = self._property_filter.property_model.cues
+        row = self._cue_table.currentRow()
+        has_cue = 0 <= row < len(cues)
+        for btn in (
+            getattr(self, "_delete_cue_button", None),
+            getattr(self, "_move_cue_up_button", None),
+            getattr(self, "_move_cue_down_button", None),
+            getattr(self, "_delete_step_button", None),
+            getattr(self, "_move_step_up_button", None),
+            getattr(self, "_move_step_down_button", None),
+        ):
+            if btn is not None:
+                btn.setEnabled(has_cue)
+        if has_cue:
+            if self._move_cue_up_button is not None:
+                self._move_cue_up_button.setEnabled(row > 0)
+            if self._move_cue_down_button is not None:
+                self._move_cue_down_button.setEnabled(row < len(cues) - 1)
+            steps = cues[row].steps
+            if self._delete_step_button is not None:
+                self._delete_step_button.setEnabled(len(steps) > 1)
 
     def _refresh_default_cue_combo(self) -> None:
         refresh_default_cue_combo(self)
@@ -269,6 +421,161 @@ class PropertyCueEditor(PreviewEditWidget):
             self._start_preview,
         )
 
+    # ------------------------------------------------------------------
+    # L11 — preview position tracking and XTouch transport integration
+    # ------------------------------------------------------------------
+
+    def _preview_push_current_selection(self) -> None:
+        """Push the current cue/step selection into the preview controller as the playhead.
+
+        Called when the user picks a cue in the table or a step in the tree.
+        Keeps the preview's timeline anchored to what the user is editing so
+        pressing PLAY on the XTouch picks up at the authored location.
+        """
+        if self._preview_controller is None:
+            return
+        cue_idx = self._cue_table.currentRow() if self._cue_table is not None else -1
+        if cue_idx < 0:
+            return
+        self._preview_controller.set_cue_index(cue_idx)
+        step_idx = self._step_tree.current_step_index() if self._step_tree is not None else 0
+        if step_idx < 0:
+            step_idx = 0
+        self._preview_controller.set_timecode(self._step_start_seconds(cue_idx, step_idx))
+
+    def _step_start_seconds(self, cue_idx: int, step_idx: int) -> float:
+        """Return the absolute (within-cue) start time in seconds of step ``step_idx``."""
+        if self._property_filter is None:
+            return 0.0
+        cues = self._property_filter.property_model.cues
+        if not (0 <= cue_idx < len(cues)):
+            return 0.0
+        total = 0
+        for i, step in enumerate(cues[cue_idx].steps):
+            if i >= step_idx:
+                break
+            total += int(step.duration_40hz)
+        return total / 40.0
+
+    def _xtouch_play_pressed(self) -> None:
+        """Handle the XTouch play button: toggle play/pause."""
+        if self._preview_controller is None or not self._preview_active:
+            return
+        now_playing = self._preview_controller.toggle_playing()
+        self._set_media_button_leds(preview_active=True, playing=now_playing)
+
+    def _xtouch_stop_pressed(self) -> None:
+        """Handle the XTouch stop button: pause and rewind to cue 0 step 0 timecode 0."""
+        if self._preview_controller is None or not self._preview_active:
+            return
+        self._preview_controller.rewind_to_start()
+        if self._cue_table is not None and self._cue_table.rowCount() > 0:
+            self._cue_table.selectRow(0)
+        self._set_media_button_leds(preview_active=True, playing=False)
+
+    def _xtouch_forward_pressed(self) -> None:
+        """Handle the XTouch FF button: advance one step (wrap into next cue if needed)."""
+        if self._preview_controller is None or not self._preview_active or self._property_filter is None:
+            return
+        cues = self._property_filter.property_model.cues
+        if not cues:
+            return
+        cue_idx = self._preview_controller.cue_index
+        step_idx = self._step_tree.current_step_index() if self._step_tree is not None else 0
+        if not (0 <= cue_idx < len(cues)):
+            return
+        if step_idx + 1 < len(cues[cue_idx].steps):
+            self._preview_select(cue_idx, step_idx + 1)
+        elif cue_idx + 1 < len(cues):
+            self._preview_select(cue_idx + 1, 0)
+
+    def _xtouch_rev_pressed(self) -> None:
+        """Handle the XTouch REV button: back one step (wrap into previous cue if needed)."""
+        if self._preview_controller is None or not self._preview_active or self._property_filter is None:
+            return
+        cues = self._property_filter.property_model.cues
+        if not cues:
+            return
+        cue_idx = self._preview_controller.cue_index
+        step_idx = self._step_tree.current_step_index() if self._step_tree is not None else 0
+        if step_idx > 0:
+            self._preview_select(cue_idx, step_idx - 1)
+        elif cue_idx > 0:
+            prev_cue = cue_idx - 1
+            last_step = max(0, len(cues[prev_cue].steps) - 1)
+            self._preview_select(prev_cue, last_step)
+
+    def _preview_select(self, cue_idx: int, step_idx: int) -> None:
+        """Move the editor selection (and preview playhead) to (cue_idx, step_idx)."""
+        if self._cue_table is not None and 0 <= cue_idx < self._cue_table.rowCount():
+            self._cue_table.selectRow(cue_idx)
+        if self._step_tree is not None:
+            self._step_tree.select_step(cue_idx, step_idx)
+        if self._preview_controller is not None:
+            self._preview_controller.set_cue_index(cue_idx)
+            self._preview_controller.set_timecode(self._step_start_seconds(cue_idx, step_idx))
+
+    def _set_media_button_leds(self, preview_active: bool, playing: bool = False) -> None:
+        """Light / extinguish the XTouch media button LEDs for the preview state.
+
+        PLAY glows solid when the preview is idle and blinks while playing so
+        the user can tell play-vs-pause at a glance. STOP, FF and REV glow
+        solid whenever preview is active; RECORD stays off (not used).
+        """
+        from controller.network import NetworkManager
+        from proto import Console_pb2  # local import so headless unit tests don't need proto
+
+        if preview_active:
+            play_state = (
+                Console_pb2.BS_SET_LED_BLINKING if playing else Console_pb2.BS_ACTIVE
+            )
+            transport_state = Console_pb2.BS_ACTIVE
+        else:
+            play_state = Console_pb2.BS_SET_LED_NOT_ACTIVE
+            transport_state = Console_pb2.BS_SET_LED_NOT_ACTIVE
+
+        # NetworkManager is a QObject singleton; headless tests may not
+        # initialise it, so guard against both construction failure and a
+        # missing socket interface.
+        try:
+            nm = NetworkManager()
+        except Exception as exc:
+            logger.debug("Skipping XTouch LED update (no NetworkManager): %s", exc)
+            return
+        for button, state in (
+            (Console_pb2.BTN_PLAY_RUNCUE, play_state),
+            (Console_pb2.BTN_STOP_STOPCUE, transport_state),
+            (Console_pb2.BTN_FF_NEXTCUE, transport_state),
+            (Console_pb2.BTN_REV_LASTCUE, transport_state),
+        ):
+            nm.button_msg_to_x_touch(
+                Console_pb2.button_state_change(button=button, new_state=state),
+            )
+
+    def _connect_xtouch_broadcaster(self) -> None:
+        """Subscribe the preview's play/stop/forward/rev handlers to the broadcaster."""
+        from model.broadcaster import Broadcaster
+        bc = Broadcaster()
+        bc.desk_media_play_pressed.connect(self._xtouch_play_pressed)
+        bc.desk_media_stop_pressed.connect(self._xtouch_stop_pressed)
+        bc.desk_media_forward_pressed.connect(self._xtouch_forward_pressed)
+        bc.desk_media_rev_pressed.connect(self._xtouch_rev_pressed)
+
+    def _disconnect_xtouch_broadcaster(self) -> None:
+        """Unsubscribe from the broadcaster so a closed editor stops receiving XTouch events."""
+        from model.broadcaster import Broadcaster
+        bc = Broadcaster()
+        for sig, slot in (
+            (bc.desk_media_play_pressed, self._xtouch_play_pressed),
+            (bc.desk_media_stop_pressed, self._xtouch_stop_pressed),
+            (bc.desk_media_forward_pressed, self._xtouch_forward_pressed),
+            (bc.desk_media_rev_pressed, self._xtouch_rev_pressed),
+        ):
+            try:
+                sig.disconnect(slot)
+            except (TypeError, RuntimeError):
+                pass
+
     @override
     def _update_terminals(self, filter_node: FilterNode) -> None:
         """No-op override: the property-cue vfilter owns its own output signature.
@@ -306,7 +613,10 @@ class PropertyCueEditor(PreviewEditWidget):
     def _start_preview(self) -> None:
         if self._preview_controller is None or self._preview_button is None or self._preview_active:
             return
-        self._preview_controller.set_playing(True)
+        # Playback starts paused: the XTouch PLAY button toggles it on;
+        # starting playing immediately would make the user chase their own
+        # cursor before they've chosen a step to listen to.
+        self._preview_controller.set_playing(False)
         # ``start`` builds the ``PREVIEW_CONST`` filters, installs the
         # virtual_name → ``PREVIEW_CONST:value`` mapping on the vfilter and
         # flips ``in_preview_mode = True``. Fish needs to see the show with
@@ -318,6 +628,12 @@ class PropertyCueEditor(PreviewEditWidget):
         self._transmit_scene_to_fish()
         self._preview_active = True
         self._preview_button.setText("Stop preview")
+        # Anchor the preview playhead to whatever the user currently has
+        # selected in the cue/step panes, then light the XTouch media
+        # buttons and subscribe to their events.
+        self._preview_push_current_selection()
+        self._connect_xtouch_broadcaster()
+        self._set_media_button_leds(preview_active=True, playing=False)
 
     def _stop_preview(self) -> None:
         if self._preview_controller is None:
@@ -325,6 +641,9 @@ class PropertyCueEditor(PreviewEditWidget):
         was_active = self._preview_active
         self._preview_controller.stop()
         self._preview_active = False
+        if was_active:
+            self._set_media_button_leds(preview_active=False)
+            self._disconnect_xtouch_broadcaster()
         if self._preview_button is not None:
             self._preview_button.setText("Start preview")
         if was_active:

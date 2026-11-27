@@ -642,6 +642,56 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         self.assertNotIn("MH1__strobefreq", mh2_freq_link,
                          f"MH2's strobe pulled MH1's strobefreq: {mh2_freq_link}")
 
+    def test_disabled_capability_drops_assignments(self) -> None:
+        """Regression (L9): disabling a capability in the wizard drops matching assignments.
+
+        Before L9 an old color assignment still produced ``A__color`` after
+        the user unticked "color" in the wizard: the compiler only checked
+        whether the fixture physically supported colour, not whether the
+        user enabled it. The fix skips assignments whose property id is not
+        in ``fixture_selection.enabled_capabilities``.
+        """
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.color_hsi import ColorHSI
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyCueFilterModel,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        model = PropertyCueFilterModel()
+        # Only DIMMER is enabled even though the step carries a stale colour
+        # assignment from a previous authoring pass.
+        model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="A")],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=40, assignments={
+                "fixture:A": PropertyAssignments(
+                    by_property={
+                        "dimmer": ManualPropertyAssignment(
+                            values={"brightness": 0.5, "strobefreq": 0.0},
+                        ),
+                        "color": ManualPropertyAssignment(
+                            values={"colors": {0: ColorHSI(0.0, 1.0, 1.0)}},
+                        ),
+                    },
+                ),
+            }),
+        ]))
+        res = compile_property_model(model, cue_filter_id="pcf_l9", scene=self.scene)
+        channel_names = set(res.channel_specs)
+        self.assertIn("A__brightness_raw", channel_names,
+                      "Enabled dimmer capability must produce brightness_raw")
+        self.assertNotIn("A__color", channel_names,
+                         "Disabled colour capability must not produce colour channels")
+
     def test_cue_length_matches_sum_of_step_durations(self) -> None:
         """Regression (L5): the last step's duration must reach the compiled cue.
 

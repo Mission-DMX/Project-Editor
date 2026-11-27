@@ -107,6 +107,53 @@ class PreviewControllerStopTest(unittest.TestCase):
             "resolve_output_port_id path takes over.",
         )
 
+    def test_rewind_resets_cue_step_and_timecode(self) -> None:
+        """Regression (L11): rewind_to_start pauses and jumps back to cue 0 / t 0."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
+            PreviewController,
+        )
+        _scene, vfilter = _make_scene_and_vfilter()
+        controller = PreviewController(vfilter)
+        # Fake a running state.
+        controller.set_cue_index(3)
+        controller.set_timecode(7.5)
+        controller.set_playing(True)
+        self.assertEqual(3, controller.cue_index)
+        self.assertAlmostEqual(7.5, controller.timecode)
+        self.assertTrue(controller.is_playing)
+
+        controller.rewind_to_start()
+
+        self.assertEqual(0, controller.cue_index)
+        self.assertAlmostEqual(0.0, controller.timecode)
+        self.assertFalse(controller.is_playing)
+
+    def test_toggle_playing_flips_state(self) -> None:
+        """Regression (L11): toggle_playing flips the playing flag and returns the new state."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
+            PreviewController,
+        )
+        _scene, vfilter = _make_scene_and_vfilter()
+        controller = PreviewController(vfilter)
+        self.assertFalse(controller.is_playing)
+        self.assertTrue(controller.toggle_playing())
+        self.assertTrue(controller.is_playing)
+        self.assertFalse(controller.toggle_playing())
+        self.assertFalse(controller.is_playing)
+
+    def test_format_seven_seg_matches_cue_editor(self) -> None:
+        """Regression (L11): 7-seg format matches the existing cue editor's 12-char layout."""
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
+            _format_seven_seg,
+        )
+        # Cue 0, timecode 0 -> "0" + 10-digit zero-padded time + leading-space padding to 12.
+        self.assertEqual(12, len(_format_seven_seg(0, 0.0)))
+        self.assertTrue(_format_seven_seg(0, 0.0).strip().startswith("0"))
+        # Cue 42 should prefix as "42".
+        formatted = _format_seven_seg(42, 1.5)
+        self.assertEqual(12, len(formatted))
+        self.assertTrue(formatted.strip().startswith("42"))
+
     def test_stop_without_prior_start_is_safe(self) -> None:
         """Calling ``stop()`` on a controller that never started must no-op cleanly."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (

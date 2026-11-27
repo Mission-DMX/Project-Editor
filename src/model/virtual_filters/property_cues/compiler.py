@@ -238,6 +238,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                  beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None,
                  color_segment_count_lookup: ColorSegmentCountLookup | None,
                  all_specs: dict[str, ChannelSpec],
+                 enabled_property_ids: set[str] | None = None,
                  ) -> tuple[list[RequestGroup], dict[str, ChannelSpec]]:
     from model.virtual_filters.property_cues._default_specs import property_kwargs_for_fixture
 
@@ -267,6 +268,14 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                 continue
             depth = len([p for p in node_path.split("/") if p])
             for pid, assignment in assignments.by_property.items():
+                # L9: a user can disable a capability in the wizard without
+                # removing the authored assignments. Drop assignments whose
+                # capability is not in ``enabled_property_ids`` so a disabled
+                # colour tab doesn't produce colour output for every selected
+                # fixture. ``enabled_property_ids is None`` means "no filter"
+                # for headless tests that stub the fixture selection.
+                if enabled_property_ids is not None and pid not in enabled_property_ids:
+                    continue
                 for ci, child in matches:
                     key = (child, pid)
                     existing = candidates.get(key)
@@ -613,6 +622,11 @@ def compile_property_model(
         capability_lookup, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
         color_segment_count_lookup,
     )
+    # L9: capabilities the user disabled in the wizard must not emit
+    # channels, even if stale assignments remain on the model. Flatten
+    # enabled_capabilities to string property IDs for a fast ``in`` check
+    # inside the hot per-step loop.
+    enabled_pids = {cap.value for cap in model.fixture_selection.enabled_capabilities}
     per_cue: list[tuple[int, str, list[RequestGroup]]] = []
     for cue_index, cue in enumerate(model.cues):
         groups, specs = _collect_cue(
@@ -620,6 +634,7 @@ def compile_property_model(
             capability_lookup, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
             color_segment_count_lookup,
             all_specs,
+            enabled_property_ids=enabled_pids,
         )
         all_specs.update(specs)
         per_cue.append((cue_index, cue.name or f"Cue {cue_index + 1}", groups))

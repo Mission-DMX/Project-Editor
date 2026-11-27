@@ -467,6 +467,13 @@ class MainWindow(QtWidgets.QMainWindow):
     @override
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._close_now:
+            # L11: interrupt any lingering property-cue preview thread so
+            # Qt doesn't tear the main window down while a worker thread
+            # is still writing updates to the (soon-to-be-gone) scene.
+            from model.virtual_filters.property_cues.preview_runtime import (
+                shutdown_all_preview_threads,
+            )
+            shutdown_all_preview_threads()
             super().closeEvent(event)
             QApplication.processEvents()
             self._broadcaster.application_closing.emit()
