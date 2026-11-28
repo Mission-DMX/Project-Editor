@@ -6,7 +6,27 @@ on:
       - "v*"
 
 jobs:
+  unit_tests:
+    runs-on: [ self-hosted ]
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install project dependencies
+        run: pdm install --dev
+
+      - name: Configure fish binary path for tests
+        run: |
+          echo "FISH_EXEC_PATH = \"$HOME/actions-runner/_work/realtime-fish/realtime-fish/bin/fish\"" > test/unittests/config.py
+
+      - name: Run unit tests
+        run: pdm run make test
+
   build_package:
+    needs: unit_tests
     runs-on: [ self-hosted ]
     steps:
       - uses: actions/checkout@v7
