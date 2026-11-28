@@ -54,7 +54,13 @@ class PropertyEditorBase(QWidget):
         self._property_id = property_id
         self._cue_index: int = 0
         self._step_index: int = 0
-        self._node_path: str = ""
+        # Multi-selection: ``load`` populates this with every node_path the
+        # user selected; _on_apply iterates over the list. A single-selection
+        # caller still passes a string, which normalises to a one-element
+        # list. ``_node_path`` is kept as a property-like alias for test and
+        # read-site compatibility (returns the first path, i.e. the "primary"
+        # one).
+        self._node_paths: list[str] = [""]
 
         self._outer = QVBoxLayout()
         self._mode = ModeToggle()
@@ -119,10 +125,23 @@ class PropertyEditorBase(QWidget):
     def _on_mode_toggle(self, manual: bool) -> None:
         self._stack.setCurrentIndex(0 if manual else 1)
 
-    def load(self, cue_index: int, step_index: int, node_path: str) -> None:
+    @property
+    def _node_path(self) -> str:
+        """Return the primary (first) node_path for backward compatibility."""
+        return self._node_paths[0] if self._node_paths else ""
+
+    @_node_path.setter
+    def _node_path(self, value: str) -> None:
+        """Set the editor to a single-node selection (tests still write to this name)."""
+        self._node_paths = [value]
+
+    def load(self, cue_index: int, step_index: int, node_path: str | list[str]) -> None:
         self._cue_index = cue_index
         self._step_index = step_index
-        self._node_path = node_path
+        if isinstance(node_path, str):
+            self._node_paths = [node_path]
+        else:
+            self._node_paths = list(node_path) if node_path else [""]
         assignment = self._current_assignment()
         if isinstance(assignment, PresetPropertyAssignment):
             self._mode.set_manual(False)
@@ -165,6 +184,7 @@ class PropertyEditorBase(QWidget):
         return TransferFunction.LINEAR.value
 
     def _current_assignment(self) -> PropertyAssignment | None:
+        """Return the assignment for the primary (first) selected node_path."""
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
             return None
         cue = self._model.cues[self._cue_index]
@@ -176,10 +196,10 @@ class PropertyEditorBase(QWidget):
             return None
         return bucket.by_property.get(self._property_id)
 
-    def _ensure_bucket(self) -> PropertyAssignments | None:
-        """Return the assignments bucket for the current (step, node) selection.
+    def _ensure_bucket_for(self, node_path: str) -> PropertyAssignments | None:
+        """Return (or create) the assignments bucket for a specific (step, node) pair.
 
-        ``self._node_path == ""`` represents a step-level assignment that applies to
+        ``node_path == ""`` represents a step-level assignment that applies to
         every selected child; the compiler expands it in :func:`_resolve_path_children`.
         """
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
@@ -188,42 +208,57 @@ class PropertyEditorBase(QWidget):
         if self._step_index < 0 or self._step_index >= len(cue.steps):
             return None
         step = cue.steps[self._step_index]
-        bucket = step.assignments.get(self._node_path)
+        bucket = step.assignments.get(node_path)
         if bucket is None:
             bucket = PropertyAssignments()
-            step.assignments[self._node_path] = bucket
+            step.assignments[node_path] = bucket
         return bucket
 
-    def _on_apply(self) -> None:
-        bucket = self._ensure_bucket()
-        if bucket is None:
-            return
+    def _ensure_bucket(self) -> PropertyAssignments | None:
+        """Return the assignments bucket for the primary node_path (compat shim)."""
+        return self._ensure_bucket_for(self._node_path)
+
+    def _build_assignment(self):  # noqa: ANN202 — returns Manual or Preset assignment
+        """Build the assignment to apply from the current widget state, or ``None``."""
         distribution = self._distribution.distribution()
         if self._mode.is_manual:
-            assignment = ManualPropertyAssignment(
+            return ManualPropertyAssignment(
                 values=self._manual_values(),
                 distribution=distribution,
                 transition=self._current_transition_value(),
             )
-        else:
-            preset_name = self._preset_panel.selected_preset_name()
-            if preset_name is None:
-                return
-            assignment = PresetPropertyAssignment(
-                preset_id=preset_name,
-                hint_values=self._preset_panel.hint_values(),
-                distribution=distribution,
-            )
-        bucket.by_property[self._property_id] = assignment
-        self.applied.emit()
+        preset_name = self._preset_panel.selected_preset_name()
+        if preset_name is None:
+            return None
+        return PresetPropertyAssignment(
+            preset_id=preset_name,
+            hint_values=self._preset_panel.hint_values(),
+            distribution=distribution,
+        )
+
+    def _on_apply(self) -> None:
+        assignment = self._build_assignment()
+        if assignment is None:
+            return
+        # Multi-fixture selection: write the same assignment to every
+        # selected node_path's bucket. For single selection this loops once.
+        touched = False
+        for path in self._node_paths:
+            bucket = self._ensure_bucket_for(path)
+            if bucket is None:
+                continue
+            bucket.by_property[self._property_id] = assignment
+            touched = True
+        if touched:
+            self.applied.emit()
 
     def _on_remove(self) -> None:
-        """pop this property's assignment from the current (step, node) bucket.
+        """Pop this property's assignment from every selected (step, node) bucket.
 
-        No-op if no assignment exists. Empty assignment buckets are left
-        behind — the compiler ignores them, and keeping them lets the user
-        re-apply the same node_path without the bucket having to be
-        recreated.
+        No-op if no assignment exists on any selected path. Empty assignment
+        buckets are left behind — the compiler ignores them, and keeping them
+        lets the user re-apply the same node_path without the bucket having
+        to be recreated.
         """
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
             return
@@ -231,10 +266,14 @@ class PropertyEditorBase(QWidget):
         if self._step_index < 0 or self._step_index >= len(cue.steps):
             return
         step = cue.steps[self._step_index]
-        bucket = step.assignments.get(self._node_path)
-        if bucket is None:
-            return
-        if bucket.by_property.pop(self._property_id, None) is None:
+        touched = False
+        for path in self._node_paths:
+            bucket = step.assignments.get(path)
+            if bucket is None:
+                continue
+            if bucket.by_property.pop(self._property_id, None) is not None:
+                touched = True
+        if not touched:
             return
         # Reset the editor's widgets so what remains on screen matches the
         # now-empty assignment.

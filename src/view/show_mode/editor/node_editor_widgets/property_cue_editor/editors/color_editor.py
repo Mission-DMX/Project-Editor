@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -64,6 +65,12 @@ class ColorEditor(PropertyEditorBase):
         """Initialize the colour editor bound to the given cue filter model."""
         super().__init__(model, "color", parent)
         self._fixtures: list[UsedFixture] = []
+        # Reuse a single QColorDialog across pick clicks. Constructing a new
+        # dialog each time hits the native colour-picker portal on Linux (XDG
+        # portal IPC can stall several hundred ms) and also re-allocates Qt's
+        # own fallback widgets, both of which add visible latency. Forcing
+        # ``DontUseNativeDialog`` keeps every picker inside Qt's own code path.
+        self._color_dialog: QColorDialog | None = None
 
     def _install_manual_widgets(self, layout: QVBoxLayout) -> None:
         # Horizontal row of segment group-boxes so N>1 stays scannable.
@@ -91,6 +98,10 @@ class ColorEditor(PropertyEditorBase):
                 container.setLayout(row)
                 preview = QLabel("")
                 preview.setMinimumWidth(60)
+                # Cap the preview so a large dialog height doesn't let the
+                # colour swatch stretch to fill the whole pane.
+                preview.setMaximumHeight(64)
+                preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 preview.setAutoFillBackground(True)
                 pick = QPushButton("Pick colour...")
                 row.addWidget(preview)
@@ -104,12 +115,23 @@ class ColorEditor(PropertyEditorBase):
                 preview = QLabel("")
                 preview.setMinimumWidth(60)
                 preview.setMinimumHeight(24)
+                preview.setMaximumHeight(64)
+                preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 preview.setAutoFillBackground(True)
                 pick = QPushButton("Pick...")
                 col.addWidget(preview)
                 col.addWidget(pick)
+                # Copy this segment's colour to every other segment in the
+                # same fixture. Useful when the user wants a single uniform
+                # hue across all segments without clicking through the
+                # picker N times.
+                apply_all = QPushButton("Apply to all others")
+                col.addWidget(apply_all)
                 self._segment_layout.addWidget(group)
                 block = _SegmentBlock(group, preview, pick)
+                apply_all.clicked.connect(
+                    lambda _checked=False, b=block: self._on_apply_to_all_others(b),
+                )
             pick.clicked.connect(lambda _checked=False, b=block: self._on_pick(b))
             block.apply_color(ColorHSI(0.0, 0.0, 0.0))
             self._segment_blocks.append(block)
@@ -133,10 +155,35 @@ class ColorEditor(PropertyEditorBase):
                     block.apply_color(preserved[i])
 
     def _on_pick(self, block: _SegmentBlock) -> None:
-        picked = QColorDialog.getColor(block.color.to_qt_color(), self, "Pick colour")
+        dialog = self._ensure_color_dialog()
+        dialog.setCurrentColor(block.color.to_qt_color())
+        if dialog.exec() != QColorDialog.DialogCode.Accepted:
+            return
+        picked = dialog.selectedColor()
         if not picked.isValid():
             return
         block.apply_color(ColorHSI.from_qt_color(picked))
+
+    def _ensure_color_dialog(self) -> QColorDialog:
+        """Lazily build a reusable, non-native colour dialog.
+
+        The native XDG colour-picker portal on Linux stalls on IPC round trips
+        and the native fallback allocates heavy widget trees on every open;
+        reusing one Qt-native dialog drops the picker latency to one frame.
+        """
+        if self._color_dialog is None:
+            dialog = QColorDialog(self)
+            dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, on=True)
+            dialog.setWindowTitle("Pick colour")
+            self._color_dialog = dialog
+        return self._color_dialog
+
+    def _on_apply_to_all_others(self, source: _SegmentBlock) -> None:
+        """Copy ``source``'s current colour to every other segment of this fixture."""
+        for block in self._segment_blocks:
+            if block is source:
+                continue
+            block.apply_color(source.color)
 
     def _manual_values(self) -> dict[str, Any]:
         return {"colors": {i: block.color.copy() for i, block in enumerate(self._segment_blocks)}}

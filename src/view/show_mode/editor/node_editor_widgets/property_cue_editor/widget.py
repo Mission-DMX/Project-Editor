@@ -146,8 +146,10 @@ class PropertyCueEditor(PreviewEditWidget):
         if self._preview_active:
             self._preview_push_current_selection()
 
-    def _on_step_tree_selection_changed(self, _step_index: int, _node_path: str) -> None:
-        """L11: when the user picks a step in the tree, jump the preview to that step's start."""
+    def _on_step_tree_selection_changed(
+        self, _step_index: int, _node_paths: list[str],
+    ) -> None:
+        """When the user picks a step/fixture(s) in the tree, jump the preview to that step's start."""
         if self._preview_active:
             self._preview_push_current_selection()
 

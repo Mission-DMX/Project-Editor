@@ -74,19 +74,25 @@ def build_preview_filters(
 ) -> dict[str, str]:
     """Instantiate the preview filter graph and return the output-port mapping.
 
-    For every virtual output port that the production serializer would resolve
-    to a channel on the native cue filter, a ``FILTER_CONSTANT_*`` with id
-    ``{cue_fid}__PREVIEW_CONST__{canonical}`` takes the cue filter's place and
-    the preview thread writes per-tick values into it. The postprocess chain
-    (sin/cos/switch/range for pan/tilt, strobe-fold for dimmer, etc.) is
-    *cloned* into the preview scene with its channel_links rewritten to read
-    from those PREVIEW_CONSTs, so synthesized outputs like ``X__pan`` keep
-    being produced by the same chain the production show runs -- the only
-    difference is that the chain's raw inputs now come from the preview
-    constants rather than the native cue filter.
+    Materialises one ``FILTER_CONSTANT_*`` named
+    ``{cue_fid}__PREVIEW_CONST__{canonical}`` for **every** canonical the
+    compile knows about -- including canonicals the compiler would normally
+    evict as "defaulted" (no keyframes anywhere) and replace with a
+    standalone ``__CONST__`` outside the writable set. In preview mode we
+    want every channel the thread may push against to resolve to a filter
+    that fish actually has in the serialized scene, so the eviction is
+    reversed here: the standalone CONSTs are dropped from the clone pass
+    and the PREVIEW_CONSTs take their place.
 
-    The returned mapping covers **both** raw virtual names (``X__color``,
-    ``X__pan_value``, ...) and synthesized virtual names (``X__pan``,
+    The postprocess chain (sin/cos/switch/range for pan/tilt, strobe-fold
+    for dimmer, colour→wheel, etc.) is cloned into the preview scene with
+    every ``{cue_fid}:{raw}`` and ``{cue_fid}__CONST__{canonical}:value``
+    channel_link rewritten to read from the matching PREVIEW_CONST, so
+    synthesised outputs like ``X__pan`` keep being produced by the same
+    chain the production show runs.
+
+    The returned mapping covers **both** raw virtual names (``X__color_0``,
+    ``X__pan_value``, ...) and synthesised virtual names (``X__pan``,
     ``X__brightness``, ...), so ``PreviewFilter.resolve_output_port_id``
     always finds a downstream-visible filter to point to.
     """
@@ -95,43 +101,71 @@ def build_preview_filters(
     specs = res.channel_specs
     consolidation = res.consolidation
 
-    # Pass 1 — walk the compile's external_ports. Entries that still point at
-    # the native cue filter (``port_fid == cue_fid``) materialise a
-    # PREVIEW_CONST on demand; everything else (defaulted CONSTs, strategy
-    # outputs) already resolves to something we're going to emit, so we
-    # just copy the reference through unchanged.
+    # Pass 1 — materialise a PREVIEW_CONST per canonical channel.
+    #
+    # Iterating the deduplicated, sorted canonical set keeps two compile
+    # runs of the same model producing bit-identical filter ids. We emit
+    # one PREVIEW_CONST per canonical even when the compile marked it as
+    # defaulted, so every mapping entry the preview thread later pushes
+    # to lands on a filter fish has.
     canonical_to_const_id: dict[str, str] = {}
+    canonicals = sorted({consolidation.canonical(n) for n in specs})
+    for canonical in canonicals:
+        # The canonical (``min(members)`` from consolidation) is itself a
+        # virtual_name that lives in ``specs``; no fallback needed.
+        spec = specs.get(canonical)
+        if spec is None:
+            continue
+        const_type = _CONSTANT_FILTER_TYPE.get(
+            spec.data_type, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+        )
+        const_id = f"{cue_fid}__PREVIEW_CONST__{canonical}"
+        const_filter = Filter(scene, const_id, filter_type=int(const_type), pos=vfilter.pos)
+        # Seed with the spec's default (or a sensible per-type zero) so
+        # fish accepts the filter at configure time. Live cues override
+        # this on the first preview tick anyway.
+        const_filter.initial_parameters["value"] = (
+            spec.default_value or _DEFAULT_VALUE_FOR_DT.get(spec.data_type, "0")
+        )
+        filter_list.append(const_filter)
+        canonical_to_const_id[canonical] = const_id
+
+    # Build the virtual_name → "{const_id}:value" mapping. Every virtual
+    # port whose canonical we just materialised resolves to that
+    # PREVIEW_CONST, regardless of what the compile's production
+    # ``external_ports`` entry would have been (cue filter, defaulted
+    # CONST, or passthrough). The thread writes "value" into exactly
+    # those PREVIEW_CONSTs.
     mapping: dict[str, str] = {}
+    for virtual_name in specs:
+        canonical = consolidation.canonical(virtual_name)
+        const_id = canonical_to_const_id.get(canonical)
+        if const_id is not None:
+            mapping[virtual_name] = f"{const_id}:value"
+    # Also publish strategy-level virtual names (``{prefix}__color``,
+    # ``{prefix}__pan``, etc.) that resolve to a post-processed strategy
+    # output. The thread never writes to these (it feeds raw inputs into
+    # the chain), but ``PreviewFilter.resolve_output_port_id`` reads this
+    # map to tell downstream wiring where to source each virtual output.
     for virtual_name, (port_fid, port_ch) in res.external_ports.items():
+        if virtual_name in mapping:
+            continue
         if port_fid != cue_fid:
             mapping[virtual_name] = f"{port_fid}:{port_ch}"
-            continue
-        canonical = port_ch
-        if canonical not in canonical_to_const_id:
-            spec = specs.get(canonical) or specs.get(virtual_name)
-            if spec is None:
-                continue
-            const_type = _CONSTANT_FILTER_TYPE.get(
-                spec.data_type, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-            )
-            const_id = f"{cue_fid}__PREVIEW_CONST__{canonical}"
-            const_filter = Filter(scene, const_id, filter_type=int(const_type), pos=vfilter.pos)
-            # Seed with the spec's default (or a sensible per-type zero) so
-            # fish accepts the filter at configure time. Live cues override
-            # this on the first preview tick anyway.
-            const_filter.initial_parameters["value"] = (
-                spec.default_value or _DEFAULT_VALUE_FOR_DT.get(spec.data_type, "0")
-            )
-            filter_list.append(const_filter)
-            canonical_to_const_id[canonical] = const_id
-        mapping[virtual_name] = f"{canonical_to_const_id[canonical]}:value"
 
-    # Pass 2 — clone the postprocess chain into the preview scene and rewrite
-    # every ``{cue_fid}:{canonical}`` channel_link to read from the matching
-    # PREVIEW_CONST we just created. References to the compile's ``CONST``
-    # filters (defaulted canonicals) start with ``{cue_fid}__CONST__``, not
-    # ``{cue_fid}:``, so the startswith guard leaves them untouched.
+    # Pass 2 — clone the postprocess chain into the preview scene.
+    #
+    # Skip the compiler's standalone ``__CONST__`` filters for defaulted
+    # canonicals: the matching PREVIEW_CONST from pass 1 covers the same
+    # channel, and cloning both would leave fish with two filters driving
+    # the same stream. Every clone's channel_links are rewritten so cue
+    # filter references (``{cue_fid}:raw``) and standalone CONST references
+    # (``{cue_fid}__CONST__{canonical}:value``) both route to the matching
+    # PREVIEW_CONST.
+    defaulted_const_ids = {f"{cue_fid}__CONST__{canonical}" for canonical in canonicals}
     for pp_src in res.postprocess_filters:
+        if pp_src.filter_id in defaulted_const_ids:
+            continue
         pp_clone = construct_filter_instance(
             scene=scene,
             filter_type=int(pp_src.filter_type),
@@ -160,16 +194,32 @@ def _preview_rewrite(
     source: str, cue_fid: str,
     consolidation: ConsolidationMap, canonical_to_const_id: dict[str, str],
 ) -> str:
-    """Rewrite one strategy channel_link from cue-filter ref to PREVIEW_CONST ref."""
+    """Rewrite one strategy channel_link to point at a PREVIEW_CONST.
+
+    Handles both forms of reference the compiler emits:
+
+    * ``{cue_fid}:{raw}`` -- a direct cue-filter raw-channel read; replaced
+      by the PREVIEW_CONST matching ``consolidation.canonical(raw)``.
+    * ``{cue_fid}__CONST__{canonical}:value`` -- the compiler's standalone
+      CONST for a defaulted canonical. In preview the standalone CONST is
+      not cloned into the scene, so we redirect to the same canonical's
+      PREVIEW_CONST.
+    """
     if not source:
         return source
-    prefix = f"{cue_fid}:"
-    if not source.startswith(prefix):
-        return source
-    local = source[len(prefix):]
-    canonical = consolidation.canonical(local)
-    const_id = canonical_to_const_id.get(canonical)
-    return f"{const_id}:value" if const_id else source
+    const_marker = f"{cue_fid}__CONST__"
+    if source.startswith(const_marker):
+        rest = source[len(const_marker):]
+        canonical, _, _ = rest.partition(":")
+        const_id = canonical_to_const_id.get(canonical)
+        return f"{const_id}:value" if const_id else source
+    cue_prefix = f"{cue_fid}:"
+    if source.startswith(cue_prefix):
+        local = source[len(cue_prefix):]
+        canonical = consolidation.canonical(local)
+        const_id = canonical_to_const_id.get(canonical)
+        return f"{const_id}:value" if const_id else source
+    return source
 
 
 def _pick_cue(vfilter: PropertyBasedCueFilter, index: int) -> Cue | None:

@@ -85,20 +85,20 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertEqual(3, tree.topLevelItemCount())
 
     def test_selection_signal(self) -> None:
-        """Verify selection_changed emits step index and node path on item clicks."""
+        """Verify selection_changed emits step index and node path list on item clicks."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
         )
         model = _make_model(fixture_ids=["F1"], cue_specs=[[("s0", 40, 0)]])
         tree = StepFixtureTree(model)
         tree.set_current_cue(0)
-        emissions: list[tuple[int, str]] = []
-        tree.selection_changed.connect(lambda si, np: emissions.append((si, np)))
+        emissions: list[tuple[int, list[str]]] = []
+        tree.selection_changed.connect(lambda si, nps: emissions.append((si, list(nps))))
         child = tree.topLevelItem(0).child(0)
         tree._on_item_clicked(child, 0)
-        self.assertEqual([(0, "fixture:F1")], emissions)
+        self.assertEqual([(0, ["fixture:F1"])], emissions)
         tree._on_item_clicked(tree.topLevelItem(0), 0)
-        self.assertEqual([(0, "fixture:F1"), (0, "")], emissions)
+        self.assertEqual([(0, ["fixture:F1"]), (0, [""])], emissions)
 
     def test_frost_column_is_present(self) -> None:
         """Regression: the tree must include a Frost summary column."""
@@ -119,11 +119,11 @@ class StepFixtureTreeTests(unittest.TestCase):
         model = _make_model(fixture_ids=["F1"], cue_specs=[[("s0", 40, 0), ("s1", 40, 0)]])
         tree = StepFixtureTree(model)
         tree.set_current_cue(0)
-        emissions: list[tuple[int, str]] = []
-        tree.selection_changed.connect(lambda si, np: emissions.append((si, np)))
+        emissions: list[tuple[int, list[str]]] = []
+        tree.selection_changed.connect(lambda si, nps: emissions.append((si, list(nps))))
         # setCurrentItem fires currentItemChanged which the tree now handles.
         tree.setCurrentItem(tree.topLevelItem(1))
-        self.assertIn((1, ""), emissions)
+        self.assertIn((1, [""]), emissions)
 
     def test_select_step_programmatic(self) -> None:
         """Regression: select_step moves the selection to (cue, step)."""
@@ -566,6 +566,64 @@ class PropertyPaneTests(unittest.TestCase):
         bucket = model.cues[0].steps[0].assignments[""]
         self.assertIsInstance(bucket.by_property["dimmer"], ManualPropertyAssignment)
         self.assertEqual(0.5, bucket.by_property["dimmer"].values["brightness"])
+
+    def test_multi_fixture_apply_writes_to_each_bucket(self) -> None:
+        """Multi-selection apply writes the same assignment to every selected fixture."""
+        from model.virtual_filters.property_cues.model.property_step import ManualPropertyAssignment
+        model = _make_model(fixture_ids=["F1", "F2"], cue_specs=[[("s0", 40, 0)]])
+        from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.property_pane import PropertyPane
+        model.fixture_selection.enabled_capabilities = set(EnabledCapability)
+        pane = PropertyPane(model)
+        pane.set_current_cue(0)
+        pane.show_editor(0, ["fixture:F1", "fixture:F2"])
+        editor = pane._editors["dimmer"]
+        editor._brightness.setValue(0.4)
+        editor._on_apply()
+        for node_path in ("fixture:F1", "fixture:F2"):
+            bucket = model.cues[0].steps[0].assignments[node_path]
+            assignment = bucket.by_property["dimmer"]
+            self.assertIsInstance(assignment, ManualPropertyAssignment)
+            self.assertEqual(0.4, assignment.values["brightness"])
+
+    def test_multi_fixture_capability_filter_uses_intersection(self) -> None:
+        """When several fixtures are selected, tabs enable only on the common capability subset."""
+        from unittest.mock import MagicMock
+        from model.ofl.ofl_fixture import WheelSlotType
+        from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.property_pane import PropertyPane
+
+        # ``WASH`` has colour but no gobo; ``SPOT`` has gobo but no colour.
+        colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
+        colour_wheel = MagicMock(); colour_wheel.slots = [colour_slot]
+        wash_fixture = MagicMock()
+        wash_fixture._fixture = MagicMock(); wash_fixture._fixture.wheels = {"Colour Wheel": colour_wheel}
+        wash_fixture.fixture_channels = ()
+
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        gobo_slot.name = "Dot"; gobo_slot.pixmap.return_value = None
+        gobo_wheel = MagicMock(); gobo_wheel.slots = [gobo_slot]
+        spot_fixture = MagicMock()
+        spot_fixture._fixture = MagicMock(); spot_fixture._fixture.wheels = {"Gobo Wheel": gobo_wheel}
+        spot_fixture.fixture_channels = ()
+
+        model = _make_model(fixture_ids=["WASH", "SPOT"], cue_specs=[[("s0", 40, 0)]])
+        model.fixture_selection.enabled_capabilities = {EnabledCapability.GOBO, EnabledCapability.COLOR}
+
+        def lookup(node_path: str):
+            if node_path == "fixture:WASH":
+                return [wash_fixture]
+            if node_path == "fixture:SPOT":
+                return [spot_fixture]
+            return []
+
+        pane = PropertyPane(model, fixture_lookup=lookup)
+        pane.set_current_cue(0)
+        # Both fixtures selected: neither colour (SPOT lacks it) nor gobo (WASH
+        # lacks it) is common, so both tabs stay disabled under the intersection.
+        pane.show_editor(0, ["fixture:WASH", "fixture:SPOT"])
+        self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["gobo"]))
+        self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["color"]))
 
 
 @unittest.skipUnless(_HAS_PYSIDE, "PySide6 required")

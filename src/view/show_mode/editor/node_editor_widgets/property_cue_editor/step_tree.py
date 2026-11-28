@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHeaderView, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTreeWidget, QTreeWidgetItem
 
 from model.virtual_filters.property_cues._property_registry import properties_in_order
 from model.virtual_filters.property_cues.model.fixture_selection import SelectionEntryKind
@@ -113,7 +113,12 @@ def _summary_cells(step: PropertyStep, node_path: str) -> list[str]:
 class StepFixtureTree(QTreeWidget):
     """Tree of steps and selected fixtures/groups with per-property summary columns."""
 
-    selection_changed = Signal(int, str)
+    # Emits (step_index, node_paths). ``node_paths`` is always a list with at
+    # least one entry: an empty string for step-level selection, otherwise one
+    # or more fixture/group node paths. Multi-selection across different steps
+    # is collapsed to the current item's step so the property pane always has
+    # a single step to edit.
+    selection_changed = Signal(int, list)
 
     def __init__(
         self,
@@ -133,6 +138,11 @@ class StepFixtureTree(QTreeWidget):
         self._current_cue_index: int = -1
         self.setColumnCount(len(_COLUMNS))
         self.setHeaderLabels(list(_COLUMNS))
+        # Allow Ctrl/Shift-click to select multiple fixture rows under the
+        # same step. Multi-selection is collapsed to a common step when the
+        # selection is emitted, so the property pane still edits one step at
+        # a time -- the fixture rows merely tell it to apply to several.
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         # Let the Name column swallow any extra window width; the other
         # columns (fade-in + per-property summaries) stay sized to their
         # content so narrow values like "-" don't waste space.
@@ -244,10 +254,34 @@ class StepFixtureTree(QTreeWidget):
 
     def _emit_selection_for(self, item: QTreeWidgetItem) -> None:
         step_index = item.data(0, _ROLE_STEP_INDEX)
-        node_path = item.data(0, _ROLE_NODE_PATH)
+        primary_path = item.data(0, _ROLE_NODE_PATH)
         if step_index is None:
             return
-        self.selection_changed.emit(int(step_index), str(node_path or ""))
+        step_idx = int(step_index)
+        primary = str(primary_path or "")
+        # A step-row selection is always single: mixing a step row with
+        # fixture rows under it would be ambiguous (apply to step vs. apply
+        # to fixtures), so collapse to just the step row.
+        if primary == "":
+            self.selection_changed.emit(step_idx, [""])
+            return
+        # Multi-selection: gather all selected fixture rows that live under
+        # the same step as the current item. Rows under other steps are
+        # ignored so the receiver never has to reason about cross-step edits.
+        paths: list[str] = [primary]
+        for sel in self.selectedItems():
+            if sel is item:
+                continue
+            sel_step = sel.data(0, _ROLE_STEP_INDEX)
+            sel_path = sel.data(0, _ROLE_NODE_PATH)
+            if sel_step is None or sel_path in (None, ""):
+                continue
+            if int(sel_step) != step_idx:
+                continue
+            sel_str = str(sel_path)
+            if sel_str not in paths:
+                paths.append(sel_str)
+        self.selection_changed.emit(step_idx, paths)
 
     def current_step_index(self) -> int:
         """Return the step index of the current selection, or -1 if nothing is selected."""

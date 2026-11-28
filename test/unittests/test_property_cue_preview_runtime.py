@@ -315,6 +315,105 @@ class BuildPreviewFiltersTests(unittest.TestCase):
         self.assertIn("MH1__pan", mapping)
         self.assertIn("MH1__tilt", mapping)
 
+    def test_every_mapping_target_exists_in_the_emitted_graph(self) -> None:
+        """Regression: every mapping value must point at a filter the preview emits.
+
+        When cue 1 writes a given channel but cue 2 does not, the preview
+        thread still reads cue 2's combined keyframes (populated with the
+        channel's spec default per slot) and tries to push a value for that
+        canonical's PREVIEW_CONST on every tick. If the compile marked the
+        canonical as defaulted (no frames anywhere) OR the mapping routed
+        through a non-PREVIEW_CONST filter id, fish complained with
+        ``The requested scene does not contain the requested filter
+        'Property Cues.0__PREVIEW_CONST__...'``.
+
+        The fix emits a PREVIEW_CONST per canonical regardless of the
+        compiler's eviction decision, and routes every mapping entry
+        through that PREVIEW_CONST. This test pins the invariant against a
+        two-cue model where cue 2 only authors colour -- all the brightness
+        / strobe / position / gobo channels from cue 1 must still resolve
+        to filters the serializer would emit.
+        """
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.preview_runtime import (
+            build_preview_filters,
+        )
+        from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
+
+        scene = _make_scene()
+        vfilter = PropertyBasedCueFilter(scene, "Property Cues.0")
+        vfilter.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={
+                EnabledCapability.DIMMER,
+                EnabledCapability.COLOR,
+                EnabledCapability.POSITION,
+            },
+        )
+        vfilter.property_model.cues.append(PropertyCue(name="Cue 1", steps=[
+            PropertyStep(name="s0", duration_40hz=400, assignments={
+                "fixture:MH1": PropertyAssignments(by_property={
+                    "dimmer": ManualPropertyAssignment(values={
+                        "brightness": 0.0, "strobefreq": 0.0, "duty_cycle": 128.0,
+                    }),
+                    "position": ManualPropertyAssignment(values={
+                        "pan_value": 0.5, "pan_curvesel": 0,
+                        "tilt_value": 0.5, "tilt_curvesel": 0,
+                    }),
+                }),
+            }),
+        ]))
+        vfilter.property_model.cues.append(PropertyCue(name="Cue 2", steps=[
+            PropertyStep(name="color-only", duration_40hz=40, assignments={
+                "fixture:MH1": _manual_colour(120.0, 1.0, 0.5),
+            }),
+        ]))
+
+        collected: list = []
+        mapping = build_preview_filters(vfilter, scene, collected)
+
+        emitted_filter_ids = {f.filter_id for f in collected}
+        for virtual_port, mapped in mapping.items():
+            target = mapped.split(":", 1)[0]
+            self.assertIn(
+                target, emitted_filter_ids,
+                f"mapping['{virtual_port}'] = '{mapped}' points at filter "
+                f"'{target}' which the preview did not emit. The preview "
+                f"thread would push to this filter and fish would log "
+                f"\"scene does not contain the requested filter\". "
+                f"Emitted: {sorted(emitted_filter_ids)}",
+            )
+
+        # Every virtual_port backed by a ChannelSpec should resolve to a
+        # PREVIEW_CONST (not the compiler's standalone __CONST__). This
+        # ensures the preview thread can actually write to every channel
+        # the vfilter publishes.
+        specs = vfilter._last_compile.channel_specs
+        consolidation = vfilter._last_compile.consolidation
+        for virtual_port in specs:
+            mapped = mapping.get(virtual_port)
+            self.assertIsNotNone(
+                mapped,
+                f"Channel '{virtual_port}' has a spec but no preview mapping.",
+            )
+            canonical = consolidation.canonical(virtual_port)
+            expected_const_id = f"Property Cues.0__PREVIEW_CONST__{canonical}"
+            self.assertEqual(
+                f"{expected_const_id}:value", mapped,
+                f"Channel '{virtual_port}' should route through its canonical's "
+                f"PREVIEW_CONST, not through a defaulted __CONST__ or the "
+                f"native cue filter.",
+            )
+
 
 @unittest.skipUnless(_HAS_PYSIDE, "Preview runtime requires PySide6")
 class PreviewThreadLifecycleTests(unittest.TestCase):

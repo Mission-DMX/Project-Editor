@@ -57,7 +57,7 @@ class PropertyPane(QWidget):
         self._fixture_lookup = fixture_lookup or (lambda _np: [])
         self._cue_index: int = -1
         self._step_index: int = -1
-        self._node_path: str = ""
+        self._node_paths: list[str] = [""]
 
         root = QVBoxLayout()
         self.setLayout(root)
@@ -118,29 +118,60 @@ class PropertyPane(QWidget):
         """Re-evaluate which tabs are enabled from the current fixture selection."""
         self._apply_capability_filter()
 
-    def show_editor(self, step_index: int, node_path: str) -> None:
-        """Switch the pane to display editors for the given step and fixture node."""
+    def show_editor(self, step_index: int, node_paths: str | list[str]) -> None:
+        """Switch the pane to display editors for the given step and fixture node(s).
+
+        ``node_paths`` may be either a single node path (for single-selection
+        callers and tests) or a list of node paths; a list of length >1 drives
+        multi-fixture editing where Apply writes the same assignment to every
+        listed node_path and the tab availability shrinks to the common
+        capability subset.
+        """
+        paths = (
+            [node_paths]
+            if isinstance(node_paths, str)
+            else list(node_paths) if node_paths else [""]
+        )
         self._step_index = step_index
-        self._node_path = node_path
+        self._node_paths = paths
         if self._cue_index < 0 or step_index < 0:
             self._placeholder.setVisible(True)
             self._top_stack.setVisible(False)
             self._tabs.setVisible(False)
             return
         self._placeholder.setVisible(False)
-        if node_path == "":
+        primary = paths[0]
+        is_step_level = all(p == "" for p in paths)
+        if is_step_level:
             self._top_stack.setCurrentWidget(self._step_editor)
             self._step_editor.load(self._cue_index, step_index)
             self._top_stack.setVisible(True)
         else:
             self._top_stack.setCurrentWidget(self._top_blank)
             self._top_stack.setVisible(False)
-        fixtures = self._fixture_lookup(node_path)
+        # Collect fixtures from every selected node_path. Multi-selection
+        # with fixtures gates tabs by the INTERSECTION of per-path
+        # capabilities so a tab only shows up when every selected fixture
+        # supports it; single-path selection keeps the previous behaviour
+        # (per-fixture union).
+        fixtures: list[UsedFixture] = []
+        common_caps: set[str] | None = None
+        if is_step_level:
+            fixtures = self._fixture_lookup(primary)
+        elif len(paths) > 1:
+            per_path_caps: list[set[str]] = []
+            for p in paths:
+                fx_list = self._fixture_lookup(p)
+                fixtures.extend(fx_list)
+                per_path_caps.append(discover_capabilities(fx_list))
+            common_caps = set.intersection(*per_path_caps) if per_path_caps else set()
+        else:
+            fixtures = self._fixture_lookup(primary)
         self._editors["gobo"].set_fixtures(fixtures)
         self._editors["color"].set_fixtures(fixtures)
-        self._apply_capability_filter(fixtures)
+        self._apply_capability_filter(fixtures, common_caps=common_caps)
         for prop_id, editor in self._editors.items():
-            editor.load(self._cue_index, step_index, node_path)
+            editor.load(self._cue_index, step_index, paths if len(paths) > 1 else primary)
             # Reflect loaded state in the tab label (prefix * if an assignment exists).
             index = self._tab_indices[prop_id]
             has_assignment = editor._current_assignment() is not None
@@ -148,17 +179,26 @@ class PropertyPane(QWidget):
             self._tabs.setTabText(index, f"* {label}" if has_assignment else label)
         self._tabs.setVisible(True)
 
-    def _apply_capability_filter(self, fixtures: list[UsedFixture] | None = None) -> None:
+    def _apply_capability_filter(
+        self,
+        fixtures: list[UsedFixture] | None = None,
+        common_caps: set[str] | None = None,
+    ) -> None:
         """Gate tabs by the selection's enabled capabilities AND per-fixture availability.
 
         When ``fixtures`` is empty we only check the global enabled set so tabs
         remain visible after fixture configuration but before a specific node is
-        clicked.
+        clicked. ``common_caps``, when provided, overrides the per-fixture
+        discovery with a pre-computed intersection (used by multi-fixture
+        selection to require every selected fixture to support a capability).
         """
         enabled = set(self._model.fixture_selection.enabled_capabilities)
         # ``discover_capabilities`` returns capability tags (strings) so the
         # OFL helper does not depend on the vfilter's EnabledCapability enum.
-        per_selection = discover_capabilities(fixtures) if fixtures else None
+        if common_caps is not None:
+            per_selection: set[str] | None = common_caps
+        else:
+            per_selection = discover_capabilities(fixtures) if fixtures else None
         for prop_id, _label, cap in _PROPERTY_ORDER:
             allowed = cap in enabled
             if allowed and per_selection is not None:
