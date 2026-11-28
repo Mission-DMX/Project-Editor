@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
 from typing import TYPE_CHECKING, Self
 
-import numpy as np
 from PySide6 import QtCore, QtNetwork
 from PySide6.QtCore import QTimer
 
@@ -32,6 +30,35 @@ if TYPE_CHECKING:
     from model.universe import Universe
 
 logger = getLogger(__name__)
+
+
+class _VarintIncompleteError(Exception):
+    """Raised by :func:`_read_varint` when the buffer runs out mid-varint."""
+
+
+def _read_varint(buf: bytes, offset: int) -> tuple[int, int]:
+    """Read one little-endian protobuf-style varint starting at ``offset``.
+
+    Returns ``(value, bytes_consumed)``. Raises :class:`_VarintIncompleteError`
+    if ``buf`` ends before the varint's continuation bit clears (i.e.
+    the header is split across two socket reads). Raises
+    :class:`ValueError` if the varint would exceed the 10-byte cap
+    (indicating actual stream corruption rather than a chunk boundary).
+    """
+    value = 0
+    shift = 0
+    pos = offset
+    while True:
+        if pos >= len(buf):
+            raise _VarintIncompleteError
+        byte = buf[pos]
+        pos += 1
+        value |= (byte & 0x7F) << shift
+        if not (byte & 0x80):
+            return value, pos - offset
+        shift += 7
+        if shift >= 70:  # 10 bytes * 7 bits = 70; anything more is malformed
+            raise ValueError(f"varint overflow at offset {offset}")
 
 
 class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
@@ -86,6 +113,16 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         x_touch.XTouchMessages(self._broadcaster, self.button_msg_to_x_touch)
         self._gui_update_ready_queue: list[proto.FilterMode_pb2.update_parameter] = []
         self._in_ready_wait_mode: bool = False
+        # Buffer for partial messages: ``readyRead`` can fire with less
+        # than one framing header's worth of bytes, and fish's 55 Hz
+        # state updates reliably straddle chunk boundaries once the
+        # scene is live. The previous implementation lost sync the
+        # first time that happened and interpreted every subsequent
+        # byte as a message type -- yielding the sporadic
+        # ``Received not implemented message type: 95 / 110 / ...``
+        # warnings and dropping the GUI connection for the rest of
+        # the show.
+        self._read_buffer: bytes = b""
 
     @property
     def is_running(self) -> bool:
@@ -236,17 +273,26 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._message_queue.put((msg, msg_type))
 
     def _on_ready_read(self) -> None:
-        """Process incoming data."""
-        msg_bytes = self._socket.readAll()
-        while len(msg_bytes) > 0:
-            try:
-                msg_type = varint.decode_bytes(bytes(msg_bytes[0]))
-                msg_len = varint.decode_bytes(bytes(msg_bytes[1:]))
-            except EOFError:
-                self.disconnect()
-            start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
-            msg = msg_bytes[start : start + msg_len]
-            msg_bytes = msg_bytes[start + msg_len :]
+        """Process incoming data.
+
+        Fish writes each message as ``varint(msg_type) + varint(msg_len) + body``
+        and emits one ``write_data`` call per message. On the Python side
+        ``QLocalSocket.readyRead`` can still deliver less than a full message
+        (or several messages concatenated) because the stream is coalesced by
+        the kernel. This loop keeps a persistent ``_read_buffer`` and decodes
+        however many complete messages it finds -- anything incomplete stays
+        in the buffer for the next ``readyRead``.
+        """
+        chunk = bytes(self._socket.readAll())
+        if not chunk:
+            return
+        self._read_buffer += chunk
+        while True:
+            parsed = self._try_parse_one_message(self._read_buffer)
+            if parsed is None:
+                break  # need more bytes to complete the next message
+            msg_type, msg, consumed = parsed
+            self._read_buffer = self._read_buffer[consumed:]
             try:
                 match msg_type:
                     case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
@@ -304,6 +350,27 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             except Exception as e:
                 logger.exception("Failed to parse message.", exc_info=e, stack_info=True)
         self.push_messages()
+
+    @staticmethod
+    def _try_parse_one_message(buf: bytes) -> tuple[int, bytes, int] | None:
+        """Extract one complete fish message from ``buf``.
+
+        Returns ``(msg_type, body, bytes_consumed)`` when ``buf`` holds at
+        least one complete message, or ``None`` when the buffer ends
+        mid-framing-header or mid-body. Mid-varint reads raise no
+        exception: the caller keeps the buffer and waits for the next
+        chunk to arrive on ``readyRead``.
+        """
+        try:
+            msg_type, type_len = _read_varint(buf, 0)
+            msg_len, len_len = _read_varint(buf, type_len)
+        except _VarintIncompleteError:
+            return None
+        header_len = type_len + len_len
+        end = header_len + msg_len
+        if len(buf) < end:
+            return None
+        return msg_type, buf[header_len:end], end
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """Return the current state of Fish.

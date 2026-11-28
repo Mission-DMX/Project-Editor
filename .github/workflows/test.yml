@@ -35,4 +35,34 @@ jobs:
             echo "No Python files changed."
           fi
 
+  unit_tests:
+    # Unit tests run on the self-hosted Debian runner so the Qt / OpenCV / SDL
+    # stack can be provisioned once at the host level instead of being
+    # reinstalled on every CI invocation.
+    runs-on: [ self-hosted ]
+    env:
+      # The runner is headless -- route every Qt widget call to the offscreen
+      # platform plugin so QApplication / QWidget construction in the tests
+      # works without a real display server.
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install project dependencies
+        # pytest lives in the dev dependency group, so ``--dev`` pulls it in
+        # together with the rest of the project requirements.
+        run: pdm install --dev
+
+      - name: Configure fish binary path for tests
+        # ``test/unittests/utilities.py`` imports FISH_EXEC_PATH from a local
+        # (git-ignored) config.py. The self-hosted runner has a pre-built fish
+        # binary from the sibling realtime-fish checkout; point the tests at it.
+        run: |
+          echo "FISH_EXEC_PATH = \"$HOME/actions-runner/_work/realtime-fish/realtime-fish/bin/fish\"" > test/unittests/config.py
+
+      - name: Run unit tests
+        run: pdm run make test
+
 

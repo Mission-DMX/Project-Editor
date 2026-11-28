@@ -3,14 +3,19 @@
 # ruff: noqa: N815
 from __future__ import annotations
 
+import base64
+import binascii
 from enum import Enum
 from logging import getLogger
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from model.color_hsi import ColorHSI
 from model.ofl.color_name_dict import get_color_by_name
+
+if TYPE_CHECKING:
+    from PySide6.QtGui import QPixmap
 
 logger = getLogger(__name__)
 
@@ -304,6 +309,52 @@ class WheelSlot(BaseModel):
         if len(self.colors) > 0:
             return get_color_by_name(self.colors[0])
         return get_color_by_name(self.name)
+
+    @property
+    def image_mime_type(self) -> str | None:
+        """Return the ``mimeType`` from ``resource.image``, or ``None`` if absent."""
+        image = self.resource.get("image")
+        if not isinstance(image, dict):
+            return None
+        mime = image.get("mimeType")
+        return mime if isinstance(mime, str) and mime else None
+
+    def image_bytes(self) -> bytes | None:
+        """Decode the base64-encoded gobo image payload, or ``None`` if unavailable.
+
+        The OFL fixture definition carries the gobo image inline under
+        ``resource.image.data`` as a base64 string. This helper is Qt-free so
+        it can be reused by headless tooling (export, caching) as well as by
+        the editor UI.
+        """
+        image = self.resource.get("image")
+        if not isinstance(image, dict):
+            return None
+        data_b64 = image.get("data")
+        if not isinstance(data_b64, str):
+            return None
+        try:
+            return base64.b64decode(data_b64, validate=False)
+        except (binascii.Error, ValueError):
+            logger.debug("WheelSlot %r: malformed base64 image data; skipping.", self.name)
+            return None
+
+    def pixmap(self) -> QPixmap | None:
+        """Decode the gobo image into a ``QPixmap``.
+
+        Returns ``None`` when the slot carries no image or the payload cannot
+        be loaded. The ``PySide6.QtGui`` import is deferred so headless callers
+        that never ask for a pixmap can skip the dependency.
+        """
+        raw = self.image_bytes()
+        if raw is None:
+            return None
+        from PySide6.QtGui import QPixmap
+
+        pix = QPixmap()
+        if not pix.loadFromData(raw):
+            return None
+        return pix
 
 
 class Wheel(BaseModel):

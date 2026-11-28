@@ -1,0 +1,24 @@
+{
+  "name": "Color Change",
+  "description": "Fade continuously between two colours over `seconds` (one full back-and-forth). Colours are HSI strings formatted as `hue,saturation,intensity` -- hue in degrees 0..360, saturation and intensity as fractions 0..1.",
+  "applies_for": "color",
+  "hints": [
+    {"id": "color_a", "type": "color", "default": "0.0,1.0,1.0"},
+    {"id": "color_b", "type": "color", "default": "240.0,1.0,1.0"},
+    {"id": "seconds", "type": "float", "default": 5.0, "min": 0.1}
+  ],
+  "kf_requests": [
+    {
+      "duration": "{{ seconds / 2 }}",
+      "channels": {
+        "color": "{{ color_a }}"
+      }
+    },
+    {
+      "duration": "{{ seconds / 2 }}",
+      "channels": {
+        "color": "{{ color_b }}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Tilt Sweep",
+  "description": "Oscillate tilt between two endpoints while letting the dimmer breathe along with the motion. Endpoints are DMX fractions (0 = full-down, 0.5 = centre, 1 = full-up) and dimmer values are fractions too (0 = dark, 1 = full). One full back-and-forth takes `seconds` seconds; dimmer linearly follows the tilt from `dimmer_a` at `angle_a` to `dimmer_b` at `angle_b` and back.",
+  "applies_for": "position",
+  "hints": [
+    {"id": "angle_a", "type": "float", "default": 0.25, "min": 0.0, "max": 1.0},
+    {"id": "angle_b", "type": "float", "default": 0.75, "min": 0.0, "max": 1.0},
+    {"id": "dimmer_a", "type": "float", "default": 1.0, "min": 0.0, "max": 1.0},
+    {"id": "dimmer_b", "type": "float", "default": 1.0, "min": 0.0, "max": 1.0},
+    {"id": "seconds", "type": "float", "default": 5.0, "min": 0.1}
+  ],
+  "kf_requests": [
+    {
+      "duration": "{{ seconds / 2 }}",
+      "channels": {
+        "tilt_value": "{{ angle_a }}",
+        "tilt_curvesel": "0",
+        "brightness_raw": "{{ dimmer_a }}"
+      }
+    },
+    {
+      "duration": "{{ seconds / 2 }}",
+      "channels": {
+        "tilt_value": "{{ angle_b }}",
+        "tilt_curvesel": "0",
+        "brightness_raw": "{{ dimmer_b }}"
+      }
+    }
+  ]
+}

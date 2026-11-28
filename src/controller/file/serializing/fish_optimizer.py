@@ -8,6 +8,11 @@ from model.filter import DataType, FilterTypeEnumeration
 
 logger = getLogger(__name__)
 
+# Matches the id ``filter_serialization`` uses for its ``str(DT_8_BIT) + "val0"``
+# default constant, so a scene that needs this filter for a universe-output
+# fallback and for a normal filter default re-uses the same instance.
+_ZERO_8BIT_CONSTANT_ID = "const8bitval0"
+
 
 class SceneOptimizerModule:
     """Post-processing helper for a single scene.
@@ -31,6 +36,11 @@ class SceneOptimizerModule:
         self._main_brightness_input_filter: Filter | None = None
         self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = {}
         self._first_universe_filter_id: dict[str, str] = {}
+        # Default constants ``_emplace_universe_filters`` needs filter_serialization
+        # to materialise so the aggregator's unwired fallbacks resolve. Keyed by
+        # DataType so the normal defaults pass can merge them with its own
+        # ``default_nodes`` and emit the shared constant filter exactly once.
+        self.extra_default_values: dict[DataType, list[str]] = {}
 
     def _substitute_universe_filter(self, f: Filter) -> None:
         """Register a universe filter for later aggregation.
@@ -120,6 +130,14 @@ class SceneOptimizerModule:
     def _emplace_universe_filters(self, scene_element: ET.Element) -> None:
         """Insert aggregated universe filters into the scene XML.
 
+        Universe-output channels the user left unwired get bound to a
+        zero 8-bit constant so fish can still schedule the aggregated
+        filter. Without this fallback, every unlinked DMX slot shows up
+        as an unresolved dependency and the whole scene fails to load.
+        The actual constant filter is materialised by the defaults pass
+        in ``filter_serialization``; here we just track that the pass
+        has to emit it.
+
         Args:
             scene_element: The XML element representing the scene.
 
@@ -132,6 +150,11 @@ class SceneOptimizerModule:
                 filter_config_parameters[filter_input_channel] = str(int(universe_channel) - 1)
                 if foreign_filter_output_channel in self.channel_override_dict:
                     foreign_filter_output_channel = self.channel_override_dict.get(foreign_filter_output_channel)
+                if foreign_filter_output_channel in (None, "None", ""):
+                    foreign_filter_output_channel = f"{_ZERO_8BIT_CONSTANT_ID}:value"
+                    bucket = self.extra_default_values.setdefault(DataType.DT_8_BIT, [])
+                    if "0" not in bucket:
+                        bucket.append("0")
                 channel_mappings[filter_input_channel] = foreign_filter_output_channel
             filter_element = ET.SubElement(
                 scene_element,

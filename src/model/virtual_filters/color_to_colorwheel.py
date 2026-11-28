@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, override
 from jinja2 import Environment
 
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
+from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
 from utility import resource_path
 
 if TYPE_CHECKING:
@@ -29,6 +30,21 @@ def _parse_data_type_string(dt_str: str) -> DataType:
             return DataType.DT_DOUBLE
         case _:
             return DataType.DT_8_BIT
+
+
+def _is_empty_wheel_slot(slot: WheelSlot) -> bool:
+    """A wheel slot carrying no identifying type, name, colour temperature or colour list.
+
+    ``WheelSlot.resulting_color`` falls back to ``get_color_by_name("")`` for such slots,
+    which returns black. On a colour wheel these positions are a pass-through for the
+    beam, so this filter must anchor them to white (saturation=0) instead.
+    """
+    return (
+        slot.type == WheelSlotType.GENERIC
+        and not slot.name
+        and not slot.colorTemperature
+        and not slot.colors
+    )
 
 
 def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index: int = 0) -> str:
@@ -53,6 +69,9 @@ def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index
     for selection_value, color1, color2 in mappings:
         if color2 is not None:
             # We have a value that is in the middle between two slots.
+            continue
+        if _is_empty_wheel_slot(color1):
+            color_mappings.append((0.0, 0.0, selection_value))
             continue
         resulting_color = color1.resulting_color
         color_mappings.append((resulting_color.hue, resulting_color.saturation, selection_value))

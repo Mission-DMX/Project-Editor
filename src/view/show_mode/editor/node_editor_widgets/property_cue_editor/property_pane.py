@@ -1,0 +1,224 @@
+"""Right-hand editor pane: step timings (when a step is selected) + property tabs.
+
+Property tabs are the full set of per-property editors. Tabs whose capability
+isn't in :class:`FixtureSelection.enabled_capabilities` are disabled. Clicking a
+step row loads step timings in the top panel and keeps the tab widget visible
+so step-level overrides can still be dialed in.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QLabel, QStackedWidget, QTabWidget, QVBoxLayout, QWidget
+
+from model.ofl.capability_discovery import discover_capabilities
+from model.virtual_filters.property_cues._property_registry import properties_in_order
+
+from .editors.beam_editor import BeamEditor
+from .editors.color_editor import ColorEditor
+from .editors.dimmer_editor import DimmerEditor
+from .editors.focus_editor import FocusEditor
+from .editors.frost_editor import FrostEditor
+from .editors.gobo_editor import GoboEditor
+from .editors.position_editor import PositionEditor
+from .editors.step_editor import StepEditor
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from model.ofl.fixture import UsedFixture
+    from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
+    from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+
+
+# Derived from the unified property registry so the tabs, their labels
+# and their gating capabilities stay in sync with the compiler.
+_PROPERTY_ORDER: tuple[tuple[str, str, EnabledCapability], ...] = tuple(
+    (e.id, e.label, e.capability) for e in properties_in_order()
+)
+
+
+class PropertyPane(QWidget):
+    """Shows the step editor (when a step is selected) above a tab widget of per-property editors."""
+
+    assignment_applied = Signal()
+
+    def __init__(
+        self,
+        model: PropertyCueFilterModel,
+        fixture_lookup: Callable[[str], list[UsedFixture]] | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
+        """Initialize the property pane with its model and fixture lookup."""
+        super().__init__(parent)
+        self._model = model
+        self._fixture_lookup = fixture_lookup or (lambda _np: [])
+        self._cue_index: int = -1
+        self._step_index: int = -1
+        self._node_paths: list[str] = [""]
+
+        root = QVBoxLayout()
+        self.setLayout(root)
+
+        self._placeholder = QLabel("Add a cue, then select a step or fixture to edit.")
+        self._placeholder.setWordWrap(True)
+        root.addWidget(self._placeholder)
+
+        self._top_stack = QStackedWidget()
+        root.addWidget(self._top_stack)
+        self._top_blank = QWidget()
+        self._top_stack.addWidget(self._top_blank)
+        self._step_editor = StepEditor(model)
+        self._top_stack.addWidget(self._step_editor)
+
+        self._tabs = QTabWidget()
+        root.addWidget(self._tabs, 1)
+        self._editors: dict[str, QWidget] = {}
+        self._tab_indices: dict[str, int] = {}
+        for prop_id, label, _cap in _PROPERTY_ORDER:
+            editor = _build_editor(prop_id, model)
+            self._editors[prop_id] = editor
+            self._tab_indices[prop_id] = self._tabs.addTab(editor, label)
+            editor.applied.connect(self.assignment_applied.emit)
+
+        self._step_editor.applied.connect(self.assignment_applied.emit)
+
+        self._placeholder.setVisible(True)
+        self._top_stack.setVisible(False)
+        self._tabs.setVisible(False)
+        self._apply_capability_filter()
+
+    def set_current_cue(self, cue_index: int) -> None:
+        """Record which cue index subsequent step edits apply to."""
+        self._cue_index = cue_index
+
+    def recommended_minimum_height(self) -> int:
+        """Return the height needed to display the pane without clipping.
+
+        When a step row is selected both the step editor (name/duration/fade-in)
+        and the tab widget are visible side-by-side vertically; this method sums
+        the natural height of both so the pane fits the worst case. For every
+        tab we read ``QWidget.sizeHint().height()`` so there are no magic
+        numbers. The tab bar overhead is already covered by
+        ``QTabWidget.sizeHint`` -- we take the max of the tabs' hint and the
+        editors' individual hints to be defensive against stylesheet
+        differences. Returns 0 when the pane carries no editors yet.
+        """
+        tab_hint = self._tabs.sizeHint().height()
+        editor_hint = max(
+            (editor.sizeHint().height() for editor in self._editors.values()),
+            default=0,
+        )
+        step_hint = self._step_editor.sizeHint().height()
+        return max(tab_hint, editor_hint) + step_hint
+
+    def refresh_capabilities(self) -> None:
+        """Re-evaluate which tabs are enabled from the current fixture selection."""
+        self._apply_capability_filter()
+
+    def show_editor(self, step_index: int, node_paths: str | list[str]) -> None:
+        """Switch the pane to display editors for the given step and fixture node(s).
+
+        ``node_paths`` may be either a single node path (for single-selection
+        callers and tests) or a list of node paths; a list of length >1 drives
+        multi-fixture editing where Apply writes the same assignment to every
+        listed node_path and the tab availability shrinks to the common
+        capability subset.
+        """
+        paths = (
+            [node_paths]
+            if isinstance(node_paths, str)
+            else list(node_paths) if node_paths else [""]
+        )
+        self._step_index = step_index
+        self._node_paths = paths
+        if self._cue_index < 0 or step_index < 0:
+            self._placeholder.setVisible(True)
+            self._top_stack.setVisible(False)
+            self._tabs.setVisible(False)
+            return
+        self._placeholder.setVisible(False)
+        primary = paths[0]
+        is_step_level = all(p == "" for p in paths)
+        if is_step_level:
+            self._top_stack.setCurrentWidget(self._step_editor)
+            self._step_editor.load(self._cue_index, step_index)
+            self._top_stack.setVisible(True)
+        else:
+            self._top_stack.setCurrentWidget(self._top_blank)
+            self._top_stack.setVisible(False)
+        # Collect fixtures from every selected node_path. Multi-selection
+        # with fixtures gates tabs by the INTERSECTION of per-path
+        # capabilities so a tab only shows up when every selected fixture
+        # supports it; single-path selection keeps the previous behaviour
+        # (per-fixture union).
+        fixtures: list[UsedFixture] = []
+        common_caps: set[str] | None = None
+        if is_step_level:
+            fixtures = self._fixture_lookup(primary)
+        elif len(paths) > 1:
+            per_path_caps: list[set[str]] = []
+            for p in paths:
+                fx_list = self._fixture_lookup(p)
+                fixtures.extend(fx_list)
+                per_path_caps.append(discover_capabilities(fx_list))
+            common_caps = set.intersection(*per_path_caps) if per_path_caps else set()
+        else:
+            fixtures = self._fixture_lookup(primary)
+        self._editors["gobo"].set_fixtures(fixtures)
+        self._editors["color"].set_fixtures(fixtures)
+        self._apply_capability_filter(fixtures, common_caps=common_caps)
+        for prop_id, editor in self._editors.items():
+            editor.load(self._cue_index, step_index, paths if len(paths) > 1 else primary)
+            # Reflect loaded state in the tab label (prefix * if an assignment exists).
+            index = self._tab_indices[prop_id]
+            has_assignment = editor._current_assignment() is not None
+            label = self._tabs.tabText(index).lstrip("* ")
+            self._tabs.setTabText(index, f"* {label}" if has_assignment else label)
+        self._tabs.setVisible(True)
+
+    def _apply_capability_filter(
+        self,
+        fixtures: list[UsedFixture] | None = None,
+        common_caps: set[str] | None = None,
+    ) -> None:
+        """Gate tabs by the selection's enabled capabilities AND per-fixture availability.
+
+        When ``fixtures`` is empty we only check the global enabled set so tabs
+        remain visible after fixture configuration but before a specific node is
+        clicked. ``common_caps``, when provided, overrides the per-fixture
+        discovery with a pre-computed intersection (used by multi-fixture
+        selection to require every selected fixture to support a capability).
+        """
+        enabled = set(self._model.fixture_selection.enabled_capabilities)
+        # ``discover_capabilities`` returns capability tags (strings) so the
+        # OFL helper does not depend on the vfilter's EnabledCapability enum.
+        if common_caps is not None:
+            per_selection: set[str] | None = common_caps
+        else:
+            per_selection = discover_capabilities(fixtures) if fixtures else None
+        for prop_id, _label, cap in _PROPERTY_ORDER:
+            allowed = cap in enabled
+            if allowed and per_selection is not None:
+                allowed = cap.value in per_selection
+            self._tabs.setTabEnabled(self._tab_indices[prop_id], allowed)
+
+
+def _build_editor(prop_id: str, model: PropertyCueFilterModel) -> QWidget:
+    if prop_id == "dimmer":
+        return DimmerEditor(model)
+    if prop_id == "position":
+        return PositionEditor(model)
+    if prop_id == "color":
+        return ColorEditor(model)
+    if prop_id == "gobo":
+        return GoboEditor(model)
+    if prop_id == "beam":
+        return BeamEditor(model)
+    if prop_id == "focus":
+        return FocusEditor(model)
+    if prop_id == "frost":
+        return FrostEditor(model)
+    raise ValueError(f"Unknown property id: {prop_id!r}")
