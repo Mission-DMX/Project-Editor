@@ -2406,6 +2406,95 @@ class ColorToColorWheelTests(unittest.TestCase):
         )
         self.assertNotIn("in_dimmer", f.in_data_types)
 
+    def test_extract_empty_wheel_slot_anchors_to_white(self) -> None:
+        """Empty OFL wheel slots must appear at the white anchor (hue=0, saturation=0)."""
+        from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
+        from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
+
+        # A fully defaulted WheelSlot has no distinguishing colour information. ``resulting_color``
+        # would route it through ``get_color_by_name("")`` and return black; the filter must
+        # override that so the pass-through beam is anchored to white instead.
+        empty_slot = WheelSlot()
+        red_slot = WheelSlot(type=WheelSlotType.COLOR, name="red")
+
+        class _StubFixture:
+            @property
+            def colorwheel_mappings(self):
+                return [(None, [(10, empty_slot, None), (128, red_slot, None)])]
+
+        self.assertEqual(
+            "0.0:0.0:10;0.0:1.0:128",
+            extract_colorwheel_mappings_from_fixture(_StubFixture()),
+        )
+
+    def test_extract_open_slot_resolves_to_white(self) -> None:
+        """Explicit OPEN slots keep their existing white resolution (sanity check)."""
+        from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
+        from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
+
+        open_slot = WheelSlot(type=WheelSlotType.OPEN, name="Open")
+
+        class _StubFixture:
+            @property
+            def colorwheel_mappings(self):
+                return [(None, [(5, open_slot, None)])]
+
+        self.assertEqual("0.0:0.0:5", extract_colorwheel_mappings_from_fixture(_StubFixture()))
+
+    def test_extract_interpolation_slots_are_skipped(self) -> None:
+        """Mappings with a second slot (interpolation between two positions) are excluded."""
+        from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
+        from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
+
+        red = WheelSlot(type=WheelSlotType.COLOR, name="red")
+        blue = WheelSlot(type=WheelSlotType.COLOR, name="blue")
+
+        class _StubFixture:
+            @property
+            def colorwheel_mappings(self):
+                return [(None, [(20, red, None), (40, red, blue), (60, blue, None)])]
+
+        # The (red, blue) interpolation slot in the middle must be dropped from the output.
+        self.assertEqual(
+            "0.0:1.0:20;240.0:1.0:60",
+            extract_colorwheel_mappings_from_fixture(_StubFixture()),
+        )
+
+    def test_extract_returns_empty_string_without_wheels(self) -> None:
+        """A fixture without any colour-wheel channels produces an empty mapping string."""
+        from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
+
+        class _StubFixture:
+            @property
+            def colorwheel_mappings(self):
+                return []
+
+        self.assertEqual("", extract_colorwheel_mappings_from_fixture(_StubFixture()))
+
+    def test_extract_returns_empty_string_for_none_fixture(self) -> None:
+        """Passing ``None`` is a documented no-op that yields an empty mapping string."""
+        from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
+
+        self.assertEqual("", extract_colorwheel_mappings_from_fixture(None))
+
+    def test_extract_selects_requested_wheel_index(self) -> None:
+        """``selected_slot_index`` chooses between multiple colour wheels on one fixture."""
+        from model.ofl.ofl_fixture import WheelSlot, WheelSlotType
+        from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
+
+        red = WheelSlot(type=WheelSlotType.COLOR, name="red")
+        green = WheelSlot(type=WheelSlotType.COLOR, name="green")
+
+        class _StubFixture:
+            @property
+            def colorwheel_mappings(self):
+                return [(None, [(10, red, None)]), (None, [(20, green, None)])]
+
+        self.assertEqual(
+            "120.0:1.0:20",
+            extract_colorwheel_mappings_from_fixture(_StubFixture(), selected_slot_index=1),
+        )
+
 
 class ColorDirectorVFilterTests(unittest.TestCase):
     """Per-type assertions for ColordirectorVFilter migrated in PR 21."""
