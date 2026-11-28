@@ -1,6 +1,6 @@
 """Helpers for the keyframe solver.
 
-S6: ``make_state`` and ``_dedupe_and_sort`` / ``_collapse_same_slot`` / the
+``make_state`` and ``_dedupe_and_sort`` / ``_collapse_same_slot`` / the
 ``slot_to_frame`` dict were removed when :class:`KeyframeSolver.solve`
 collapsed to a single pass. Only the small time-conversion helpers and the
 ``make_frame`` factory remain -- they are still used by the compiler's L5

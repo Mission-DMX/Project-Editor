@@ -9,7 +9,6 @@ from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.filters._channel_names import sanitize_channel_name
 from model.virtual_filters.cue_vfilter import PreviewFilter
 from model.virtual_filters.property_cues._channel_ordering import (
-    INTERNAL_LOCAL_NAMES,
     channel_sort_key,
     synthesized_output,
 )
@@ -28,14 +27,13 @@ logger = getLogger(__name__)
 def _user_facing_outputs(channel_specs: dict) -> dict:
     """Return ``{name: DataType}`` for the output terminals the node should expose.
 
-    S5: raw channels that only exist to feed post-processing filters (such as
+    Raw channels that only exist to feed post-processing filters (such as
     ``strobefreq``, ``duty_cycle``, ``pan_value``, ``tilt_curvesel``) are
-    identified by their :attr:`ChannelSpec.exposed_locally` flag instead of
-    the historic ``INTERNAL_LOCAL_NAMES`` lookup. The post-processed outputs
-    they drive (``pan``, ``tilt`` -- 16-bit; ``brightness`` already shares a
-    name with its raw counterpart since the strobe generator preserves the
-    float type) are still synthesised via :func:`synthesized_output`. Order
-    follows :func:`channel_sort_key`.
+    identified by their :attr:`ChannelSpec.exposed_locally` flag. The
+    post-processed outputs they drive (``pan``, ``tilt`` -- 16-bit;
+    ``brightness`` already shares a name with its raw counterpart since the
+    strobe generator preserves the float type) are synthesised via
+    :func:`synthesized_output`. Order follows :func:`channel_sort_key`.
     """
     full: dict[str, object] = {}
     for name, spec in channel_specs.items():
@@ -44,15 +42,7 @@ def _user_facing_outputs(channel_specs: dict) -> dict:
         if syn is not None:
             syn_local, syn_type = syn
             full.setdefault(f"{prefix}__{syn_local}", syn_type)
-        # ``exposed_locally`` defaults to ``True`` so specs produced by
-        # older code paths (defaulted CONST channels, headless unit-test
-        # stubs) still surface on the node.
-        if not getattr(spec, "exposed_locally", True):
-            continue
-        # Belt-and-braces fallback for callers that didn't thread the flag
-        # through: keep the historic internal-local-names check so a legacy
-        # spec dict still hides the raw channels.
-        if local in INTERNAL_LOCAL_NAMES:
+        if not spec.exposed_locally:
             continue
         full[name] = spec.data_type
     return {name: full[name] for name in sorted(full.keys(), key=channel_sort_key)}
@@ -115,12 +105,11 @@ class PropertyBasedCueFilter(PreviewFilter):
     def _ensure_compiled(self) -> CompileResult:
         """Compile the model if needed and refresh ``self._out_data_types``.
 
-        L14 + S4: a short-lived :class:`BoardFixtureInfo` memoises every
-        per-fixture capability / wheel / segment lookup for the duration of
-        the compile so repeated references to the same fixture only pay the
-        board-lookup cost once. The preset library is cached module-wide so
-        this call is effectively free when nothing changed on disk since the
-        last compile.
+        A short-lived :class:`BoardFixtureInfo` memoises every per-fixture
+        capability / wheel / segment lookup for the duration of the compile
+        so repeated references to the same fixture only pay the board-lookup
+        cost once. The preset library is cached module-wide so this call is
+        effectively free when nothing changed on disk since the last compile.
         """
         if self._last_compile is None:
             from model.virtual_filters.property_cues.fixture_info import BoardFixtureInfo
@@ -155,18 +144,6 @@ class PropertyBasedCueFilter(PreviewFilter):
         if caps:
             return caps
         return {cap.value for cap in self._property_model.fixture_selection.enabled_capabilities}
-
-    def _find_fixture(self, fixture_id: str):  # noqa: ANN202 — UsedFixture lazy import
-        """Compatibility shim: delegate to a transient :class:`BoardFixtureInfo`.
-
-        Retained for the small number of callers (tests, external integrations)
-        that still reach for ``_find_fixture`` directly. Production code paths
-        go through :class:`BoardFixtureInfo` via :meth:`_ensure_compiled`.
-        """
-        from model.virtual_filters.property_cues.fixture_info import BoardFixtureInfo
-        scene = getattr(self, "scene", None)
-        board = getattr(scene, "board_configuration", None) if scene is not None else None
-        return BoardFixtureInfo(board)._fixture(fixture_id)
 
     def _build_fixture_name_map(self) -> dict[str, str]:
         """Build ``{fixture_id: display_name}`` with collision-safe suffixes.

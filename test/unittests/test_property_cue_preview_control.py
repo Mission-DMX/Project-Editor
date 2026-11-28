@@ -108,7 +108,7 @@ class PreviewControllerStopTest(unittest.TestCase):
         )
 
     def test_rewind_resets_cue_step_and_timecode(self) -> None:
-        """Regression (L11): rewind_to_start pauses and jumps back to cue 0 / t 0."""
+        """Regression: rewind_to_start pauses and jumps back to cue 0 / t 0."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
             PreviewController,
         )
@@ -129,7 +129,7 @@ class PreviewControllerStopTest(unittest.TestCase):
         self.assertFalse(controller.is_playing)
 
     def test_toggle_playing_flips_state(self) -> None:
-        """Regression (L11): toggle_playing flips the playing flag and returns the new state."""
+        """Regression: toggle_playing flips the playing flag and returns the new state."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
             PreviewController,
         )
@@ -142,7 +142,7 @@ class PreviewControllerStopTest(unittest.TestCase):
         self.assertFalse(controller.is_playing)
 
     def test_format_seven_seg_matches_cue_editor(self) -> None:
-        """Regression (L11): 7-seg format matches the existing cue editor's 12-char layout."""
+        """Regression: 7-seg format matches the existing cue editor's 12-char layout."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import (
             _format_seven_seg,
         )
@@ -153,6 +153,45 @@ class PreviewControllerStopTest(unittest.TestCase):
         formatted = _format_seven_seg(42, 1.5)
         self.assertEqual(12, len(formatted))
         self.assertTrue(formatted.strip().startswith("42"))
+
+    def test_push_seven_seg_dedups_identical_content(self) -> None:
+        """Regression: unchanged 7-seg content must not re-send a desk_update to fish.
+
+        The 100 ms preview tick fires regardless of playback state; when
+        paused and nothing is navigating, consecutive ticks produce the
+        same cue/timecode string. Routing every one of those through
+        ``set_seven_seg_display_content`` -- which unconditionally emits a
+        ``desk_update`` protobuf containing ``selected_bank = 0`` -- had fish
+        logging "Failed to change active bank" ten times a second and
+        backed the ArtNet writer up to the point of dropping output packets.
+        """
+        from unittest.mock import patch
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor import (
+            preview_control as pc,
+        )
+        _scene, vfilter = _make_scene_and_vfilter()
+        controller = pc.PreviewController(vfilter)
+        controller.set_cue_index(0)
+        controller.set_timecode(1.5)
+
+        with patch.object(pc, "set_seven_seg_display_content") as mock_send:
+            controller._push_seven_seg()
+            controller._push_seven_seg()
+            controller._push_seven_seg()
+
+        self.assertEqual(1, mock_send.call_count,
+                         "Identical consecutive 7-seg pushes must dedup to a single call")
+
+        # A content change still gets through.
+        with patch.object(pc, "set_seven_seg_display_content") as mock_send:
+            controller._push_seven_seg()  # unchanged
+            controller.set_timecode(2.0)   # pushes once from set_timecode
+            controller._push_seven_seg()  # dedups again
+        # ``set_timecode`` with no running thread does not push, so only the
+        # explicit push after the change should hit the mock; verify that
+        # the dedup lets through exactly one call.
+        self.assertEqual(1, mock_send.call_count,
+                         "Timecode change must emit exactly one desk update")
 
     def test_stop_without_prior_start_is_safe(self) -> None:
         """Calling ``stop()`` on a controller that never started must no-op cleanly."""

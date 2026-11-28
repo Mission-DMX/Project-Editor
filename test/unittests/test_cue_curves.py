@@ -170,22 +170,21 @@ class CueCurvesColorTest(unittest.TestCase):
     """Validate color interpolation and hue wraparound."""
 
     def test_color_linear_half(self) -> None:
-        """Verify LINEAR color interpolation lerps in RGB at t = 0.5 (F2).
+        """Verify LINEAR color interpolation produces a midpoint HSI at t = 0.5.
 
-        Fish interpolates colour linearly in RGB, not along the HSI shortest
-        hue arc. Going black (0,0,0) → cyan (180,1,1) in HSI corresponds to
-        RGB (0,0,0) → (0,255,255); the midpoint RGB (0, 128, 128) converts
-        back to HSI ≈ (180, 1, 0.5): cyan hue, full saturation, half
-        intensity. Previously this returned (90, 0.5, 0.5), a muted lime
-        that fish's realtime engine never produces.
+        Fish interpolates HSI channel-wise: shortest-arc hue plus linear
+        saturation/intensity. Going black (0,0,0) → cyan (180,1,1) in HSI
+        therefore lands at (90, 0.5, 0.5) at the midpoint: hue swept through
+        a lime, saturation half-full, intensity half-full. Matches fish
+        bit-exact for primary-to-primary fades.
         """
         prev = _make_color(0.0, 0.0, 0.0)
         nxt = _make_color(180.0, 1.0, 1.0)
         result = value_at(0.5, prev, nxt, TransferFunction.LINEAR)
         self.assertIsInstance(result, ColorHSI)
-        self.assertAlmostEqual(180.0, result.hue, places=0)
-        self.assertAlmostEqual(1.0, result.saturation, places=2)
-        self.assertAlmostEqual(0.502, result.intensity, places=2)
+        self.assertAlmostEqual(90.0, result.hue)
+        self.assertAlmostEqual(0.5, result.saturation)
+        self.assertAlmostEqual(0.5, result.intensity)
 
     def test_color_endpoints(self) -> None:
         """Verify color interpolation returns the exact endpoint HSI at t = 0 and t = 1."""

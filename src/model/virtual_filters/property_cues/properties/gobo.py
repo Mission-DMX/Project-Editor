@@ -23,10 +23,10 @@ class GoboProperty(Property):
     """Per-wheel gobo slot (discrete) and rotation speed (continuous).
 
     ``slots`` and ``rotations`` are indexed by wheel index. Entries missing
-    from the user-supplied dicts default to 0. S2: the base class builds
-    the keyframe requests from :meth:`channel_values`; slot channels are
-    marked ``discrete`` on their :class:`ChannelSpec` so the base emits
-    them with :attr:`TransferFunction.EDGE` (see L26).
+    from the user-supplied dicts default to 0. Slot channels are marked
+    ``discrete`` on their :class:`ChannelSpec` so the base
+    :meth:`Property.generate_requests` emits them with
+    :attr:`TransferFunction.EDGE`.
     """
 
     wheel_count: int = 1

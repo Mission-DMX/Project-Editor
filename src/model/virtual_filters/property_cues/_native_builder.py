@@ -44,14 +44,16 @@ def _parse_default(dt: DataType, default_value: str) -> Union[float, int, ColorH
         return 0
 
 
+_SLOT_SECONDS = 1.0 / 40.0
+
+
 def _state_for(spec: ChannelSpec, ts: float, frames: list[KeyFrame]) -> State:
     """Return the state for ``spec`` at timestamp ``ts``.
 
-    L4: when ``ts`` falls between two keyframes on this channel, interpolate
+    When ``ts`` falls between two keyframes on this channel, interpolate
     using :func:`curves.value_at` with the **next** frame's transition (F1 --
-    matches fish's and the preview's semantics). The previous implementation
-    held the prior keyframe's value, which turned an unrelated cross-fixture
-    keyframe into a hold-then-fade on this channel.
+    matches fish's and the preview's semantics). Without this an unrelated
+    cross-channel keyframe used to turn a running fade into a hold.
 
     Fallback value when no keyframe has been emitted yet comes from
     ``spec.default_value`` rather than a hard-coded 0, so e.g. the duty cycle's
@@ -83,6 +85,63 @@ def _state_for(spec: ChannelSpec, ts: float, frames: list[KeyFrame]) -> State:
     )
 
 
+def _densify_non_linear(
+    spec: ChannelSpec, frames: list[KeyFrame],
+) -> list[KeyFrame]:
+    """Densify segments whose next-frame transition is non-linear.
+
+    Fish stores keyframes sparsely and uses the target frame's transition to
+    interpolate between them. For LINEAR / EDGE segments the engine's
+    interpolation matches our :func:`curves.value_at` evaluation exactly so
+    one pair of frames is enough. For SIGMOIDAL / EASE_IN / EASE_OUT the
+    exact shape between two sparse keyframes depends on the full span --
+    splitting such a segment at an unrelated cross-channel slot would
+    silently flatten the curve (slot 25 of a 0..100 sigmoid would read 0.25
+    instead of 0.045).
+
+    We emit intermediate samples at every 40 Hz tick within non-linear
+    spans so fish's piecewise-linear evaluation between consecutive samples
+    is a close approximation of the authored curve. The number of extra
+    frames is bounded by the span: a 2 s sigmoid fade adds 79 samples,
+    which is cheap at compile time and negligible at runtime.
+    """
+    if len(frames) < 2:
+        return list(frames)
+    densified: list[KeyFrame] = []
+    for i, frame in enumerate(frames):
+        densified.append(frame)
+        if i + 1 >= len(frames):
+            continue
+        nxt = frames[i + 1]
+        if not frame._states or not nxt._states:
+            continue
+        try:
+            transition = TransferFunction(nxt._states[0]._transition_type)
+        except (ValueError, TypeError):
+            continue
+        if transition in (TransferFunction.LINEAR, TransferFunction.EDGE):
+            continue
+        span = nxt.timestamp - frame.timestamp
+        if span <= _SLOT_SECONDS:
+            continue
+        tick_count = max(1, round(span * 40.0))
+        for tick in range(1, tick_count):
+            rel = tick / tick_count
+            try:
+                value = curves.value_at(rel, frame._states[0], nxt._states[0], transition)
+            except ValueError:
+                break
+            # These scratch frames never enter the cue directly; they only
+            # feed :func:`_state_for` so the combined-slot iteration picks
+            # up densely-sampled values at every 40 Hz tick.
+            sample = KeyFrame.at(
+                frame.timestamp + tick * _SLOT_SECONDS,
+                states=[State.from_value(spec.data_type, TransferFunction.LINEAR, value)],
+            )
+            densified.append(sample)
+    return densified
+
+
 def _frames_to_cue(name: str, channels: list[ChannelSpec],
                    per_channel: dict[str, list[KeyFrame]],
                    end_action: EndAction, restart_on_play: bool) -> Cue:
@@ -90,14 +149,21 @@ def _frames_to_cue(name: str, channels: list[ChannelSpec],
     cue.name = name or "No Name"
     for spec in channels:
         cue.add_channel(spec.name, spec.data_type)
-    slots: set[float] = {round(kf.timestamp, 6) for frames in per_channel.values() for kf in frames}
+    # Densify non-linear segments before building the combined-slot union so
+    # cross-channel interpolation never lands at a point where fish's
+    # piecewise linear evaluation would distort the authored curve.
+    densified: dict[str, list[KeyFrame]] = {
+        spec.name: _densify_non_linear(spec, per_channel.get(spec.name, []))
+        for spec in channels
+    }
+    slots: set[float] = {round(kf.timestamp, 6) for frames in densified.values() for kf in frames}
     if not slots:
         slots.add(0.0)
     for ts in sorted(slots):
         combined = KeyFrame(cue)
         combined.timestamp = ts
         for spec in channels:
-            combined._states.append(_state_for(spec, ts, per_channel.get(spec.name, [])))
+            combined._states.append(_state_for(spec, ts, densified.get(spec.name, [])))
         cue.insert_frame(combined)
     cue.end_action = end_action
     cue.restart_on_another_play_press = restart_on_play

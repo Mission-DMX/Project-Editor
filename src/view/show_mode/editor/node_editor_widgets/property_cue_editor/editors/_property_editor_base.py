@@ -73,7 +73,7 @@ class PropertyEditorBase(QWidget):
         self._distribution = DistributionControls()
         self._outer.addWidget(self._distribution)
 
-        # L18: expose a transition selector so users can pick between linear,
+        # expose a transition selector so users can pick between linear,
         # sigmoidal, ease in/out and EDGE (hold-until-next-keyframe). The
         # compiler still forces EDGE for discrete channels (gobo slot, pan/
         # tilt curvesel, prism selection) per L26; this control affects the
@@ -92,7 +92,7 @@ class PropertyEditorBase(QWidget):
         self._apply_button = QPushButton("Apply")
         self._apply_button.clicked.connect(self._on_apply)
         action_row.addWidget(self._apply_button)
-        # L9: an explicit "Remove assignment" action so the user can undo a
+        # an explicit "Remove assignment" action so the user can undo a
         # mis-authored property-pane value without re-running the wizard.
         self._remove_button = QPushButton("Remove assignment")
         self._remove_button.setToolTip(
@@ -139,7 +139,7 @@ class PropertyEditorBase(QWidget):
             self._distribution.set_distribution(assignment.distribution)
             self._set_transition_combo(assignment.transition)
         else:
-            # L17: no assignment exists at the new (cue, step, node) selection.
+            # no assignment exists at the new (cue, step, node) selection.
             # Reset the manual widgets to their spec defaults and the
             # distribution controls to CONSTANT so the previous node's state
             # doesn't leak through visually.
@@ -218,7 +218,7 @@ class PropertyEditorBase(QWidget):
         self.applied.emit()
 
     def _on_remove(self) -> None:
-        """L9: pop this property's assignment from the current (step, node) bucket.
+        """pop this property's assignment from the current (step, node) bucket.
 
         No-op if no assignment exists. Empty assignment buckets are left
         behind — the compiler ignores them, and keeping them lets the user

@@ -71,6 +71,14 @@ class PreviewController(QObject):
         self._timecode = 0.0
         self._playing = False
         self._cue_index = 0
+        # Tracks the last string we pushed to the XTouch 7-seg so repeated
+        # ticks with unchanged content skip the call. Every push ends up in
+        # :func:`send_independent_update_msg`, which sends a full desk_update
+        # protobuf to fish (including ``selected_bank = 0``). Hitting fish
+        # 10 times a second with that packet triggers "Failed to change
+        # active bank" errors and makes the ArtNet writer fall behind --
+        # see the regression reported after wiring the preview timer.
+        self._last_seven_seg_content: str | None = None
         self._tick_timer = QTimer(self)
         self._tick_timer.setInterval(_SEVEN_SEG_TICK_MS)
         self._tick_timer.timeout.connect(self._on_tick)
@@ -125,14 +133,33 @@ class PreviewController(QObject):
         after the preview thread is gone, and fish rejects the resulting
         scene because the cloned switch expects a uint8 ``select`` while
         the preview constant for ``pan_curvesel`` is still around.
+
+        Hardened against teardown-time races: the tick timer is stopped
+        before the preview thread is joined so a late-firing tick cannot
+        poke the vfilter mid-destruction, and every attribute access on
+        the vfilter is wrapped in ``RuntimeError`` catches because Qt may
+        have deleted the underlying C++ object between the editor's
+        ``parent_closed`` hook and the application's close event.
         """
-        self._tick_timer.stop()
+        try:
+            self._tick_timer.stop()
+        except RuntimeError:
+            pass
         # Blank the 7-seg so the next editor to claim it doesn't inherit
-        # our preview timecode on the physical desk.
-        set_seven_seg_display_content(" " * 12, update_from_gui=True)
+        # our preview timecode on the physical desk. Reset the dedup cache
+        # too so a restart pushes a fresh value instead of noticing the
+        # blank content matches and skipping the first update.
+        self._last_seven_seg_content = None
+        try:
+            set_seven_seg_display_content(" " * 12, update_from_gui=True)
+        except RuntimeError as exc:
+            logger.debug("PreviewController.stop: 7-seg update failed: %s", exc)
         if self._vfilter is not None:
-            self._vfilter.in_preview_mode = False
-            self._vfilter._channel_mapping = {}
+            try:
+                self._vfilter.in_preview_mode = False
+                self._vfilter._channel_mapping = {}
+            except RuntimeError as exc:
+                logger.debug("PreviewController.stop: vfilter gone: %s", exc)
         thread = self._thread
         if thread is None:
             return
@@ -200,13 +227,36 @@ class PreviewController(QObject):
         """Timer callback: advance the preview clock, push it into the thread, update 7-seg."""
         if self._thread is None:
             return
-        if self._playing:
-            self._timecode += _SEVEN_SEG_TICK_MS / 1000.0
-            self._thread.set_timecode(self._timecode)
-        self._push_seven_seg()
+        try:
+            if self._playing:
+                self._timecode += _SEVEN_SEG_TICK_MS / 1000.0
+                self._thread.set_timecode(self._timecode)
+            self._push_seven_seg()
+        except RuntimeError as exc:
+            # Qt may have deleted either the thread C++ object or one of its
+            # dependencies between the timer start and this tick firing;
+            # stop the timer so we don't keep hitting the same stale state
+            # for the rest of the application's lifetime.
+            logger.debug("PreviewController._on_tick: stopping on error: %s", exc)
+            try:
+                self._tick_timer.stop()
+            except RuntimeError:
+                pass
 
     def _push_seven_seg(self) -> None:
-        set_seven_seg_display_content(
-            _format_seven_seg(self._cue_index, self._timecode),
-            update_from_gui=True,
-        )
+        """Send the current (cue, timecode) to the XTouch 7-seg display.
+
+        Deduplicates against :attr:`_last_seven_seg_content` so idle preview
+        ticks (paused playback, no cue/step navigation) stop hitting fish
+        with redundant ``desk_update`` protobufs. ``set_seven_seg_display_content``
+        unconditionally emits a message carrying ``selected_bank = 0``;
+        emitting it 10 times a second while the user does nothing produced
+        a stream of "Failed to change active bank as it is out of range"
+        errors on fish and backed the ArtNet writer up to the point of
+        dropping output packets.
+        """
+        content = _format_seven_seg(self._cue_index, self._timecode)
+        if content == self._last_seven_seg_content:
+            return
+        self._last_seven_seg_content = content
+        set_seven_seg_display_content(content, update_from_gui=True)

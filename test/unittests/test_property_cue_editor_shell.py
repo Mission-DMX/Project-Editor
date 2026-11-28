@@ -142,7 +142,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual("Beta", editor2._cue_table.item(0, 1).text())
 
     def test_mutations_drop_vfilter_compile_cache(self) -> None:
-        """Regression (L10): model mutations must invalidate the vfilter's compile cache.
+        """Regression: model mutations must invalidate the vfilter's compile cache.
 
         Before L10 only :meth:`_rebuild_io` (dialog close) and ``deserialize``
         cleared ``PropertyBasedCueFilter._last_compile``, so starting the
@@ -183,7 +183,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertIsNone(f._last_compile, "restart_on_play change must invalidate compile cache")
 
     def test_delete_cue_removes_from_model(self) -> None:
-        """Regression (L19): the delete-cue button removes the selected cue."""
+        """Regression: the delete-cue button removes the selected cue."""
         from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -200,7 +200,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual([c.name for c in f.property_model.cues], ["A", "C"])
 
     def test_move_cue_swaps_order(self) -> None:
-        """Regression (L19): move-cue reorders the cues in the model."""
+        """Regression: move-cue reorders the cues in the model."""
         from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -217,7 +217,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual([c.name for c in f.property_model.cues], ["B", "A", "C"])
 
     def test_rename_cue_via_table_edit(self) -> None:
-        """Regression (L19): editing the Name cell writes the new name back to the model."""
+        """Regression: editing the Name cell writes the new name back to the model."""
         from model.virtual_filters.property_cues.model import PropertyCue, PropertyStep
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
@@ -309,11 +309,13 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         f = self._make_filter()
         editor = PropertyCueEditor(f=f)
         self.assertEqual(Qt.Orientation.Vertical, editor._splitter.orientation())
-        # The pane's minimum tracks the tallest property-editor tab (computed at
-        # runtime) and is at least 100 px so very short editors still get space.
-        expected = max(100, editor._property_pane.recommended_minimum_height())
-        self.assertEqual(expected, editor._property_pane.minimumHeight())
-        self.assertGreaterEqual(editor._property_pane.minimumHeight(), 100)
+        # The pane carries a fixed minimum height tall enough to fit the
+        # typical property editor without demanding a huge splitter on
+        # small screens; the previous "max of all tab size hints" rule
+        # squeezed the step tree to its header on default-size dialogs.
+        self.assertGreaterEqual(editor._property_pane.minimumHeight(), 300)
+        # Step tree must also enforce a floor so it keeps a usable row count.
+        self.assertGreaterEqual(editor._step_tree.minimumHeight(), 150)
 
     def test_parent_closed_triggers_node_terminal_sync(self) -> None:
         """Verify parent_closed propagates to update_node_after_settings_changed on the node.

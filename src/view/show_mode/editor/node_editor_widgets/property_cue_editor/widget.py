@@ -91,14 +91,26 @@ class PropertyCueEditor(PreviewEditWidget):
     def _invalidate_cache(self) -> None:
         """Drop the vfilter's cached compile so the next preview rebuild uses current model state.
 
-        L10: :meth:`PropertyBasedCueFilter.invalidate_compile_cache` is only
-        called from this helper; every editor mutator that touches the
-        property model routes through here. Without this the preview would
-        render the pre-edit timeline until the dialog was closed and the
-        next ``_rebuild_io`` dropped the cache.
+        Every editor mutator that touches the property model routes through
+        here. When the live preview is running, clearing the compile cache
+        leaves the preview thread with ``_last_compile = None`` and no
+        channel values to send; restart the preview inline so the user sees
+        their edit immediately instead of a silent preview until Stop/Start
+        is clicked.
         """
-        if self._property_filter is not None:
-            self._property_filter.invalidate_compile_cache()
+        if self._property_filter is None:
+            return
+        self._property_filter.invalidate_compile_cache()
+        # If preview is active, rebuild it now so the new compile result
+        # gets a fresh thread + channel mapping. ``PreviewController.start``
+        # already handles stopping any prior thread, so this is safe to
+        # call repeatedly in a burst of mutations.
+        if self._preview_active and self._preview_controller is not None:
+            was_playing = self._preview_controller.is_playing
+            self._preview_controller.start()
+            # Preserve play/pause state across the restart.
+            self._preview_controller.set_playing(was_playing)
+            self._set_media_button_leds(preview_active=True, playing=was_playing)
 
     def _end_action_changed(self, text: str) -> None:
         cue = self._selected_cue()
@@ -463,6 +475,7 @@ class PropertyCueEditor(PreviewEditWidget):
             return
         now_playing = self._preview_controller.toggle_playing()
         self._set_media_button_leds(preview_active=True, playing=now_playing)
+        self._update_play_pause_button(preview_active=True, playing=now_playing)
 
     def _xtouch_stop_pressed(self) -> None:
         """Handle the XTouch stop button: pause and rewind to cue 0 step 0 timecode 0."""
@@ -472,6 +485,7 @@ class PropertyCueEditor(PreviewEditWidget):
         if self._cue_table is not None and self._cue_table.rowCount() > 0:
             self._cue_table.selectRow(0)
         self._set_media_button_leds(preview_active=True, playing=False)
+        self._update_play_pause_button(preview_active=True, playing=False)
 
     def _xtouch_forward_pressed(self) -> None:
         """Handle the XTouch FF button: advance one step (wrap into next cue if needed)."""
@@ -613,21 +627,21 @@ class PropertyCueEditor(PreviewEditWidget):
     def _start_preview(self) -> None:
         if self._preview_controller is None or self._preview_button is None or self._preview_active:
             return
-        # Playback starts paused: the XTouch PLAY button toggles it on;
-        # starting playing immediately would make the user chase their own
-        # cursor before they've chosen a step to listen to.
+        # Playback starts paused so the user doesn't chase their own cursor
+        # before they've chosen a step to listen to. The on-screen Play
+        # button (and the XTouch PLAY key when hardware is attached) flips
+        # it on.
         self._preview_controller.set_playing(False)
         # ``start`` builds the ``PREVIEW_CONST`` filters, installs the
         # virtual_name → ``PREVIEW_CONST:value`` mapping on the vfilter and
         # flips ``in_preview_mode = True``. Fish needs to see the show with
         # those constants as scene filters before the preview thread starts
-        # pumping GUI updates addressed to them, otherwise every tick triggers
-        # ``The requested scene does not contain the requested filter
-        # 'Property Cues.0__PREVIEW_CONST__...'`` on the fish side.
+        # pumping GUI updates addressed to them.
         self._preview_controller.start()
         self._transmit_scene_to_fish()
         self._preview_active = True
         self._preview_button.setText("Stop preview")
+        self._update_play_pause_button(preview_active=True, playing=False)
         # Anchor the preview playhead to whatever the user currently has
         # selected in the cue/step panes, then light the XTouch media
         # buttons and subscribe to their events.
@@ -646,11 +660,40 @@ class PropertyCueEditor(PreviewEditWidget):
             self._disconnect_xtouch_broadcaster()
         if self._preview_button is not None:
             self._preview_button.setText("Start preview")
+        self._update_play_pause_button(preview_active=False, playing=False)
         if was_active:
             # The vfilter is back to non-preview mode; re-transmit so fish
             # drops the ``PREVIEW_CONST`` filters and picks the real native
             # cue filter back up before the user runs a normal cue.
             self._transmit_scene_to_fish()
+
+    def _on_play_pause_clicked(self) -> None:
+        """Toggle playback when the user clicks the on-screen Play / Pause button."""
+        if self._preview_controller is None or not self._preview_active:
+            return
+        now_playing = self._preview_controller.toggle_playing()
+        self._update_play_pause_button(preview_active=True, playing=now_playing)
+        self._set_media_button_leds(preview_active=True, playing=now_playing)
+
+    def _on_preview_rewind_clicked(self) -> None:
+        """Mirror the XTouch STOP key from the on-screen Rewind button."""
+        if self._preview_controller is None or not self._preview_active:
+            return
+        self._preview_controller.rewind_to_start()
+        if self._cue_table is not None and self._cue_table.rowCount() > 0:
+            self._cue_table.selectRow(0)
+        self._update_play_pause_button(preview_active=True, playing=False)
+        self._set_media_button_leds(preview_active=True, playing=False)
+
+    def _update_play_pause_button(self, preview_active: bool, playing: bool) -> None:
+        """Keep the on-screen Play / Pause button's enabled state and label in sync."""
+        btn = getattr(self, "_play_pause_button", None)
+        rewind = getattr(self, "_preview_stop_button", None)
+        if btn is not None:
+            btn.setEnabled(preview_active)
+            btn.setText("Pause" if playing else "Play")
+        if rewind is not None:
+            rewind.setEnabled(preview_active)
 
     def _transmit_scene_to_fish(self) -> None:
         """Re-send the show after flipping the vfilter's preview mode on or off."""

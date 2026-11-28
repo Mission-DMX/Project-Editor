@@ -62,10 +62,10 @@ class PanStrategyTest(unittest.TestCase):
     def test_pan_strategy_wires_chain(self) -> None:
         """Verify the pan strategy wires sin/cos/rescale/switch/range filters correctly.
 
-        L23: two additional ``FLOAT_TO_FLOAT_RANGE`` adapters remap the
-        trig outputs from [-1, 1] to [0, 1] so the switch sees a consistent
-        range across all three branches. The chain now has six filters
-        (sin, cos, sin_to_01, cos_to_01, switch, range) instead of four.
+        Two additional ``FLOAT_TO_FLOAT_RANGE`` adapters remap the trig
+        outputs from [-1, 1] to [0, 1] so the switch sees a consistent
+        range across all three branches. The chain has six filters
+        (sin, cos, sin_to_01, cos_to_01, switch, range).
         """
         out = self._build()
         self.assertEqual(6, len(out.filters))
@@ -77,7 +77,7 @@ class PanStrategyTest(unittest.TestCase):
         self.assertEqual(1, len(by_type.get(int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT), [])))
         self.assertEqual(1, len(by_type.get(int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE), [])))
         self.assertEqual(2, len(by_type.get(int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE), [])),
-                         "L23: expected two [-1,1]->[0,1] trig rescalers")
+                         "expected two [-1,1]->[0,1] trig rescalers")
 
         sin_f = by_type[int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN)][0]
         cos_f = by_type[int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN)][0]

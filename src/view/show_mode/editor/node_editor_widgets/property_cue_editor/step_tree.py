@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QHeaderView, QTreeWidget, QTreeWidgetItem
 
 from model.virtual_filters.property_cues._property_registry import properties_in_order
 from model.virtual_filters.property_cues.model.fixture_selection import SelectionEntryKind
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.property_step import PropertyStep
 
 
-# S1: the step tree's property columns derive from the registry so a new
+# the step tree's property columns derive from the registry so a new
 # property class only needs to add a :class:`PropertyEntry` with a
 # ``step_tree_column`` for the column to appear here.
 _PROPERTY_COLUMN_SEQUENCE: tuple[tuple[str, str], ...] = tuple(
@@ -83,7 +83,7 @@ def _summary_for(property_id: str, assignment: object) -> str:
                 return ",".join(str(v) for v in slots.values())
             return "0"
         if property_id == "beam":
-            # L22: focus has moved to its own property; show the beam sub-channels
+            # focus has moved to its own property; show the beam sub-channels
             # the current BeamProperty actually exposes instead of the stale
             # ``focus`` summary.
             parts = [f"{key[0]}{values[key]}"
@@ -133,7 +133,15 @@ class StepFixtureTree(QTreeWidget):
         self._current_cue_index: int = -1
         self.setColumnCount(len(_COLUMNS))
         self.setHeaderLabels(list(_COLUMNS))
-        # L24: keyboard arrows must update the property pane too. Clicking
+        # Let the Name column swallow any extra window width; the other
+        # columns (fade-in + per-property summaries) stay sized to their
+        # content so narrow values like "-" don't waste space.
+        header = self.header()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        for col in range(1, len(_COLUMNS)):
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        # keyboard arrows must update the property pane too. Clicking
         # fires both ``itemClicked`` and ``currentItemChanged`` but keyboard
         # navigation only fires the latter, so listen on both. The click
         # handler forwards to the same slot as the selection change.

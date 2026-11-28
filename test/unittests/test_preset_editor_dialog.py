@@ -187,7 +187,7 @@ class PresetEditorDialogTests(unittest.TestCase):
 
 
     def test_dimmer_channels_match_compiler(self) -> None:
-        """Regression (L12): the dialog's dimmer channel list must match what the compiler emits.
+        """Regression: the dialog's dimmer channel list must match what the compiler emits.
 
         Before L12 the dialog listed ``brightness`` but the compiler's raw
         name is ``brightness_raw``; the resulting preset compiled to a
@@ -202,7 +202,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertNotIn("brightness", dimmer_channels)
 
     def test_beam_channels_no_focus_include_prism(self) -> None:
-        """Regression (L12): beam channel list reflects BeamProperty (no focus; prism present)."""
+        """Regression: beam channel list reflects BeamProperty (no focus; prism present)."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             _PROPERTY_CHANNELS,
         )
@@ -212,7 +212,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertIn("prism_rotation", beam)
 
     def test_filename_sanitisation_round_trips(self) -> None:
-        """Regression (L12): names with spaces or unsafe chars get a safe filename."""
+        """Regression: names with spaces or unsafe chars get a safe filename."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
         )
@@ -227,7 +227,7 @@ class PresetEditorDialogTests(unittest.TestCase):
             self.assertNotIn(ch, files[0])
 
     def test_rename_in_user_dir_deletes_old_file(self) -> None:
-        """Regression (L12): renaming a user preset drops the old JSON file."""
+        """Regression: renaming a user preset drops the old JSON file."""
         from model.virtual_filters.property_cues.presets import load_preset_library
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
@@ -252,7 +252,7 @@ class PresetEditorDialogTests(unittest.TestCase):
                          f"Expected only the renamed file; got {files}")
 
     def test_applies_for_change_preserves_channel_exprs(self) -> None:
-        """Regression (L12): switching applies_for back and forth preserves per-channel values."""
+        """Regression: switching applies_for back and forth preserves per-channel values."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
             PresetEditorDialog,
         )
@@ -277,7 +277,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         self.assertEqual("17", exprs[0]["channels"]["tilt_value"])
 
     def test_color_hint_default_preserved_on_round_trip(self) -> None:
-        """Regression (L12): colour hint defaults are preserved as the ``"H,S,I"`` string."""
+        """Regression: colour hint defaults are preserved as the ``"H,S,I"`` string."""
         from model.virtual_filters.property_cues.presets import (
             EffectPreset,
             PresetHintSpec,

@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
 
 
-# S1: derived from the unified property registry so the tabs, their labels
+# Derived from the unified property registry so the tabs, their labels
 # and their gating capabilities stay in sync with the compiler.
 _PROPERTY_ORDER: tuple[tuple[str, str, EnabledCapability], ...] = tuple(
     (e.id, e.label, e.capability) for e in properties_in_order()

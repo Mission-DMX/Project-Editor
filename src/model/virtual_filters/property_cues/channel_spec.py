@@ -19,9 +19,9 @@ class ChannelSpec:
     ``discrete`` marks channels (gobo slot, pan/tilt curve selector, prism
     selection) whose values must step instantly between keyframes — the
     emitter forces ``TransferFunction.EDGE`` for them so a slot going 0 → 6
-    does not walk through 2/3/4/5 in intermediate ticks (L26).
+    does not walk through 2/3/4/5 in intermediate ticks.
 
-    S5: ``capability`` records which property-cue capability this channel
+    ``capability`` records which property-cue capability this channel
     belongs to (``"dimmer"``, ``"position"``, ...). ``exposed_locally`` is
     ``False`` for raw channels that only exist to drive post-processing
     filters -- the vfilter hides them on the node and exposes the chain

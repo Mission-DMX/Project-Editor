@@ -137,7 +137,7 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
         self.assertEqual(default, loaded)
 
     def test_load_from_json_str_rejects_unsupported_schema_version_atomically(self) -> None:
-        """Regression (L20): a bad schema version leaves the model untouched."""
+        """Regression: a bad schema version leaves the model untouched."""
         model = PropertyCueFilterModel()
         from model.virtual_filters.property_cues.model import (
             FixtureSelection,

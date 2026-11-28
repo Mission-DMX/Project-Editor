@@ -73,7 +73,7 @@ class ColorProperty(Property):
     def channel_values(self) -> dict[str, ColorHSI]:
         """Return a distributed colour per segment, keyed by channel name.
 
-        S2: dynamic channel count — the base class's ``channel_values``
+        dynamic channel count — the base class's ``channel_values``
         contract is satisfied by enumerating one entry per segment from
         :func:`distribute_colors`.
         """

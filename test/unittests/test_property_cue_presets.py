@@ -226,7 +226,7 @@ class PresetEvaluatorTest(unittest.TestCase):
 
 
 class PresetLibraryCacheTest(unittest.TestCase):
-    """L14: the module-level preset cache must be returned on subsequent calls."""
+    """the module-level preset cache must be returned on subsequent calls."""
 
     def test_default_invocation_is_cached(self) -> None:
         """Verify ``load_preset_library()`` returns the same object on repeat calls."""
@@ -252,7 +252,7 @@ class PresetLibraryCacheTest(unittest.TestCase):
 
 
 class PresetTemplateCacheTest(unittest.TestCase):
-    """L14: Jinja template compilations must be cached across evaluations."""
+    """Jinja template compilations must be cached across evaluations."""
 
     def test_template_cache_reuses_compiled_templates(self) -> None:
         """Verify evaluating the same expression twice returns the same compiled template."""
@@ -274,7 +274,7 @@ class PresetTemplateCacheTest(unittest.TestCase):
 
 
 class PresetHintValidationTest(unittest.TestCase):
-    """L16: unknown hints must be tolerated; min/max must be enforced."""
+    """unknown hints must be tolerated; min/max must be enforced."""
 
     def _dimmer_preset(self, hints: tuple[PresetHintSpec, ...]) -> EffectPreset:
         return EffectPreset(
@@ -290,7 +290,7 @@ class PresetHintValidationTest(unittest.TestCase):
         )
 
     def test_unknown_hint_is_warning_not_error(self) -> None:
-        """Regression (L16): unknown hint ids are dropped with a warning (not raised)."""
+        """Regression: unknown hint ids are dropped with a warning (not raised)."""
         preset = self._dimmer_preset(
             hints=(PresetHintSpec(id="speed", type=PresetHintType.FLOAT, default=0.5),),
         )
@@ -304,7 +304,7 @@ class PresetHintValidationTest(unittest.TestCase):
         self.assertEqual(0.3, float(result["brightness_raw"][0].requested_value))
 
     def test_min_max_clamp_numeric_hint(self) -> None:
-        """Regression (L16): numeric hint values outside [min, max] are clamped."""
+        """Regression: numeric hint values outside [min, max] are clamped."""
         preset = self._dimmer_preset(
             hints=(PresetHintSpec(
                 id="speed", type=PresetHintType.FLOAT,
@@ -325,7 +325,7 @@ class PresetHintValidationTest(unittest.TestCase):
         self.assertEqual(0.0, float(result_neg["brightness_raw"][0].requested_value))
 
     def test_int_hint_clamped_and_rounded(self) -> None:
-        """Regression (L16): int hints respect min/max and are coerced to int."""
+        """Regression: int hints respect min/max and are coerced to int."""
         preset = EffectPreset(
             name="P", description="", applies_for="gobo",
             hints=(PresetHintSpec(

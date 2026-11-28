@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QPushButton,
     QSplitter,
@@ -25,14 +26,31 @@ if TYPE_CHECKING:
 def build_root_ui(editor: PropertyCueEditor) -> None:
     layout = QVBoxLayout()
     editor._root.setLayout(layout)
+    # The FilterSettingsDialog sizes itself to its content's ``sizeHint``,
+    # so without a minimum the dialog opens too narrow for the cue table and
+    # step tree columns to fit without clipping. A 900x720 floor is wide
+    # enough to show all property columns ("Dimmer" … "Frost") and tall
+    # enough for a couple of visible step rows above the property pane.
+    editor._root.setMinimumSize(900, 720)
 
     editor._cue_table = QTableWidget(0, 3)
     editor._cue_table.setHorizontalHeaderLabels(["#", "Name", "Steps"])
     editor._cue_table.verticalHeader().setVisible(False)
     editor._cue_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
     editor._cue_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+    # Let the Name column take any extra width while the fixed-width ``#``
+    # and ``Steps`` columns stay sized to their content.
+    cue_header = editor._cue_table.horizontalHeader()
+    cue_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+    cue_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+    cue_header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+    # Three rows worth of height keeps the cue table compact when there is
+    # only one cue but still growable when the user adds more. An empty
+    # table reports ``rowHeight(0) == 0`` so we hard-code a reasonable
+    # per-row figure here.
+    editor._cue_table.setMinimumHeight(editor._cue_table.horizontalHeader().height() + 3 * 28 + 10)
     editor._cue_table.itemSelectionChanged.connect(editor._cue_selection_changed)
-    # L19: the Name column is editable in place -- double-click to rename.
+    # The Name column is editable in place -- double-click to rename.
     # ``_on_cue_table_item_changed`` writes the new text back into the model.
     editor._cue_table.itemChanged.connect(editor._on_cue_table_item_changed)
     layout.addWidget(editor._cue_table)
@@ -83,6 +101,17 @@ def build_root_ui(editor: PropertyCueEditor) -> None:
     editor._preview_button.clicked.connect(editor._toggle_preview)
     editor._preview_button.setEnabled(editor._preview_controller is not None)
     button_row.addWidget(editor._preview_button)
+    # On-screen play/pause mirrors the XTouch PLAY button so users without
+    # the physical hardware can still drive playback. Disabled until preview
+    # is active.
+    editor._play_pause_button = QPushButton("Play")
+    editor._play_pause_button.clicked.connect(editor._on_play_pause_clicked)
+    editor._play_pause_button.setEnabled(False)
+    button_row.addWidget(editor._play_pause_button)
+    editor._preview_stop_button = QPushButton("Rewind")
+    editor._preview_stop_button.clicked.connect(editor._on_preview_rewind_clicked)
+    editor._preview_stop_button.setEnabled(False)
+    button_row.addWidget(editor._preview_stop_button)
     button_row.addStretch(1)
     layout.addLayout(button_row)
 
@@ -106,15 +135,25 @@ def install_live_panes(editor: PropertyCueEditor) -> None:
     model = editor._property_filter.property_model
     editor._step_tree = StepFixtureTree(model, name_resolver=editor._resolve_node_name)
     editor._property_pane = PropertyPane(model, fixture_lookup=editor._lookup_fixtures)
-    # The pane's own sizeHint is driven by the placeholder when nothing is
-    # selected, so Qt would otherwise shrink the pane below the tallest
-    # editor's natural size. Ask the pane what each tab actually needs and
-    # cap at a floor of 100 px for environments where sizeHint is 0.
-    editor._property_pane.setMinimumHeight(max(100, editor._property_pane.recommended_minimum_height()))
+    # The property pane carries seven tab editors; forcing the worst-case
+    # tab's size as a hard minimum (what we did before) pushed the pane to
+    # ~600 px and left the step tree squeezed to its header. A 320 px floor
+    # fits the typical editor (dimmer / focus / frost have ~4 rows plus
+    # tabs / transition / Apply) and the splitter can still grow it when
+    # the dialog is enlarged.
+    editor._property_pane.setMinimumHeight(320)
+    # Step tree gets its own minimum so it never collapses to the header;
+    # two full step rows plus the column header give the user something
+    # worth clicking on even in a cramped dialog.
+    editor._step_tree.setMinimumHeight(180)
     editor._splitter.replaceWidget(0, editor._step_tree)
     editor._splitter.replaceWidget(1, editor._property_pane)
     editor._splitter.setStretchFactor(0, 2)
-    editor._splitter.setStretchFactor(1, 1)
+    editor._splitter.setStretchFactor(1, 3)
+    # Explicitly seed the initial split so Qt doesn't give the whole free
+    # area to whichever child reports the taller sizeHint; the stretch
+    # factors above govern what happens when the user drags the handle.
+    editor._splitter.setSizes([260, 400])
     editor._step_tree.selection_changed.connect(editor._property_pane.show_editor)
     # L11: whenever the step selection changes (mouse or keyboard), update the
     # preview playhead so the XTouch transport operates on the selected step.

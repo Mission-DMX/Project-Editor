@@ -25,22 +25,36 @@ def child_start_timestep(
     step_start_40hz: int,
     distribution: Distribution,
     child_index: int,
+    step_duration_40hz: int | None = None,
 ) -> int:
-    """Return the absolute start timestep for ``child_index`` under ``distribution``."""
-    return step_start_40hz + seconds_to_timesteps(distribution.delay_for_child(child_index))
+    """Return the absolute start timestep for ``child_index`` under ``distribution``.
+
+    When ``step_duration_40hz`` is supplied the delay is clamped so that the
+    emitted keyframe still lands inside the step: a delay longer than the
+    step would otherwise push the keyframe past the step boundary, where
+    it never becomes the authored value before the next step's keyframe
+    arrives and the fixture appears to skip the step entirely.
+    """
+    delay_ticks = seconds_to_timesteps(distribution.delay_for_child(child_index))
+    if step_duration_40hz is not None and step_duration_40hz > 0:
+        # Clamp to one tick before the step ends so the authored value still
+        # has at least one 40 Hz slot of effect before the next step takes
+        # over; a delay exactly equal to the step would otherwise collide
+        # with the next step's own start keyframe.
+        delay_ticks = max(0, min(delay_ticks, int(step_duration_40hz) - 1))
+    return step_start_40hz + delay_ticks
 
 
 class Property(abc.ABC):
     """ABC for a settable property on a step node (fixture, group or segment).
 
     Concrete properties hold the user-dialed values and emit
-    :class:`KeyframeRequest` streams for the channels they own. S2: the
-    default :meth:`generate_requests` builds one request per channel at the
-    same start tick -- subclasses only have to implement :meth:`channel_values`
+    :class:`KeyframeRequest` streams for the channels they own. The default
+    :meth:`generate_requests` builds one request per channel at the same
+    start tick -- subclasses only have to implement :meth:`channel_values`
     returning ``{channel_name: value}``. Properties with dynamic channel
     shapes (gobo wheel count, colour segment count) still override
-    :meth:`channel_values` to enumerate the channels their spec would
-    publish.
+    :meth:`channel_values` to enumerate the channels their spec would publish.
     """
 
     __slots__ = ()
@@ -69,8 +83,9 @@ class Property(abc.ABC):
         transition with :attr:`TransferFunction.EDGE` so wheel-slot values
         don't walk through intermediates during a fade.
         """
-        del step_duration_40hz
-        start = child_start_timestep(step_start_40hz, distribution, child_index)
+        start = child_start_timestep(
+            step_start_40hz, distribution, child_index, step_duration_40hz,
+        )
         values = self.channel_values()
         transition = getattr(self, "transition", TransferFunction.LINEAR)
         discrete_locals = {spec.name for spec in self.channel_specs if spec.discrete}

@@ -1,57 +1,21 @@
 """Memoising provider for per-fixture metadata used by the compile pipeline.
 
-S4: the compiler used to take six separate lookup callbacks (``name_resolver``,
-``capability_lookup``, ``gobo_wheel_count_lookup``, ``beam_sub_capabilities_lookup``,
-``color_segment_count_lookup``) and the vfilter implemented each by re-walking the
-whole board on every call. For a 12-fixture show that meant 100+ linear scans
-per compile; the preset library + Jinja cache fixes from L14 handled the
-template hot path, but the per-fixture lookups were still O(fixtures * calls).
-
-:class:`BoardFixtureInfo` collapses all five lookups behind one helper that
-uses :meth:`BoardConfiguration.get_fixture` under the hood (fast path,
-dict-indexed) and memoises each per-fixture answer for the lifetime of a
-single compile. The vfilter instantiates one per ``_ensure_compiled`` call;
-``compile_property_model`` is still free to accept the individual callbacks
-for existing tests, but production now routes everything through the
-provider's cached accessors.
+:class:`BoardFixtureInfo` collapses every per-fixture lookup the compile
+pipeline needs -- stage name, capability tags, gobo wheel count, beam sub-
+capabilities, colour segment count -- behind one helper that uses
+:meth:`BoardConfiguration.get_fixture` as its fast path (dict-indexed) and
+memoises each answer for the lifetime of a single compile. The vfilter
+instantiates one per ``_ensure_compiled`` call; the compiler still accepts
+the individual callback parameters so headless tests can stub them without
+materialising a board.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model import BoardConfiguration
-    from model.ofl.fixture import UsedFixture
-
-
-class FixtureInfoProvider(Protocol):
-    """Protocol version of :class:`BoardFixtureInfo` for dependency injection.
-
-    Any object with these five methods can stand in for the board-backed
-    implementation; tests use this to seed the compile pipeline without
-    materialising a :class:`BoardConfiguration`.
-    """
-
-    def resolve_name(self, fixture_id: str) -> str:
-        """Return the stage-name for ``fixture_id`` (fallback: the raw id)."""
-        ...
-
-    def capabilities(self, fixture_id: str) -> set[str]:
-        """Return the capability tags the fixture physically supports."""
-        ...
-
-    def gobo_wheels(self, fixture_id: str) -> int:
-        """Return the number of gobo wheels on ``fixture_id``."""
-        ...
-
-    def beam_parts(self, fixture_id: str) -> set[str]:
-        """Return the beam sub-capabilities (``zoom`` / ``iris`` / ``prism``) available."""
-        ...
-
-    def color_segments(self, fixture_id: str) -> int:
-        """Return the number of HSI colour segments on ``fixture_id``."""
-        ...
 
 
 class BoardFixtureInfo:

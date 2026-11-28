@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import colorsys
 import math
 from typing import Union
 
@@ -66,28 +65,33 @@ def _interp_numeric(start: float, end: float, rel_time: float) -> float:
     return (end - start) * rel_time + start
 
 
+def _shortest_hue_interp(start_hue: float, end_hue: float, rel_time: float) -> float:
+    start = start_hue % 360.0
+    end = end_hue % 360.0
+    diff = end - start
+    if diff > 180.0:
+        diff -= 360.0
+    elif diff < -180.0:
+        diff += 360.0
+    return (start + diff * rel_time) % 360.0
+
+
 def _interp_color(start: ColorHSI, end: ColorHSI, rel_time: float) -> ColorHSI:
-    """Interpolate between two HSI colours by lerping in float RGB.
+    """Interpolate between two HSI colours matching fish's shortest-hue arc.
 
-    F2: the realtime engine (fish) performs colour interpolation on the raw
-    RGB values it writes to DMX, so matching its output requires converting
-    HSI → RGB, interpolating channel-wise, and converting back. The previous
-    implementation interpolated hue along the shortest arc in HSI space,
-    which produced different mid-cue colours than fish would (e.g. red →
-    blue passed through magenta instead of the dim purple fish outputs).
-
-    The lerp happens in the ``[0.0, 1.0]`` RGB floats returned by
-    :func:`colorsys.hsv_to_rgb` rather than the 8-bit integers from
-    :meth:`ColorHSI.to_rgb` so identical endpoints round-trip exactly and
-    smooth fades don't lose precision below the DMX output stage.
+    Fish holds colour state in HSI and interpolates the three channels
+    independently: hue along the shortest arc on the colour wheel,
+    saturation and intensity linearly. This keeps a saturated red → blue
+    fade at full intensity throughout; an earlier attempt to route the
+    midpoint through RGB via ``colorsys.hsv_to_rgb`` dipped the primaries'
+    intensity to roughly half, because HSV red and HSV blue sum to a
+    desaturated magenta at RGB midpoint (``(0.5, 0, 0.5)`` arrives at
+    half-value after ``rgb_to_hsv``). Linear HSI matches fish bit-exact.
     """
-    sr, sg, sb = colorsys.hsv_to_rgb(start.hue / 360.0, start.saturation, start.intensity)
-    er, eg, eb = colorsys.hsv_to_rgb(end.hue / 360.0, end.saturation, end.intensity)
-    r = _interp_numeric(sr, er, rel_time)
-    g = _interp_numeric(sg, eg, rel_time)
-    b = _interp_numeric(sb, eb, rel_time)
-    hue, sat, val = colorsys.rgb_to_hsv(r, g, b)
-    return ColorHSI(hue * 360.0, sat, val)
+    hue = _shortest_hue_interp(start.hue, end.hue, rel_time)
+    saturation = (end.saturation - start.saturation) * rel_time + start.saturation
+    intensity = (end.intensity - start.intensity) * rel_time + start.intensity
+    return ColorHSI(hue, saturation, intensity)
 
 
 def is_compatible(prev: State, nxt: State) -> bool:

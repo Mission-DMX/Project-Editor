@@ -775,7 +775,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_sanitize_strips_punctuation_without_partition_breakage(self) -> None:
-        """Regression (L2): a name containing ``#`` must not produce ``__`` after sanitisation.
+        """Regression: a name containing ``#`` must not produce ``__`` after sanitisation.
 
         The previous sanitiser replaced every non-alphanumeric character with
         ``_``, so "Hero Spot #3" became "Hero_Spot__3" — a prefix that then
@@ -813,7 +813,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_sanitize_dash_and_space_are_distinct(self) -> None:
-        """Regression (L2): "MH 1" sanitises to "MH_1" and "MH-1" stays "MH-1".
+        """Regression: "MH 1" sanitises to "MH_1" and "MH-1" stays "MH-1".
 
         The old sanitiser mapped every non-alphanumeric character — including
         ``-`` — to ``_``, so both names collapsed to "MH_1" and the second
@@ -863,7 +863,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             del type(scene.board_configuration).fixtures
 
     def test_sanitize_detects_post_sanitisation_collisions(self) -> None:
-        """Regression (L2): names differing only in stripped characters get UUID suffixes.
+        """Regression: names differing only in stripped characters get UUID suffixes.
 
         The sanitiser strips ``#``, ``:`` and ``|``, so "MH#1" and "MH:1" both
         collapse to "MH1". Without post-sanitisation collision detection the

@@ -101,7 +101,7 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertEqual([(0, "fixture:F1"), (0, "")], emissions)
 
     def test_frost_column_is_present(self) -> None:
-        """Regression (L22): the tree must include a Frost summary column."""
+        """Regression: the tree must include a Frost summary column."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
             _COLUMNS,
@@ -112,7 +112,7 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertEqual(len(_COLUMNS), tree.columnCount())
 
     def test_keyboard_selection_also_emits(self) -> None:
-        """Regression (L24): keyboard navigation (currentItemChanged) emits selection_changed."""
+        """Regression: keyboard navigation (currentItemChanged) emits selection_changed."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
         )
@@ -126,7 +126,7 @@ class StepFixtureTreeTests(unittest.TestCase):
         self.assertIn((1, ""), emissions)
 
     def test_select_step_programmatic(self) -> None:
-        """Regression (L11): select_step moves the selection to (cue, step)."""
+        """Regression: select_step moves the selection to (cue, step)."""
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import (
             StepFixtureTree,
         )

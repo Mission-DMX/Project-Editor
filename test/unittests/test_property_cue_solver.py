@@ -91,7 +91,7 @@ class KeyframeSolverTest(unittest.TestCase):
     def test_incompatible_transition_does_not_crash(self) -> None:
         """Verify the solver tolerates mixed transition kinds within the same channel.
 
-        Updated for L4: cross-channel insertion moved to the native builder, so
+        Cross-channel insertion lives in the native builder now, so
         the solver no longer tries to interpolate across the mixed-transition
         pair. It emits the two X frames at the original slots and the Y frame
         at its own slot; the native builder handles any cross-channel fills.
@@ -256,7 +256,7 @@ class ChannelConsolidatorTest(unittest.TestCase):
         :func:`consolidate`. Differing post-process wiring (e.g. two
         fixtures whose strobe-freq streams diverge even though brightness
         consolidates) is now resolved at the chain-cache key level in
-        :func:`_build_ports` (L1), not here. This test documents the new
+        :func:`_build_ports`, not here. This test documents the new
         boundary: identical per-channel frame streams collapse unconditionally.
         """
         per_cue_frames = {

@@ -59,7 +59,7 @@ BeamSubCapabilityLookup = Callable[[str], set[str]]
 # Return the number of independent HSI colour segments on the fixture (0 if none).
 ColorSegmentCountLookup = Callable[[str], int]
 
-# S1: the property-id -> Property-subclass mapping lives in _property_registry.py
+# the property-id -> Property-subclass mapping lives in _property_registry.py
 # as the single source of truth. Expose it under the historic name here so
 # existing readers (``_default_specs.default_specs_for_fixtures`` does a local
 # import for ``_PROPERTY_CLASS``) keep working.
@@ -165,7 +165,7 @@ def _spec_table_for(
         name=f"{prefix}__{s.name}", data_type=s.data_type,
         default_value=s.default_value, discrete=s.discrete,
         capability=property_id,
-        # S5: raw channels listed in ``INTERNAL_LOCAL_NAMES`` only exist to
+        # raw channels listed in ``INTERNAL_LOCAL_NAMES`` only exist to
         # drive post-processing filters; the vfilter hides them on the node.
         exposed_locally=s.name not in _capability_wiring.INTERNAL_LOCAL_NAMES,
     ) for s in prop.channel_specs}
@@ -239,14 +239,14 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
 
     groups: list[RequestGroup] = []
     specs: dict[str, ChannelSpec] = {}
-    # L5: track the last-emitted request per channel so we can synthesise a
+    # track the last-emitted request per channel so we can synthesise a
     # closing keyframe at the cue's end slot. Without it fish treats a cue
     # as finished at its last authored keyframe, so a step with duration
     # 10 s that only emits at its start silently loses the 10 s hold.
     last_per_channel: dict[str, KeyframeRequest] = {}
     step_start = 0
     for si, step in enumerate(cue.steps):
-        # L6: resolve per-(child, pid) precedence BEFORE emitting. The
+        # resolve per-(child, pid) precedence BEFORE emitting. The
         # previous code emitted one RequestGroup per (node_path, pid, child)
         # and relied on :func:`_select_winners` to reconcile at the 40 Hz
         # slot level. That was wrong whenever a less-specific assignment
@@ -263,7 +263,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                 continue
             depth = len([p for p in node_path.split("/") if p])
             for pid, assignment in assignments.by_property.items():
-                # L9: a user can disable a capability in the wizard without
+                # a user can disable a capability in the wizard without
                 # removing the authored assignments. Drop assignments whose
                 # capability is not in ``enabled_property_ids`` so a disabled
                 # colour tab doesn't produce colour output for every selected
@@ -315,6 +315,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
             groups.append(RequestGroup(
                 origin_label=f"c{cue_index}.s{si}.{pid}.{node_path}",
                 requests=prefixed,
+                origin_property=pid,
             ))
             for ch_name, reqs in prefixed.items():
                 if not reqs:
@@ -324,7 +325,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                 if cur is None or int(latest.timestep_40hz) >= int(cur.timestep_40hz):
                     last_per_channel[ch_name] = latest
         step_start += int(step.duration_40hz)
-    # L5: add a trailing keyframe at the cue's total duration repeating each
+    # add a trailing keyframe at the cue's total duration repeating each
     # channel's last value with EDGE so fish holds through to the end.
     total_duration = step_start
     if total_duration > 0 and last_per_channel:
@@ -466,7 +467,7 @@ def _build_ports(all_specs: dict[str, ChannelSpec], consolidation: Consolidation
                  ) -> tuple[list[Filter], dict[str, tuple[str, str]]]:
     """Build post-processing chains, keyed on the canonical input tuple.
 
-    L1: chains are cached per *tuple of canonical input sources*, not per
+    chains are cached per *tuple of canonical input sources*, not per
     ``(canonical_prefix, capability)``. Two fixtures whose brightness streams
     consolidate but whose strobe-freq streams differ therefore each get their
     own strobe generator; two fixtures whose entire dimmer input set
@@ -611,7 +612,7 @@ def compile_property_model(
         capability_lookup, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
         color_segment_count_lookup,
     )
-    # L9: capabilities the user disabled in the wizard must not emit
+    # capabilities the user disabled in the wizard must not emit
     # channels, even if stale assignments remain on the model. Flatten
     # enabled_capabilities to string property IDs for a fast ``in`` check
     # inside the hot per-step loop.

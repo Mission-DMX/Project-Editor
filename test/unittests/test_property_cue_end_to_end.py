@@ -439,7 +439,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         self.assertAlmostEqual(1.0, brightness_values[-1], places=5)
 
     def test_int_key_dicts_survive_json_roundtrip(self) -> None:
-        """Regression (L3): gobo slots and colour segments must keep int keys after reload.
+        """Regression: gobo slots and colour segments must keep int keys after reload.
 
         ``json.dumps`` encodes every dict key as a string, so a gobo
         ``{slots: {0: 3, 1: 7}}`` would come back as ``{slots: {"0": 3, "1": 7}}``
@@ -476,7 +476,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         self.assertAlmostEqual(0.5, rotations[5], places=5)
 
     def test_unrelated_keyframe_does_not_reshape_fade(self) -> None:
-        """Regression (L4): an unrelated channel's keyframe must not turn a fade into a hold.
+        """Regression: an unrelated channel's keyframe must not turn a fade into a hold.
 
         Before L4, :func:`_native_builder._state_for` copied the prior
         keyframe's value when the timestamp slot had no hit on this channel.
@@ -552,7 +552,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         )
 
     def test_consolidation_preserves_divergent_strobe_wiring(self) -> None:
-        """Regression (L1): same brightness + different strobe freq must not merge.
+        """Regression: same brightness + different strobe freq must not merge.
 
         Before L1, the post-process chain cache was keyed on
         ``(canonical_prefix, capability)``. When MH1's brightness consolidated
@@ -643,7 +643,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                          f"MH2's strobe pulled MH1's strobefreq: {mh2_freq_link}")
 
     def test_disabled_capability_drops_assignments(self) -> None:
-        """Regression (L9): disabling a capability in the wizard drops matching assignments.
+        """Regression: disabling a capability in the wizard drops matching assignments.
 
         Before L9 an old color assignment still produced ``A__color`` after
         the user unticked "color" in the wizard: the compiler only checked
@@ -693,7 +693,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                          "Disabled colour capability must not produce colour channels")
 
     def test_cue_length_matches_sum_of_step_durations(self) -> None:
-        """Regression (L5): the last step's duration must reach the compiled cue.
+        """Regression: the last step's duration must reach the compiled cue.
 
         Before L5 each step emitted a keyframe only at its start, so a two-
         step cue 1 s + 10 s compiled to a cue ending at 1.0 s (fish
@@ -748,7 +748,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                                msg="Closing keyframe must repeat the last authored value")
 
     def test_fixture_override_holds_across_step_duration(self) -> None:
-        """Regression (L6): a fixture-level override must hold for the whole step.
+        """Regression: a fixture-level override must hold for the whole step.
 
         Before L6, a step-level assignment produced a separate RequestGroup
         for every fixture it covered, and the solver reconciled per-slot.

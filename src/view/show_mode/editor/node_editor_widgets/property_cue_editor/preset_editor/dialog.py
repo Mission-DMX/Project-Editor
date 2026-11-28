@@ -52,7 +52,7 @@ from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox, Jogwhee
 
 logger = getLogger(__name__)
 
-# S1: the "Applies for" choices and the per-property preset channel columns
+# the "Applies for" choices and the per-property preset channel columns
 # derive from :data:`_property_registry.REGISTRY` so there is no second table
 # to keep in sync with the compiler.
 _APPLIES_FOR_CHOICES = tuple(e.id for e in properties_in_order())
@@ -86,7 +86,7 @@ def _sanitize_filename(name: str) -> str:
 def _build_hint_default_widget(hint_type: str, default: str) -> QWidget:
     """Return the editor widget appropriate for a hint's default value.
 
-    L12: colour hints get a plain :class:`QLineEdit` so ``"0,0,0"`` round-trips
+    colour hints get a plain :class:`QLineEdit` so ``"0,0,0"`` round-trips
     unchanged; int hints get :class:`JogwheelSpinBox`; float hints get the
     original :class:`JogwheelDoubleSpinBox`.
     """
@@ -128,10 +128,10 @@ class PresetEditorDialog(QDialog):
         self._user_dir = Path(user_dir) if user_dir is not None else self._default_user_dir()
         self._result_preset: EffectPreset | None = None
         self._msgbox: QMessageBox | None = None
-        # L12: track the original filename when editing so a rename can
+        # track the original filename when editing so a rename can
         # delete the stale file instead of orphaning it alongside the new one.
         self._original_source_path: Path | None = None
-        # L12: ``_rebuild_kf_columns`` is wired to the "Applies for" combo's
+        # ``_rebuild_kf_columns`` is wired to the "Applies for" combo's
         # change signal and also runs after :meth:`_populate_from` inserts
         # preset-specific rows. Suppress the rebuild while populating so
         # colour defaults don't get coerced through the float spin box.
@@ -232,7 +232,7 @@ class PresetEditorDialog(QDialog):
     def _rebuild_kf_columns(self) -> None:
         """Rebuild the keyframe table columns for the current applies_for.
 
-        L12: a prior snapshot of per-channel expressions is carried across
+        a prior snapshot of per-channel expressions is carried across
         the rebuild so switching ``applies_for`` back and forth does not
         drop the user's authored expressions. Unknown channels (ones the
         new applies_for doesn't expose) are preserved in
@@ -283,7 +283,7 @@ class PresetEditorDialog(QDialog):
         else:
             hint_type = "float"
         self._hints_table.setCellWidget(row, 1, type_combo)
-        # L12: honour the hint's declared type when choosing the default
+        # honour the hint's declared type when choosing the default
         # widget. The old code always used a float spin box, so a colour
         # hint's ``"0,0,0"`` default was coerced to ``0.0`` on load and the
         # preset silently lost its colour information.
@@ -338,7 +338,7 @@ class PresetEditorDialog(QDialog):
         remove_btn = QPushButton("x")
         remove_btn.clicked.connect(lambda _checked=False, b=remove_btn: self._remove_row(b))
         self._kf_table.setCellWidget(row, len(channels) + 1, remove_btn)
-        # L12: keep ``_passthrough_rows`` in step with the kf_table so
+        # keep ``_passthrough_rows`` in step with the kf_table so
         # unknown-channel expressions (ones the dialog's columns don't show
         # but the loaded preset carried) round-trip through save.
         if not hasattr(self, "_passthrough_rows"):
@@ -367,7 +367,7 @@ class PresetEditorDialog(QDialog):
                 return
 
     def _populate_from(self, preset: EffectPreset) -> None:
-        # L12: suppress rebuild side effects while filling the dialog --
+        # suppress rebuild side effects while filling the dialog --
         # the setCurrentText call below would otherwise trigger
         # ``_on_applies_changed`` -> ``_rebuild_kf_columns`` and clobber the
         # just-cleared ``_passthrough_rows``.
@@ -414,7 +414,7 @@ class PresetEditorDialog(QDialog):
             type_combo = self._hints_table.cellWidget(row, 1)
             default_widget = self._hints_table.cellWidget(row, 2)
             type_name = type_combo.currentText() if isinstance(type_combo, QComboBox) else "float"
-            # L12: read the hint's default value in the representation its
+            # read the hint's default value in the representation its
             # widget uses so colour defaults don't get coerced to float
             # (``"0.0"``) and ints don't get silently promoted to floats.
             if type_name == "color":
@@ -466,7 +466,7 @@ class PresetEditorDialog(QDialog):
             for col, channel in enumerate(channels, start=1):
                 cell = self._kf_table.item(row, col)
                 channel_exprs[channel] = cell.text() if cell else ""
-            # L12: merge any passthrough (unknown-column) channels we
+            # merge any passthrough (unknown-column) channels we
             # captured in :meth:`_populate_from` or during an applies_for
             # swap so they survive the round-trip to disk.
             if hasattr(self, "_passthrough_rows") and row < len(self._passthrough_rows):
@@ -495,7 +495,7 @@ class PresetEditorDialog(QDialog):
         except OSError as exc:
             self._show_validation_errors([f"Could not create user directory: {exc}"])
             return
-        # L12: sanitise the filename so names with spaces, slashes or other
+        # sanitise the filename so names with spaces, slashes or other
         # characters unsafe on the host filesystem don't fail silently.
         safe_name = _sanitize_filename(name)
         target_path = self._user_dir / f"{safe_name}.json"
@@ -504,7 +504,7 @@ class PresetEditorDialog(QDialog):
         except OSError as exc:
             self._show_validation_errors([f"Could not write preset file: {exc}"])
             return
-        # L12: if the user renamed the preset while editing, drop the stale
+        # if the user renamed the preset while editing, drop the stale
         # file so we don't accumulate orphaned ``*.json`` files in the user
         # library. Built-in presets live elsewhere and are never touched here.
         if (
@@ -527,7 +527,7 @@ class PresetEditorDialog(QDialog):
             name=name, description=blob["description"], applies_for=blob["applies_for"],
             hints=hints, kf_requests=kf, source_path=str(target_path), is_builtin=False,
         )
-        # L14: invalidate the module-level preset cache so the next compile
+        # invalidate the module-level preset cache so the next compile
         # and any still-open PresetPanel pick up the saved changes without
         # having to be re-instantiated.
         reload_preset_library()

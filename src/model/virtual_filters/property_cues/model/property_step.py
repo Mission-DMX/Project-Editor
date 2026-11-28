@@ -45,7 +45,7 @@ def _value_from_json(blob: dict | list | float | str | bool | None) -> object:
     if isinstance(blob, dict):
         if blob.get("__kind__") == "color_hsi":
             return ColorHSI.from_filter_str(blob["value"], strict=True)
-        # L3: before recursing, restore integer keys lost to JSON string
+        # before recursing, restore integer keys lost to JSON string
         # encoding on any dict whose keys parse as decimal ints (gobo slots,
         # colour segments, ...). Strings remain strings when at least one
         # key doesn't look numeric, so property values with named keys are
