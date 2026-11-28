@@ -35,4 +35,22 @@ jobs:
             echo "No Python files changed."
           fi
 
+  unit_tests:
+    runs-on: [ self-hosted ]
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install project dependencies
+        run: pdm install --dev
+
+      - name: Ensure pytest is available
+        run: pdm run python -m pip install pytest
+
+      - name: Run unit tests
+        run: pdm run make test
+
 
